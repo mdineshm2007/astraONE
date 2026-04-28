@@ -1,0 +1,107 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "User account details and permissions",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "role": { "type": "string", "enum": ["CAPTAIN", "VICE_CAPTAIN", "HEAD", "MEMBER"] },
+        "subsystem": { "type": "string", "description": "Assigned subsystem (for HEAD and MEMBER)" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "Subsystem": {
+      "title": "Subsystem",
+      "description": "Engineering team/department metadata",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "headId": { "type": "string" },
+        "progress": { "type": "number" },
+        "riskScore": { "type": "number" },
+        "readiness": { "type": "number" },
+        "status": { "type": "string" },
+        "pendingTasks": { "type": "number" }
+      },
+      "required": ["id", "name"]
+    },
+    "Task": {
+      "title": "Task",
+      "description": "A specific engineering task",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "subsystem": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "status": { "type": "string", "enum": ["TODO", "IN_PROGRESS", "COMPLETED", "BLOCKED"] },
+        "priority": { "type": "string", "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"] },
+        "assignedTo": { "type": "string" },
+        "createdBy": { "type": "string" },
+        "deadline": { "type": "string", "format": "date-time" },
+        "delayProbability": { "type": "number" },
+        "aiSuggestions": { "type": "string" },
+        "attachments": { "type": "array" }
+      },
+      "required": ["title", "subsystem", "status"]
+    },
+    "Telemetry": {
+      "title": "Telemetry Sample",
+      "description": "Real-time kart data point",
+      "type": "object",
+      "properties": {
+        "timestamp": { "type": "string", "format": "date-time" },
+        "speed": { "type": "number" },
+        "rpm": { "type": "number" },
+        "motorTemp": { "type": "number" },
+        "controllerTemp": { "type": "number" },
+        "batteryVoltage": { "type": "number" },
+        "batteryCurrent": { "type": "number" },
+        "batteryTemp": { "type": "number" },
+        "solarPanelOutput": { "type": "number" },
+        "powerConsumption": { "type": "number" },
+        "rangeEstimation": { "type": "number" }
+      }
+    },
+    "FailureLog": {
+      "title": "Failure Analysis",
+      "description": "Post-mortem reports",
+      "type": "object",
+      "properties": {
+        "timestamp": { "type": "string", "format": "date-time" },
+        "cause": { "type": "string" },
+        "subsystem": { "type": "string" },
+        "telemetrySnapshot": { "type": "object" },
+        "aiExplanation": { "type": "string" }
+      }
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Application users and their roles"
+    },
+    "/subsystems/{subsystemId}": {
+      "schema": "Subsystem",
+      "description": "Core team stats and progress"
+    },
+    "/tasks/{taskId}": {
+      "schema": "Task",
+      "description": "All engineering tasks"
+    },
+    "/telemetry_live/current": {
+      "schema": "Telemetry",
+      "description": "Current live snapshot of the kart"
+    },
+    "/failure_logs/{logId}": {
+      "schema": "FailureLog",
+      "description": "Failure analysis reports"
+    }
+  }
+}

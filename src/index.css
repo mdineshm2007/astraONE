@@ -1,0 +1,93 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: #0a0e1a;
+  --color-surface: #0f1524;
+  --color-surface-elevated: #1a2438;
+  --color-primary: #7dd3fc;
+  --color-secondary: #88b4cc;
+  --color-tertiary: #c8a0f0;
+  --color-error: #ff6b6b;
+  
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-background text-[#e0e8f0] font-sans;
+    background-image: 
+        radial-gradient(at 0% 0%, rgba(125, 211, 252, 0.05) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(200, 160, 240, 0.05) 0px, transparent 50%);
+    min-height: 100vh;
+  }
+}
+
+.glass-panel {
+  @apply bg-[#0f1524]/60 backdrop-blur-lg border border-primary/10;
+}
+
+.glass-panel-elevated {
+  @apply bg-[#0f1524]/75 backdrop-blur-xl border border-primary/15;
+}
+
+.glow-soft {
+  box-shadow: 0 0 30px rgba(125, 211, 252, 0.05);
+}
+
+.glow-primary {
+  box-shadow: 0 0 15px rgba(125, 211, 252, 0.3);
+}
+
+@utility scrollbar-hide {
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@layer utilities {
+  .modal-container {
+    @apply w-full max-w-lg max-h-[90vh] overflow-y-auto scrollbar-hide space-y-6;
+  }
+  .modal-container-wide {
+    @apply w-full max-w-2xl max-h-[90vh] overflow-y-auto scrollbar-hide space-y-6;
+  }
+}
+
+.markdown-body h1, .markdown-body h2, .markdown-body h3 {
+  @apply font-bold text-slate-100 mt-6 mb-4;
+}
+
+.markdown-body p, .markdown-body li {
+  @apply text-slate-300 leading-relaxed;
+}
+
+.markdown-body ul, .markdown-body ol {
+  @apply pl-6 mb-4 list-disc;
+}
+
+.markdown-body strong {
+  @apply text-primary font-bold;
+}
+
+/* Fix for Select Dropdowns in Dark Mode */
+select {
+  @apply bg-[#0f1524] text-slate-100;
+}
+
+select option {
+  @apply bg-[#1a2438] text-slate-100 py-2;
+}
+
+/* Custom scrollbar for better look */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  @apply bg-white/5;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  @apply bg-primary/20 rounded-full hover:bg-primary/40;
+}

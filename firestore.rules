@@ -1,0 +1,73 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    
+    function isCaptain() {
+      return getUserData().role == 'CAPTAIN';
+    }
+    
+    function isTeamLead() {
+      return getUserData().role == 'TEAM_LEAD';
+    }
+    
+    function isMemberOf(teamId) {
+      return teamId in getUserData().approvedTeams;
+    }
+
+    // Users collection
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Subsystems collection
+    match /subsystems/{subId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && (isCaptain() || isTeamLead());
+    }
+
+    // Tasks collection
+    match /tasks/{taskId} {
+      allow read: if isAuthenticated(); // Allow reading for dashboard/overview
+      allow write: if isAuthenticated() && (isCaptain() || isTeamLead() || request.auth.uid == resource.data.assignedToId);
+      allow create: if isAuthenticated() && (isCaptain() || isTeamLead());
+    }
+
+    // Posts collection
+    match /posts/{postId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && (isCaptain() || isTeamLead());
+      allow delete: if isAuthenticated() && (isCaptain() || request.auth.uid == resource.data.authorId);
+    }
+
+    // Queries collection (CRITICAL FOR PRIVACY)
+    match /queries/{queryId} {
+      allow read: if isAuthenticated() && (
+        resource.data.type == 'PUBLIC' || 
+        resource.data.authorId == request.auth.uid || 
+        isCaptain()
+      );
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && (isCaptain() || request.auth.uid == resource.data.authorId);
+      allow delete: if isAuthenticated() && (isCaptain() || request.auth.uid == resource.data.authorId);
+    }
+    
+    // Notes collection (Now unused by app, but kept secure just in case old data exists)
+    match /notes/{noteId} {
+      allow read, write: if isAuthenticated() && request.auth.uid == resource.data.authorId;
+    }
+
+    // Legacy or other collections
+    match /{document=**} {
+      allow read, write: if isAuthenticated() && isCaptain();
+    }
+  }
+}

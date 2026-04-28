@@ -1,0 +1,14 @@
+{
+  "name": "ASTRA – Solar Car Intelligence & Team Management Platform",
+  "description": "Unified engineering command platform for solar car projects featuring AI-powered telemetry predictive analytics, hierarchical team management, and real-time coordination tools.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "AI-Powered Telemetry Monitoring",
+    "Predictive Failure Detection",
+    "Hierarchical Team Management",
+    "AI Engineering Assistant"
+  ]
+}
