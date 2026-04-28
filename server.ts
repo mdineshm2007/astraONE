@@ -10,7 +10,7 @@ import dotenv from "dotenv";
 import admin from "firebase-admin";
 import { createFolder, uploadFile, getOrCreateFolder, createOAuth2Client } from "./src/services/driveService";
 
-dotenv.config();
+dotenv.config();//dfjhjhgdf
 
 // Initialize Firebase Admin
 if (!admin.apps.length) {
@@ -39,39 +39,39 @@ async function startServer() {
 
   const getAuthForUser = async (uid: string) => {
     const rtdb = admin.database();
-    
+
     // 1. Try to get Master Tokens first (Centralized Mode)
     const masterSnapshot = await rtdb.ref('drive_config/tokens').once("value");
     let tokens = masterSnapshot.exists() ? masterSnapshot.val() : null;
-    
+
     // 2. Fallback to User-specific tokens if no Master token exists
     if (!tokens && uid) {
       const userSnapshot = await rtdb.ref(`users/${uid}/drive_tokens`).once("value");
       if (userSnapshot.exists()) tokens = userSnapshot.val();
     }
-    
+
     if (!tokens) throw new Error("Google Drive not connected by Captain. Please contact your administrator.");
-    
+
     const oauth2Client = createOAuth2Client();
     oauth2Client.setCredentials(tokens);
-    
+
     // Auto-refresh if needed
     if (tokens.expiry_date && tokens.expiry_date <= Date.now()) {
       try {
         const { credentials } = await oauth2Client.refreshAccessToken();
         const updateData = { ...tokens, ...credentials };
-        
+
         // Update both locations
         if (masterSnapshot.exists()) await rtdb.ref('drive_config/tokens').update(updateData);
         if (uid) await rtdb.ref(`users/${uid}/drive_tokens`).update(updateData);
-        
+
         oauth2Client.setCredentials(updateData);
       } catch (e) {
         console.error("Token refresh failed:", e);
         throw new Error("Google Drive session expired. Captain must reconnect.");
       }
     }
-    
+
     return oauth2Client;
   };
 
@@ -109,13 +109,13 @@ async function startServer() {
     try {
       const { code, state } = req.query; // state contains the uid
       if (!code || !state) return res.redirect("http://localhost:3000/?error=missing_params");
-      
+
       const oauth2Client = createOAuth2Client();
       const { tokens } = await oauth2Client.getToken(code as string);
       // Also save as Master Tokens for the team
       await admin.database().ref('drive_config/tokens').set(tokens);
       await admin.database().ref(`users/${state}/drive_tokens`).set(tokens);
-      
+
       res.redirect("http://localhost:3000/workspace?auth=success");
     } catch (error: any) {
       console.error("OAuth Redirect Error:", error);
@@ -157,7 +157,7 @@ async function startServer() {
     try {
       const { type, data, context, uid } = req.body;
       console.log(`Unified AI Analyzing ${type} for user ${uid}`);
-      
+
       let userContext = "";
       if (uid) {
         try {
@@ -165,11 +165,11 @@ async function startServer() {
           if (snapshot.exists()) {
             userContext = "\nUser Context: " + Object.values(snapshot.val()).map((l: any) => l.action).join(", ");
           }
-        } catch (e) {}
+        } catch (e) { }
       }
 
       let systemPrompt = "You are ASTRA AI, the core engineering brain of the Solar Car mission. Analyze the data provided and give a sharp, 1-sentence technical directive. Focus on prediction and efficiency.";
-      
+
       if (type === 'TASK_PROGRESS') {
         systemPrompt = "You are ASTRA AI, the project intelligence lead. Analyze the task telemetry and progress updates provided. Follow the specific instructions in the context. Provide a concise, professional summary (max 4 sentences) of the tasks, their progress, and potential bottlenecks. Use engineering terminology.";
       }
@@ -194,9 +194,9 @@ async function startServer() {
   app.post("/api/ai/team-analysis", async (req, res) => {
     try {
       const { tasks = [], members = [], progress = [], delays = [], subsystem = "General" } = req.body;
-      
+
       console.log(`AI Request: Analyzing team performance for ${subsystem}`);
-      
+
       const systemPrompt = `You are an AI Project Manager for a solar car team.
 Analyze the provided telemetry and return a strategic assessment.
 Return STRICT JSON format:
@@ -229,7 +229,7 @@ Delays: ${JSON.stringify(delays)}
 
       const responseContent = completion.choices[0]?.message?.content;
       console.log("AI Response:", responseContent);
-      
+
       const analysis = JSON.parse(responseContent || "{}");
       res.json(analysis);
     } catch (error) {
@@ -241,11 +241,11 @@ Delays: ${JSON.stringify(delays)}
   app.post("/api/ai/cost-analysis", async (req, res) => {
     try {
       const { finances, teamId, currency } = req.body;
-      
+
       // Build a compact BOM summary from finances data
       const teams = finances?.teams || {};
       const bom = finances?.bom || {};
-      
+
       // Collect all BOM rows into a simple list
       const allParts: string[] = [];
       for (const [team, rows] of Object.entries(bom)) {
@@ -257,13 +257,13 @@ Delays: ${JSON.stringify(delays)}
           }
         }
       }
-      
+
       const systemPrompt = `You are the ASTRA Financial Intelligence.
 Return EXACTLY ONE short bullet point per part in this format:
 • Part Name - Team - ₹Cost
 Then end with one line: "Total: ₹X"
 DO NOT write anything else. NO introductory text. NO explanation.`;
-      
+
       const userPrompt = `Currency: ${currency || 'INR (₹)'}
 Team Totals: ${JSON.stringify(teams)}
 Parts: ${allParts.length > 0 ? allParts.join(', ') : 'No parts entered yet'}
@@ -319,17 +319,17 @@ ${teamId ? `Focus Team: ${teamId}` : 'All teams'}`;
       const { uid } = req.body;
       const auth = await getAuthForUser(uid);
       const root = await getOrCreateFolder(auth, "ASTRA_SOLAR_CAR_2026");
-      
+
       const pRoot = await getOrCreateFolder(auth, "PROGRESS_TRACKING", root.id);
       const bRoot = await getOrCreateFolder(auth, "BILLING_AND_FINANCE", root.id);
-      
+
       const teams = ["Steering", "Suspension", "Brakes", "Transmission", "Design", "Electricals", "Innovation", "Autonomous", "Cost", "PRO"];
       const bTeams = [...teams, "Seat", "Others", "Safety_Equipments", "Dashboard", "Wheel_Tyre", "Frame", "Drive_Train"];
-      
+
       const map: any = { progress: {}, bills: {} };
-      for(const t of teams) map.progress[t] = await getOrCreateFolder(auth, `${t}_Progress`, pRoot.id);
-      for(const t of bTeams) map.bills[t] = await getOrCreateFolder(auth, `${t}_Bills`, bRoot.id);
-      
+      for (const t of teams) map.progress[t] = await getOrCreateFolder(auth, `${t}_Progress`, pRoot.id);
+      for (const t of bTeams) map.bills[t] = await getOrCreateFolder(auth, `${t}_Bills`, bRoot.id);
+
       await admin.database().ref('drive_folders').set(map);
       await admin.database().ref('drive_config/root').set(root);
       res.json({ success: true });
@@ -349,9 +349,9 @@ ${teamId ? `Focus Team: ${teamId}` : 'All teams'}`;
       const fileStream = fs.createReadStream(req.file!.path);
       const date = new Date().toISOString().split('T')[0];
       const name = category === 'bills' ? `${date}_${teamId}_${amount || '0'}.pdf` : req.file!.originalname;
-      
+
       const result = await uploadFile(auth, name, req.file!.mimetype, fileStream, folderRef.val().id);
-      
+
       if (category === 'bills' && amount) {
         const amt = parseFloat(amount);
         await rtdb.ref('finances/teams').child(teamId).transaction(c => (c || 0) + amt);
@@ -384,7 +384,7 @@ ${teamId ? `Focus Team: ${teamId}` : 'All teams'}`;
     const cutoff = sixtyDaysAgo.toISOString();
 
     const collections = ['tasks', 'posts', 'queries', 'logs', 'task_updates'];
-    
+
     for (const col of collections) {
       const ref = rtdb.ref(col);
       const snapshot = await ref.once("value");
