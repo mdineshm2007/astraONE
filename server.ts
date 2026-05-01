@@ -6,7 +6,7 @@ import { fileURLToPath } from "url";
 import fs from "fs";
 import dotenv from "dotenv";
 import admin from "firebase-admin";
-import { createFolder, uploadFile, getOrCreateFolder, createOAuth2Client } from "./src/services/driveService";
+import { createFolder, uploadFile, getOrCreateFolder, createOAuth2Client } from "./src/services/driveService.ts";
 
 dotenv.config();//dfjhjhgdf
 
