@@ -69,6 +69,16 @@ app.use((req, res, next) => {
   next();
 });
 
+// Global Error Handler to prevent HTML error pages on Vercel
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error("[Global Error]", err);
+  res.status(500).json({ 
+    error: "Internal Server Error", 
+    message: err.message,
+    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+  });
+});
+
 // Firebase REST Helper (Fallback if Admin SDK fails)
 const firebaseRest = {
   get: async (path: string) => {
