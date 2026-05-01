@@ -40,6 +40,7 @@ export interface UserProfile {
   lastActive?: any;
   department?: string;
   year?: string;
+  onboarded?: boolean;
 }
 
 export interface Subsystem {
@@ -61,7 +62,7 @@ export type TaskPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
 export interface Task {
   id: string;
   subsystem: string;
-  taskType?: 'REPORT' | 'MANUFACTURING';
+  taskType?: 'REPORT' | 'MANUFACTURING' | 'MEDIA_SPONSOR';
   workstream?: 'R&D' | 'Hardware' | 'Software';
   title: string;
   description: string;

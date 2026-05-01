@@ -52,15 +52,18 @@ export default function DriveWorkspace() {
     formData.append('category', category);
     formData.append('uid', profile?.uid || '');
 
+    console.log(`Starting upload for ${category} team ${teamId}...`);
     try {
+      // No timeout here — large files need time to upload
       const response = await fetch('/api/drive/upload', {
         method: 'POST',
         body: formData
       });
+      console.log(`Upload response received: ${response.status}`);
       
       if (!response.ok) {
         const text = await response.text();
-        throw new Error(`Upload failed (${response.status}): ${text || 'Unknown Error'}`);
+        throw new Error(`Upload failed (${response.status}): ${text || 'Server error — check backend logs'}`);
       }
 
       const result = await response.json();
@@ -122,11 +125,16 @@ export default function DriveWorkspace() {
     if (!window.confirm('Initialize or Sync Google Drive Folder structure?')) return;
     setIsUploading('setup');
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
+
       const response = await fetch('/api/drive/setup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: profile?.email, uid: profile?.uid })
+        body: JSON.stringify({ email: profile?.email, uid: profile?.uid }),
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
       
       if (!response.ok) {
         const text = await response.text();
@@ -137,7 +145,6 @@ export default function DriveWorkspace() {
       if (result.success) {
         alert('Drive Sync Complete!');
       } else {
-        // If the error indicates missing auth, trigger connection
         if (result.error?.includes('not connected') || result.error?.includes('auth')) {
           if (window.confirm('Drive connection expired or missing. Reconnect now?')) {
             handleConnectGoogle();
@@ -147,7 +154,11 @@ export default function DriveWorkspace() {
         }
       }
     } catch (error: any) {
-      alert(`Sync Process Error: ${error.message}`);
+      if (error.name === 'AbortError') {
+        alert('Sync timed out. The backend server may be unreachable. Make sure the server is running and restart npm run dev.');
+      } else {
+        alert(`Sync Process Error: ${error.message}`);
+      }
     } finally {
       setIsUploading(null);
     }
@@ -155,7 +166,12 @@ export default function DriveWorkspace() {
 
   const handleConnectGoogle = async () => {
     try {
-      const res = await fetch(`/api/auth/google/url?uid=${profile?.uid}`);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+      const res = await fetch(`/api/auth/google/url?uid=${profile?.uid}`, { signal: controller.signal });
+      clearTimeout(timeoutId);
+
       if (!res.ok) {
         const text = await res.text();
         throw new Error(`Auth Error (${res.status}): ${text || 'Unknown Error'}`);
@@ -165,7 +181,11 @@ export default function DriveWorkspace() {
         window.location.href = data.url;
       }
     } catch (e: any) {
-      alert("Failed to get Google Auth URL: " + e.message);
+      if (e.name === 'AbortError') {
+        alert('Connection timed out. The backend server may be unreachable. Make sure npm run dev is running and try again.');
+      } else {
+        alert('Failed to get Google Auth URL: ' + e.message);
+      }
     }
   };
 

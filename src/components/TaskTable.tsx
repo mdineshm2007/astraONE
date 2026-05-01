@@ -16,7 +16,7 @@ function resolveAssigneeName(task: Task): string {
   //    Use a placeholder — the captain will see uid fallback.
   //    In practice the email map will resolve most cases via resolveNameFromEmail.
   if (task.assignedToId) {
-    return `Member (${task.assignedToId.slice(0, 6)}…)`;
+    return `Member (${(task.assignedToId || '').slice(0, 6)}…)`;
   }
   return 'Unassigned';
 }
@@ -165,9 +165,11 @@ export default function TaskTable({ tasks, onUpdateProgress, onDeleteTask, canMa
                   </td>
                   <td className="px-6 py-4">
                     <span className={`px-2.5 py-1 rounded-full text-[9px] font-black tracking-widest uppercase border ${
-                      task.taskType === 'MANUFACTURING' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' : 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                      task.taskType === 'MANUFACTURING' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' : 
+                      task.taskType === 'MEDIA_SPONSOR' ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' :
+                      'bg-blue-500/10 text-blue-400 border-blue-500/20'
                     }`}>
-                      {task.taskType || 'REPORT'}
+                      {task.taskType?.replace('_', ' ') || 'REPORT'}
                     </span>
                   </td>
                   <td className="px-6 py-4">

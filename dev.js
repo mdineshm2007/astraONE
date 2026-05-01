@@ -20,8 +20,8 @@ const viteProcess = spawn('node', [vitePath], {
     cwd: __dirname
 });
 
-// Start Express backend
-const serverProcess = spawn('node', [tsxPath, 'server.ts'], { 
+// Start Express backend with watch mode so it auto-restarts on changes
+const serverProcess = spawn('node', [tsxPath, 'watch', 'server.ts'], { 
     stdio: 'inherit',
     cwd: __dirname
 });

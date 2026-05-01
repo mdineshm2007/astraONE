@@ -31,7 +31,13 @@ export function subscribeToPendingMembers(teamId: string, callback: (members: Us
       callback([]);
       return;
     }
-    const members = Object.values(data) as UserProfile[];
+    
+    // Use entries to preserve the key as UID
+    const members = Object.entries(data).map(([key, val]: [string, any]) => {
+      const finalUid = (val && val.uid && typeof val.uid === 'string' && val.uid.length > 5) ? val.uid : key;
+      return { ...val, uid: finalUid };
+    }) as UserProfile[];
+
     const pending = members.filter(profile => {
       if (teamId === 'all') {
         return profile.teams?.some(t => t.status === 'PENDING');
@@ -62,11 +68,14 @@ export function subscribeToMultipleTeamsPendingMembers(teamIds: string[], callba
       callback([]);
       return;
     }
-    // Ensure UID is present from the key if it's missing in the value
-    const members = Object.entries(data).map(([uid, val]: [string, any]) => ({
-      ...val,
-      uid: val.uid || uid
-    })) as UserProfile[];
+    // Ensure UID is present from the key if it's missing or invalid in the value
+    const members = Object.entries(data).map(([key, val]: [string, any]) => {
+      const finalUid = (val && val.uid && typeof val.uid === 'string' && val.uid.length > 5) ? val.uid : key;
+      return {
+        ...val,
+        uid: finalUid
+      };
+    }) as UserProfile[];
 
     const filtered = members.filter(profile => 
       profile.teams?.some(t => t.status === 'PENDING' && teamIds.includes(t.teamId))
@@ -77,30 +86,46 @@ export function subscribeToMultipleTeamsPendingMembers(teamIds: string[], callba
 
 
 export async function approveMember(uid: string, teamId: string) {
-  const userRef = ref(rtdb, `users/${uid}`);
-  const snapshot = await get(userRef);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
   
-  if (snapshot.exists()) {
-    const profile = snapshot.val() as UserProfile;
-    const teams = profile.teams || [];
-    const updatedTeams = teams.map(t => 
-      t.teamId === teamId ? { ...t, status: 'APPROVED' as const } : t
-    );
-    const approvedTeams = updatedTeams.filter(t => t.status === 'APPROVED').map(t => t.teamId);
-    await update(userRef, { teams: updatedTeams, approvedTeams });
+  try {
+    const response = await fetch('/api/users/approve', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ uid, teamId }),
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || "Failed to approve member");
+    }
+  } catch (error: any) {
+    if (error.name === 'AbortError') throw new Error("Approval timed out. Backend is not responding.");
+    throw error;
   }
 }
 
 export async function rejectMember(uid: string, teamId: string) {
-  const userRef = ref(rtdb, `users/${uid}`);
-  const snapshot = await get(userRef);
-  
-  if (snapshot.exists()) {
-    const profile = snapshot.val() as UserProfile;
-    const teams = profile.teams || [];
-    const updatedTeams = teams.filter(t => t.teamId !== teamId);
-    const approvedTeams = updatedTeams.filter(t => t.status === 'APPROVED').map(t => t.teamId);
-    await update(userRef, { teams: updatedTeams, approvedTeams });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+  try {
+    const response = await fetch('/api/users/reject', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ uid, teamId }),
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || "Failed to reject member");
+    }
+  } catch (error: any) {
+    if (error.name === 'AbortError') throw new Error("Rejection timed out. Backend is not responding.");
+    throw error;
   }
 }
 
@@ -125,11 +150,14 @@ export function subscribeToUsers(callback: (users: UserProfile[]) => void) {
       callback([]);
       return;
     }
-    // Always pull uid from the database key in case it's missing in the value
-    const users = Object.entries(data).map(([uid, val]: [string, any]) => ({
-      ...val,
-      uid: val.uid || uid,
-    })) as UserProfile[];
+    // Always pull uid from the database key in case it's missing or invalid in the value
+    const users = Object.entries(data).map(([key, val]: [string, any]) => {
+      const finalUid = (val && val.uid && typeof val.uid === 'string' && val.uid.length > 5) ? val.uid : key;
+      return {
+        ...val,
+        uid: finalUid,
+      };
+    }) as UserProfile[];
     callback(users);
   });
 }

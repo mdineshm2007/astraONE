@@ -27,7 +27,7 @@ export default function Teams() {
     title: '', description: '', priority: 'MEDIUM' as TaskPriority,
     status: 'PENDING' as TaskStatus, assignedTo: '', assignedToId: '',
     deadline: '', dependencies: [] as string[],
-    workstream: 'R&D' as any, taskType: 'REPORT' as 'REPORT' | 'MANUFACTURING', startDate: new Date().toISOString().split('T')[0],
+    workstream: 'R&D' as any, taskType: 'REPORT' as 'REPORT' | 'MANUFACTURING' | 'MEDIA_SPONSOR', startDate: new Date().toISOString().split('T')[0],
     requirements: '',
   });
   const [dailyLog, setDailyLog] = useState({
@@ -270,6 +270,15 @@ export default function Teams() {
                     <span className={`px-2 py-0.5 text-[8px] font-black rounded-full uppercase ${priorityColors[task.priority]}`}>{task.priority}</span>
                     <span className={`px-2 py-0.5 text-[8px] font-black rounded-full uppercase ${statusColors[task.status]}`}>{task.status.replace('_', ' ')}</span>
                     <span className="px-2 py-0.5 text-[8px] font-black rounded-full uppercase bg-white/5 text-slate-500">{task.workstream || 'R&D'}</span>
+                    {task.taskType && (
+                      <span className={`px-2 py-0.5 text-[8px] font-black rounded-full uppercase ${
+                        task.taskType === 'MANUFACTURING' ? 'bg-orange-500/20 text-orange-400' :
+                        task.taskType === 'MEDIA_SPONSOR' ? 'bg-purple-500/20 text-purple-400' :
+                        'bg-blue-500/20 text-blue-400'
+                      }`}>
+                        {task.taskType.replace('_', ' ')}
+                      </span>
+                    )}
                   </div>
                   <h3 className="text-base font-bold text-white">{task.title}</h3>
                   {task.description && <p className="text-slate-400 text-sm leading-relaxed">{task.description}</p>}
@@ -364,6 +373,7 @@ export default function Teams() {
                       className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl outline-none focus:ring-2 focus:ring-primary">
                       <option value="REPORT">Report Phase (Doc, Design)</option>
                       <option value="MANUFACTURING">Manufacturing (Build, Weld)</option>
+                      <option value="MEDIA_SPONSOR">Media and Sponsor</option>
                     </select>
                   </div>
                   <div className="space-y-1.5">
@@ -456,7 +466,7 @@ export default function Teams() {
                     <div className="w-2 h-8 bg-primary rounded-full" />
                     DAILY PROGRESS LOG
                   </h2>
-                  <p className="text-slate-500 text-sm mt-1 uppercase font-bold tracking-widest">{progressTask.title}</p>
+                  <p className="text-slate-500 text-sm mt-1 uppercase font-bold tracking-widest">{progressTask.title} {progressTask.taskType && `• ${progressTask.taskType.replace('_', ' ')}`}</p>
                 </div>
                 <button onClick={() => setProgressTask(null)} className="p-2 hover:bg-white/5 rounded-full transition-colors">
                   <Plus className="rotate-45 text-slate-500" />

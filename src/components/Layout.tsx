@@ -17,6 +17,7 @@ export default function Layout({ children, currentView, onViewChange }: LayoutPr
   const { profile, logout } = useAuth();
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
 
   const [isProfileModalOpen, setProfileModalOpen] = useState(false);
   const [editName, setEditName] = useState('');
@@ -39,7 +40,8 @@ export default function Layout({ children, currentView, onViewChange }: LayoutPr
       await updateUserProfile(profile.uid, {
         displayName: editName,
         photoURL: editPhoto,
-        year: editYear
+        year: editYear,
+        onboarded: true
       });
       setProfileModalOpen(false);
     } catch (error) {
@@ -72,6 +74,17 @@ export default function Layout({ children, currentView, onViewChange }: LayoutPr
     });
   }, [profile]);
 
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
   if (!profile) return null;
 
   const menuItems = [
@@ -79,7 +92,6 @@ export default function Layout({ children, currentView, onViewChange }: LayoutPr
     { id: 'teams', label: 'Engineering Hub', icon: Users, roles: ['CAPTAIN', 'TEAM_LEAD', 'MEMBER'] },
     { id: 'posts', label: 'Engineering Feed', icon: Globe, roles: ['CAPTAIN', 'TEAM_LEAD', 'MEMBER'] },
     { id: 'queries', label: 'Query Panel', icon: HelpCircle, roles: ['CAPTAIN', 'TEAM_LEAD', 'MEMBER'] },
-    { id: 'notebooks', label: 'Personal Notes', icon: NotebookIcon, roles: ['CAPTAIN', 'TEAM_LEAD', 'MEMBER'] },
     { id: 'workspace', label: 'Cloud Infrastructure', icon: Database, roles: ['CAPTAIN', 'TEAM_LEAD', 'MEMBER'] },
     { id: 'admin', label: 'Admin Control', icon: ShieldAlert, roles: ['CAPTAIN', 'TEAM_LEAD'], badge: pendingCount },
   ];
@@ -187,9 +199,9 @@ export default function Layout({ children, currentView, onViewChange }: LayoutPr
              </button>
              <div className="h-8 w-[1px] bg-white/5" />
              <div className="flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full ${profile.isOnline ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-slate-500'}`} />
+                <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-slate-500'}`} />
                 <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                  {profile.isOnline ? 'Active Now' : 'Offline'}
+                  {isOnline ? 'Active Now' : 'Offline'}
                 </span>
              </div>
           </div>

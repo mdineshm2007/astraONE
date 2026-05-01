@@ -5,11 +5,11 @@ import Layout from './components/Layout';
 import { AppView } from './types';
 import Dashboard from './components/Dashboard';
 import Teams from './components/Teams';
-import Notebooks from './components/Notebooks';
 import Posts from './components/Posts';
 import Queries from './components/Queries';
 import Login from './components/Login';
 import TeamSelection from './components/TeamSelection';
+import ProfileOnboarding from './components/ProfileOnboarding';
 import AdminPanel from './components/AdminPanel';
 import DriveWorkspace from './components/DriveWorkspace';
 import { ShieldAlert } from 'lucide-react';
@@ -63,6 +63,10 @@ function AppContent() {
   const isPrivileged = privilegedRoles.includes(profile?.role || '');
 
   if (!isPrivileged && profile?.role === 'MEMBER') {
+    if (!profile.onboarded) {
+      return <ProfileOnboarding />;
+    }
+    
     const hasApprovedTeam = profile.teams?.some(t => t.status === 'APPROVED');
     if (!hasApprovedTeam) {
       // Show TeamSelection — it handles both "choose teams" and "pending approval" states
@@ -74,7 +78,6 @@ function AppContent() {
     switch (currentView) {
       case 'dashboard': return <Dashboard />;
       case 'teams': return <Teams />;
-      case 'notebooks': return <Notebooks />;
       case 'posts': return <Posts />;
       case 'queries': return <Queries />;
       case 'admin': return <AdminPanel />;

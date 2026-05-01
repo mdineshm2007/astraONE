@@ -3,8 +3,6 @@ import cors from "cors";
 // Replaced vite middleware import 
 import path from "path";
 import { fileURLToPath } from "url";
-import Groq from "groq-sdk";
-import multer from "multer";
 import fs from "fs";
 import dotenv from "dotenv";
 import admin from "firebase-admin";
@@ -12,67 +10,151 @@ import { createFolder, uploadFile, getOrCreateFolder, createOAuth2Client } from 
 
 dotenv.config();//dfjhjhgdf
 
-// Initialize Firebase Admin
-if (!admin.apps.length) {
-  const serviceAccount = JSON.parse(fs.readFileSync("./firebase-admin-sdk.json", "utf8"));
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    databaseURL: process.env.FIREBASE_DATABASE_URL
-  });
-  console.log("Firebase Admin Initialized");
-}
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Initialize Firebase Admin
+if (!admin.apps.length) {
+  try {
+    const serviceAccountPath = path.join(__dirname, "firebase-admin-sdk.json");
+    const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, "utf8"));
+    
+    // Fix potential newline issues in private key
+    if (serviceAccount.private_key) {
+      serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
+    }
+
+    console.log(`[Firebase] Initializing for project: ${serviceAccount.project_id}`);
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+      databaseURL: process.env.FIREBASE_DATABASE_URL
+    });
+    console.log("[Firebase] Admin SDK Initialized Successfully");
+  } catch (err: any) {
+    console.error("[Firebase] Initialization Failed:", err.message);
+    // Fallback: If service account fails, some operations might still work if DATABASE_URL is correct
+    // and the environment has default credentials, but usually this is fatal.
+  }
+}
+
+import Groq from "groq-sdk";
+import multer from "multer";
+import os from "os";
+
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-const upload = multer({ dest: "uploads/" });
+const upload = multer({ dest: os.tmpdir() });
 
-async function startServer() {
-  const app = express();
-  const PORT = 3001;
+const app = express();
+const PORT = 3001;
 
-  app.use(express.json());
-  app.use(cors());
+app.use(express.json());
+app.use(cors());
 
-  app.get("/api/test", (req, res) => res.json({ ok: true }));
+app.use((req, res, next) => {
+  console.log(`[${new Date().toLocaleTimeString()}] ${req.method} ${req.url}`);
+  next();
+});
+
+// Firebase REST Helper (Fallback if Admin SDK fails)
+const firebaseRest = {
+  get: async (path: string) => {
+    try {
+      const cleanUrl = (process.env.FIREBASE_DATABASE_URL || "").replace(/\/$/, "");
+      const cleanPath = path.startsWith("/") ? path : `/${path}`;
+      const url = `${cleanUrl}${cleanPath}.json?auth=${process.env.FIREBASE_DATABASE_SECRET}`;
+      const res = await fetch(url);
+      if (!res.ok) {
+        const errText = await res.text();
+        console.error(`[Firebase REST] GET ${path} failed (${res.status}):`, errText);
+        return null;
+      }
+      return res.json();
+    } catch (e) {
+      console.error(`[Firebase REST] GET ${path} error:`, e);
+      return null;
+    }
+  },
+  update: async (path: string, data: any) => {
+    try {
+      const cleanUrl = (process.env.FIREBASE_DATABASE_URL || "").replace(/\/$/, "");
+      const cleanPath = path.startsWith("/") ? path : `/${path}`;
+      const url = `${cleanUrl}${cleanPath}.json?auth=${process.env.FIREBASE_DATABASE_SECRET}`;
+      const res = await fetch(url, {
+        method: 'PATCH',
+        body: JSON.stringify(data)
+      });
+      if (!res.ok) {
+        const errText = await res.text();
+        console.error(`[Firebase REST] UPDATE ${path} failed (${res.status}):`, errText);
+        return null;
+      }
+      return res.json();
+    } catch (e) {
+      console.error(`[Firebase REST] UPDATE ${path} error:`, e);
+      return null;
+    }
+  },
+  remove: async (path: string) => {
+    try {
+      const cleanUrl = (process.env.FIREBASE_DATABASE_URL || "").replace(/\/$/, "");
+      const cleanPath = path.startsWith("/") ? path : `/${path}`;
+      const url = `${cleanUrl}${cleanPath}.json?auth=${process.env.FIREBASE_DATABASE_SECRET}`;
+      const res = await fetch(url, { method: 'DELETE' });
+      if (!res.ok) {
+        const errText = await res.text();
+        console.error(`[Firebase REST] REMOVE ${path} failed (${res.status}):`, errText);
+      }
+    } catch (e) {
+      console.error(`[Firebase REST] REMOVE ${path} error:`, e);
+    }
+  }
+};
+
+app.get("/api/test", (req, res) => res.json({ ok: true }));
 
   const getAuthForUser = async (uid: string) => {
-    const rtdb = admin.database();
+    // Try REST first as it is more reliable given current credential issues
+    try {
+      const masterTokens = await firebaseRest.get('drive_config/tokens');
+      let tokens = masterTokens;
 
-    // 1. Try to get Master Tokens first (Centralized Mode)
-    const masterSnapshot = await rtdb.ref('drive_config/tokens').once("value");
-    let tokens = masterSnapshot.exists() ? masterSnapshot.val() : null;
-
-    // 2. Fallback to User-specific tokens if no Master token exists
-    if (!tokens && uid) {
-      const userSnapshot = await rtdb.ref(`users/${uid}/drive_tokens`).once("value");
-      if (userSnapshot.exists()) tokens = userSnapshot.val();
-    }
-
-    if (!tokens) throw new Error("Google Drive not connected by Captain. Please contact your administrator.");
-
-    const oauth2Client = createOAuth2Client();
-    oauth2Client.setCredentials(tokens);
-
-    // Auto-refresh if needed
-    if (tokens.expiry_date && tokens.expiry_date <= Date.now()) {
-      try {
-        const { credentials } = await oauth2Client.refreshAccessToken();
-        const updateData = { ...tokens, ...credentials };
-
-        // Update both locations
-        if (masterSnapshot.exists()) await rtdb.ref('drive_config/tokens').update(updateData);
-        if (uid) await rtdb.ref(`users/${uid}/drive_tokens`).update(updateData);
-
-        oauth2Client.setCredentials(updateData);
-      } catch (e) {
-        console.error("Token refresh failed:", e);
-        throw new Error("Google Drive session expired. Captain must reconnect.");
+      if (!tokens && uid) {
+        tokens = await firebaseRest.get(`users/${uid}/drive_tokens`);
       }
-    }
 
-    return oauth2Client;
+      if (!tokens) throw new Error("Google Drive not connected. Contact administrator.");
+
+      const oauth2Client = createOAuth2Client();
+      oauth2Client.setCredentials(tokens);
+
+      // Auto-refresh if needed
+      if (tokens.expiry_date && tokens.expiry_date <= Date.now()) {
+        try {
+          const { credentials } = await oauth2Client.refreshAccessToken();
+          const updateData = { ...tokens, ...credentials };
+          await firebaseRest.update('drive_config/tokens', updateData);
+          if (uid) await firebaseRest.update(`users/${uid}/drive_tokens`, updateData);
+          oauth2Client.setCredentials(updateData);
+        } catch (e) {
+          console.error("Token refresh failed:", e);
+          throw new Error("Google Drive session expired.");
+        }
+      }
+      return oauth2Client;
+    } catch (error: any) {
+      // Fallback to Admin SDK if REST fails
+      const rtdb = admin.database();
+      const masterSnapshot = await rtdb.ref('drive_config/tokens').once("value");
+      let tokens = masterSnapshot.exists() ? masterSnapshot.val() : null;
+      if (!tokens && uid) {
+        const userSnapshot = await rtdb.ref(`users/${uid}/drive_tokens`).once("value");
+        if (userSnapshot.exists()) tokens = userSnapshot.val();
+      }
+      if (!tokens) throw new Error(error.message);
+      const oauth2Client = createOAuth2Client();
+      oauth2Client.setCredentials(tokens);
+      return oauth2Client;
+    }
   };
 
   // Google OAuth Endpoints
@@ -133,6 +215,58 @@ async function startServer() {
       res.json({ success: true });
     } catch (error: any) {
       console.error("Disconnect Error:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // User Approval Endpoints
+  app.post("/api/users/approve", async (req, res) => {
+    try {
+      const { uid, teamId } = req.body;
+      if (!uid || !teamId) return res.status(400).json({ error: "UID and TeamID required" });
+      
+      console.log(`[Approval] Attempting to approve user ${uid} for team ${teamId}`);
+      
+      const profile = await firebaseRest.get(`users/${uid}`);
+      if (profile) {
+        console.log(`[Approval] Found profile for ${uid}, current teams:`, profile.teams);
+        const teams = profile.teams || [];
+        const updatedTeams = teams.map((t: any) => 
+          t.teamId === teamId ? { ...t, status: 'APPROVED' } : t
+        );
+        const approvedTeams = updatedTeams.filter((t: any) => t.status === 'APPROVED').map((t: any) => t.teamId);
+        
+        console.log(`[Approval] Updating user ${uid} with approved team: ${teamId}`);
+        const result = await firebaseRest.update(`users/${uid}`, { teams: updatedTeams, approvedTeams });
+        
+        if (result) {
+          res.json({ success: true });
+        } else {
+          res.status(500).json({ error: "Database update failed" });
+        }
+      } else {
+        console.error(`[Approval] User ${uid} not found in database path users/${uid}`);
+        res.status(404).json({ error: "User not found in database" });
+      }
+    } catch (error: any) {
+      console.error("Approval Error:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/users/reject", async (req, res) => {
+    try {
+      const { uid, teamId } = req.body;
+      const profile = await firebaseRest.get(`users/${uid}`);
+      if (profile) {
+        const teams = (profile.teams || []).filter((t: any) => t.teamId !== teamId);
+        const approvedTeams = teams.filter((t: any) => t.status === 'APPROVED').map((t: any) => t.teamId);
+        await firebaseRest.update(`users/${uid}`, { teams, approvedTeams });
+        res.json({ success: true });
+      } else {
+        res.status(404).json({ error: "User not found" });
+      }
+    } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
   });
@@ -318,22 +452,36 @@ ${teamId ? `Focus Team: ${teamId}` : 'All teams'}`;
     try {
       const { uid } = req.body;
       const auth = await getAuthForUser(uid);
+      console.log(`[Drive] Setting up workspace for UID: ${uid}`);
+      
       const root = await getOrCreateFolder(auth, "ASTRA_SOLAR_CAR_2026");
-
       const pRoot = await getOrCreateFolder(auth, "PROGRESS_TRACKING", root.id);
       const bRoot = await getOrCreateFolder(auth, "BILLING_AND_FINANCE", root.id);
 
-      const teams = ["Steering", "Suspension", "Brakes", "Transmission", "Design", "Electricals", "Innovation", "Autonomous", "Cost", "PRO"];
+      const teams = ["Steering", "Suspension", "Brakes", "Transmission", "Design", "Electricals", "Innovation", "Autonomous", "Cost", "PRO", "Media-Sponsorship"];
       const bTeams = [...teams, "Seat", "Others", "Safety_Equipments", "Dashboard", "Wheel_Tyre", "Frame", "Drive_Train"];
 
       const map: any = { progress: {}, bills: {} };
-      for (const t of teams) map.progress[t] = await getOrCreateFolder(auth, `${t}_Progress`, pRoot.id);
-      for (const t of bTeams) map.bills[t] = await getOrCreateFolder(auth, `${t}_Bills`, bRoot.id);
+      
+      console.log("[Drive] Parallelizing 28 folder creations...");
+      
+      // Parallelize progress folders
+      await Promise.all(teams.map(async (t) => {
+        map.progress[t] = await getOrCreateFolder(auth, `${t}_Progress`, pRoot.id);
+      }));
 
-      await admin.database().ref('drive_folders').set(map);
-      await admin.database().ref('drive_config/root').set(root);
+      // Parallelize billing folders
+      await Promise.all(bTeams.map(async (t) => {
+        map.bills[t] = await getOrCreateFolder(auth, `${t}_Bills`, bRoot.id);
+      }));
+
+      await firebaseRest.update('drive_folders', map);
+      await firebaseRest.update('drive_config/root', root);
+      
+      console.log("[Drive] Workspace setup complete");
       res.json({ success: true });
     } catch (error: any) {
+      console.error("[Drive] Setup Error:", error);
       res.status(500).json({ error: error.message });
     }
   });
@@ -342,25 +490,33 @@ ${teamId ? `Focus Team: ${teamId}` : 'All teams'}`;
     try {
       const { teamId, category, amount, uid } = req.body;
       const auth = await getAuthForUser(uid);
-      const rtdb = admin.database();
-      const folderRef = await rtdb.ref(`drive_folders/${category}/${teamId}`).once("value");
-      if (!folderRef.exists()) throw new Error("Team folder not initialized");
+      
+      const folderData = await firebaseRest.get(`drive_folders/${category}/${teamId}`);
+      if (!folderData || !folderData.id) throw new Error("Team folder not initialized. Please click Sync Drive.");
 
       const fileStream = fs.createReadStream(req.file!.path);
       const date = new Date().toISOString().split('T')[0];
       const name = category === 'bills' ? `${date}_${teamId}_${amount || '0'}.pdf` : req.file!.originalname;
 
-      const result = await uploadFile(auth, name, req.file!.mimetype, fileStream, folderRef.val().id);
+      const result = await uploadFile(auth, name, req.file!.mimetype, fileStream, folderData.id);
 
       if (category === 'bills' && amount) {
         const amt = parseFloat(amount);
-        await rtdb.ref('finances/teams').child(teamId).transaction(c => (c || 0) + amt);
-        await rtdb.ref('finances/overall').transaction(c => (c || 0) + amt);
-        await rtdb.ref('finance_logs').push({ teamId, amount: amt, timestamp: new Date().toISOString(), fileName: name, fileLink: result.webViewLink });
+        const currentTeams = await firebaseRest.get(`finances/teams/${teamId}`) || 0;
+        const currentOverall = await firebaseRest.get('finances/overall') || 0;
+        
+        await firebaseRest.update(`finances/teams`, { [teamId]: currentTeams + amt });
+        await firebaseRest.update('finances', { overall: currentOverall + amt });
+        
+        const logData = { teamId, amount: amt, timestamp: new Date().toISOString(), fileName: name, fileLink: result.webViewLink };
+        const pushUrl = `${process.env.FIREBASE_DATABASE_URL}finance_logs.json?auth=${process.env.FIREBASE_DATABASE_SECRET}`;
+        await fetch(pushUrl, { method: 'POST', body: JSON.stringify(logData) });
       }
       fs.unlinkSync(req.file!.path);
       res.json({ success: true, link: result.webViewLink });
     } catch (error: any) {
+      console.error("[Drive] Upload Error:", error);
+      if (req.file) fs.unlinkSync(req.file.path);
       res.status(500).json({ error: error.message });
     }
   });
@@ -419,17 +575,19 @@ ${teamId ? `Focus Team: ${teamId}` : 'All teams'}`;
     try {
       await performDataSweep();
       res.json({ success: true, message: "Retention sweep triggered." });
-    } catch (error) {
+    } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
   });
 
   // Run on startup
-  performDataSweep().catch(console.error);
+  // performDataSweep().catch(console.error);
 
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-  });
-}
+  // Only listen locally, Vercel uses the exported app
+  if (process.env.NODE_ENV !== "production") {
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+    });
+  }
 
-startServer();
+export default app;

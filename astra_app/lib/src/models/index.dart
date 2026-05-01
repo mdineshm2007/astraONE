@@ -25,6 +25,8 @@ class User {
   final bool isActive;
   final DateTime createdAt;
   final DateTime? lastActiveAt;
+  final String? year;
+  final bool onboarded;
 
   User({
     required this.id,
@@ -35,6 +37,8 @@ class User {
     this.isActive = false,
     required this.createdAt,
     this.lastActiveAt,
+    this.year,
+    this.onboarded = false,
   });
 
   factory User.fromFirestore(Map<String, dynamic> data, String id) {
@@ -52,6 +56,8 @@ class User {
         lastActiveAt: data['lastActiveAt'] != null
             ? DateTime.parse(data['lastActiveAt'].toString())
             : null,
+        year: data['year'],
+        onboarded: data['onboarded'] ?? false,
       );
     } catch (e) {
       throw Exception('Error parsing user: $e');
@@ -67,6 +73,8 @@ class User {
       'isActive': isActive,
       'createdAt': createdAt.toIso8601String(),
       'lastActiveAt': lastActiveAt?.toIso8601String(),
+      'year': year,
+      'onboarded': onboarded,
     };
   }
 
@@ -93,6 +101,8 @@ class User {
       isActive: isActive ?? this.isActive,
       createdAt: createdAt ?? this.createdAt,
       lastActiveAt: lastActiveAt ?? this.lastActiveAt,
+      year: year ?? this.year,
+      onboarded: onboarded ?? this.onboarded,
     );
   }
 }

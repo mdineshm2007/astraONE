@@ -45,15 +45,35 @@ export default function AdminPanel() {
     }, [profile, canAccess, isCaptainMode]);
 
     const handleApprove = async (uid: string, teamId: string) => {
+        if (!uid || !teamId) {
+            alert("Internal Error: Missing UID or TeamID. Contact developer.");
+            return;
+        }
         setActionLoading(uid + teamId);
-        await approveMember(uid, teamId);
-        setActionLoading(null);
+        try {
+            await approveMember(uid, teamId);
+        } catch (error: any) {
+            alert(error.message || "Failed to approve member.");
+            console.error(error);
+        } finally {
+            setActionLoading(null);
+        }
     };
 
     const handleReject = async (uid: string, teamId: string) => {
+        if (!uid || !teamId) {
+            alert("Internal Error: Missing UID or TeamID. Contact developer.");
+            return;
+        }
         setActionLoading(uid + teamId + 'reject');
-        await rejectMember(uid, teamId);
-        setActionLoading(null);
+        try {
+            await rejectMember(uid, teamId);
+        } catch (error: any) {
+            alert(error.message || "Failed to reject member.");
+            console.error(error);
+        } finally {
+            setActionLoading(null);
+        }
     };
 
     const handleRemoveMember = async (member: UserProfile, teamId: string) => {
@@ -159,16 +179,29 @@ export default function AdminPanel() {
                                                 >
                                                     <div className="flex items-center gap-4">
                                                         <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-primary font-black text-lg shrink-0">
-                                                            {(req.displayName || resolveNameFromEmail(req.email))?.charAt(0)?.toUpperCase()}
+                                                            {(req.displayName || (req.email ? resolveNameFromEmail(req.email) : `User_${(req.uid || '').slice(0, 6)}`))?.charAt(0)?.toUpperCase()}
                                                         </div>
                                                         <div className="min-w-0">
                                                             <p className="font-bold text-slate-100 truncate">
-                                                                {req.displayName || resolveNameFromEmail(req.email)}
+                                                                {req.displayName || (req.email ? resolveNameFromEmail(req.email) : `User_${(req.uid || '').slice(0, 6)}`)}
                                                             </p>
-                                                            <p className="text-xs text-slate-500 truncate">{req.email}</p>
-                                                            <div className="flex items-center gap-1 mt-1">
-                                                                <Clock size={10} className="text-yellow-400" />
-                                                                <span className="text-[10px] text-yellow-400 font-bold">AWAITING APPROVAL</span>
+                                                            <p className="text-xs text-slate-500 truncate">{req.email || 'No Email Provided'}</p>
+                                                            <div className="flex items-center gap-2 mt-1">
+                                                                {req.onboarded ? (
+                                                                  req.year && (
+                                                                    <span className="text-[10px] bg-white/5 text-slate-400 px-2 py-0.5 rounded-full border border-white/5 font-bold uppercase tracking-wider">
+                                                                      {req.year}
+                                                                    </span>
+                                                                  )
+                                                                ) : (
+                                                                  <span className="text-[10px] bg-red-500/10 text-red-400 px-2 py-0.5 rounded-full border border-red-500/20 font-black uppercase tracking-wider animate-pulse">
+                                                                    Incomplete Profile
+                                                                  </span>
+                                                                )}
+                                                                <div className="flex items-center gap-1">
+                                                                    <Clock size={10} className="text-yellow-400" />
+                                                                    <span className="text-[10px] text-yellow-400 font-bold uppercase">AWAITING APPROVAL</span>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -244,13 +277,13 @@ export default function AdminPanel() {
                                                 >
                                                     <div className="flex items-center gap-4">
                                                         <div className="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 font-black text-lg shrink-0">
-                                                            {(member.displayName || resolveNameFromEmail(member.email))?.charAt(0)?.toUpperCase()}
+                                                            {(member.displayName || (member.email ? resolveNameFromEmail(member.email) : `User_${(member.uid || '').slice(0, 6)}`))?.charAt(0)?.toUpperCase()}
                                                         </div>
                                                         <div className="min-w-0 flex-1">
                                                             <p className="font-bold text-slate-100 truncate">
-                                                                {member.displayName || resolveNameFromEmail(member.email)}
+                                                                {member.displayName || (member.email ? resolveNameFromEmail(member.email) : `User_${(member.uid || '').slice(0, 6)}`)}
                                                             </p>
-                                                            <p className="text-xs text-slate-500 truncate">{member.email}</p>
+                                                            <p className="text-xs text-slate-500 truncate">{member.email || 'No Email Provided'}</p>
                                                             <div className="flex items-center gap-1 mt-1">
                                                                 <CheckCircle2 size={10} className="text-emerald-400" />
                                                                 <span className="text-[10px] text-emerald-400 font-bold uppercase">{member.role || 'MEMBER'}</span>

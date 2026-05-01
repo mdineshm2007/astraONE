@@ -9,6 +9,7 @@ interface BOMRow {
   sno?: string;
   category?: string;
   partName: string;
+  vendor?: string;
   type: 'Purchased' | 'Fabricated';
   totalMaterialCost: number;
   remarks: string;
@@ -45,6 +46,7 @@ function EditableRow({
       sno: row.sno !== undefined ? row.sno : String(index + 1),
       category: row.category !== undefined ? row.category : teamName,
       partName: row.partName,
+      vendor: row.vendor || '',
       type: row.type,
       totalMaterialCost: row.totalMaterialCost,
       remarks: row.remarks,
@@ -108,6 +110,18 @@ function EditableRow({
           onChange={e => setLocal(prev => ({ ...prev, partName: e.target.value }))}
           onBlur={handleBlur}
           placeholder="Part name..."
+          className="w-full bg-transparent border-b border-white/20 focus:border-primary outline-none text-sm text-white py-1 transition-colors placeholder:text-slate-600 caret-primary"
+        />
+      </td>
+
+      {/* Vendor */}
+      <td className="px-4 py-2">
+        <input
+          type="text"
+          value={local.vendor}
+          onChange={e => setLocal(prev => ({ ...prev, vendor: e.target.value }))}
+          onBlur={handleBlur}
+          placeholder="Vendor..."
           className="w-full bg-transparent border-b border-white/20 focus:border-primary outline-none text-sm text-white py-1 transition-colors placeholder:text-slate-600 caret-primary"
         />
       </td>
@@ -188,6 +202,7 @@ export default function BOMTable({ teamName, onClose }: BOMTableProps) {
           sno: val.sno,
           category: val.category,
           partName: val.partName || '',
+          vendor: val.vendor || '',
           type: val.type || 'Purchased',
           totalMaterialCost: val.totalMaterialCost || 0,
           remarks: val.remarks || '',
@@ -219,6 +234,7 @@ export default function BOMTable({ teamName, onClose }: BOMTableProps) {
     const bomRef = ref(rtdb, dbPath);
     await push(bomRef, {
       partName: '',
+      vendor: '',
       type: 'Purchased',
       totalMaterialCost: 0,
       remarks: '',
@@ -264,10 +280,11 @@ export default function BOMTable({ teamName, onClose }: BOMTableProps) {
               <th style="width:5%">S.No</th>
               <th style="width:15%">Category</th>
               <th style="width:12%">Date</th>
-              <th style="width:28%">Part Name</th>
-              <th style="width:10%">P/F</th>
+              <th style="width:23%">Part Name</th>
+              <th style="width:15%">Vendor</th>
+              <th style="width:5%">P/F</th>
               <th style="width:12%">Cost (₹)</th>
-              <th style="width:18%">Remarks</th>
+              <th style="width:13%">Remarks</th>
             </tr>
           </thead>
           <tbody>
@@ -277,6 +294,7 @@ export default function BOMTable({ teamName, onClose }: BOMTableProps) {
                 <td>${r.category !== undefined ? r.category : teamName}</td>
                 <td style="text-align:center">${r.date || new Date().toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: '2-digit' })}</td>
                 <td>${r.partName || ''}</td>
+                <td>${r.vendor || ''}</td>
                 <td style="text-align:center">${r.type === 'Purchased' ? 'P' : 'F'}</td>
                 <td style="text-align:right">${Number(r.totalMaterialCost || 0).toLocaleString('en-IN')}</td>
                 <td>${r.remarks || ''}</td>
@@ -285,7 +303,7 @@ export default function BOMTable({ teamName, onClose }: BOMTableProps) {
           </tbody>
           <tfoot>
             <tr class="total-row">
-              <td colspan="5" style="text-align:right; font-weight:bold; text-transform:uppercase; letter-spacing:1px">TOTAL COST</td>
+              <td colspan="6" style="text-align:right; font-weight:bold; text-transform:uppercase; letter-spacing:1px">TOTAL COST</td>
               <td style="text-align:right">&#8377;${totalCost.toLocaleString('en-IN')}</td>
               <td></td>
             </tr>
@@ -360,6 +378,7 @@ export default function BOMTable({ teamName, onClose }: BOMTableProps) {
                     <th className="px-4 py-3 border-b border-white/5 w-28">Category</th>
                     <th className="px-4 py-3 border-b border-white/5 w-24 text-center">Date</th>
                     <th className="px-4 py-3 border-b border-white/5">Part Name</th>
+                    <th className="px-4 py-3 border-b border-white/5 w-32">Vendor</th>
                     <th className="px-4 py-3 border-b border-white/5 w-40 text-center">Purchased / Fabricated</th>
                     <th className="px-4 py-3 border-b border-white/5 w-36 text-right">Total Material Cost (₹)</th>
                     <th className="px-4 py-3 border-b border-white/5 w-44">Remarks</th>
@@ -383,7 +402,7 @@ export default function BOMTable({ teamName, onClose }: BOMTableProps) {
                 {/* Total Row */}
                 <tfoot>
                   <tr className="bg-primary/5 border-t border-primary/20">
-                    <td colSpan={5} className="px-4 py-3 text-right text-[10px] font-black uppercase tracking-[0.2em] text-primary">
+                    <td colSpan={6} className="px-4 py-3 text-right text-[10px] font-black uppercase tracking-[0.2em] text-primary">
                       Total Cost
                     </td>
                     <td className="px-4 py-3 text-right text-sm font-black text-primary">
