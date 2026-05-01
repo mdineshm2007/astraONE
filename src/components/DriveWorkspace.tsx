@@ -126,7 +126,7 @@ export default function DriveWorkspace() {
     setIsUploading('setup');
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000);
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // Increased to 60s for complex drive setup
 
       const response = await fetch('/api/drive/setup', {
         method: 'POST',
@@ -155,7 +155,7 @@ export default function DriveWorkspace() {
       }
     } catch (error: any) {
       if (error.name === 'AbortError') {
-        alert('Sync timed out. The backend server may be unreachable. Make sure the server is running and restart npm run dev.');
+        alert('Sync timed out. The backend server may be unreachable or busy. Please check your internet connection and try again.');
       } else {
         alert(`Sync Process Error: ${error.message}`);
       }
@@ -182,7 +182,7 @@ export default function DriveWorkspace() {
       }
     } catch (e: any) {
       if (e.name === 'AbortError') {
-        alert('Connection timed out. The backend server may be unreachable. Make sure npm run dev is running and try again.');
+        alert('Connection timed out. The backend server may be unreachable. Please try again in a few moments.');
       } else {
         alert('Failed to get Google Auth URL: ' + e.message);
       }

@@ -2,10 +2,10 @@ import { google } from 'googleapis';
 import fs from 'fs';
 import path from 'path';
 
-export function createOAuth2Client() {
+export function createOAuth2Client(redirectUri?: string) {
   const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
   const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-  const REDIRECT_URI = 'http://localhost:3001/api/auth/google/callback';
+  const REDIRECT_URI = redirectUri || 'http://localhost:3001/api/auth/google/callback';
   return new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
 }
 
