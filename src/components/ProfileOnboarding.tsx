@@ -39,8 +39,11 @@ export default function ProfileOnboarding() {
         photoURL,
         onboarded: true
       });
-    } catch (error) {
+      // Force reload to update AuthContext state and navigate to the dashboard
+      window.location.reload();
+    } catch (error: any) {
       console.error('Failed to update profile:', error);
+      alert('Failed to save profile: ' + error.message);
     } finally {
       setIsSubmitting(false);
     }

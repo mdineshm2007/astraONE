@@ -31,7 +31,7 @@ export default function Login() {
           className="w-full bg-primary text-[#001f2e] font-bold py-4 rounded-xl flex items-center justify-center gap-3 hover:brightness-110 active:scale-[0.98] transition-all glow-primary"
         >
           <LogIn size={20} />
-          Authenticate with SSO
+          Login with college mail id
         </button>
         
         <div className="mt-8 pt-8 border-t border-primary/10 flex flex-col items-center gap-4">
