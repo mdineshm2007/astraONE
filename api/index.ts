@@ -10,8 +10,6 @@ import Groq from "groq-sdk";
 import multer from "multer";
 import os from "os";
 
-const groq = process.env.GROQ_API_KEY ? new Groq({ apiKey: process.env.GROQ_API_KEY }) : null;
-
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
