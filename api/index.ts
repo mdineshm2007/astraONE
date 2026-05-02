@@ -58,6 +58,22 @@ export async function createFolder(auth: any, name: string, parentId?: string) {
   }
 }
 
+export interface TaskUpdate {
+  id: string;
+  taskId: string;
+  userId: string;
+  userName: string;
+  userEmail?: string;
+  progressPercent: number;
+  attendance: string;
+  todayProgress: string;
+  nextAction: string;
+  resourcesNeeded: string;
+  event: string;
+  remarks: string;
+  createdAt: any;
+}
+
 export async function getOrCreateFolder(auth: any, name: string, parentId?: string) {
   const existing = await findFolderByName(auth, name, parentId);
   if (existing) return existing;
@@ -199,11 +215,25 @@ app.get("/api/users/profile/:uid", async (req, res) => {
       } catch (e) {}
     }
 
-    if (profile) {
-      res.json(profile);
-    } else {
-      res.status(404).json({ error: "Profile not found" });
+    if (!profile) {
+      // Create default profile if missing (auto-onboarding fallback)
+      const defaultProfile = {
+        uid,
+        displayName: 'Engineer',
+        role: 'MEMBER',
+        onboarded: false,
+        createdAt: new Date().toISOString()
+      };
+      
+      if (admin.apps.length > 0) {
+        await admin.database().ref(`users/${uid}`).set(defaultProfile);
+      } else {
+        await firebaseRest.put(`users/${uid}`, defaultProfile);
+      }
+      profile = defaultProfile;
     }
+
+    res.json(profile);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }

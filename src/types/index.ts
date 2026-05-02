@@ -93,6 +93,7 @@ export interface TaskUpdate {
   taskId: string;
   userId: string;
   userName: string;
+  userEmail?: string;
   progressPercent: number;
   attendance: string;
   todayProgress: string;
