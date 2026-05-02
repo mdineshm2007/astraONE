@@ -80,8 +80,15 @@ export async function uploadFile(auth: any, fileName: string, mimeType: string, 
 if (!admin.apps.length) {
   try {
     const serviceAccountPath = path.join(process.cwd(), "firebase-admin-sdk.json");
+    let serviceAccount;
+
     if (fs.existsSync(serviceAccountPath)) {
-      const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, "utf8"));
+      serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, "utf8"));
+    } else if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+      serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+    }
+
+    if (serviceAccount) {
       if (serviceAccount.private_key) {
         serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
       }
@@ -91,7 +98,7 @@ if (!admin.apps.length) {
       });
       console.log("[Firebase] Admin SDK Initialized Successfully");
     } else {
-      console.warn("[Firebase] Admin SDK file not found. Falling back to REST.");
+      console.warn("[Firebase] No credentials found. Falling back to REST.");
     }
   } catch (err: any) {
     console.error("[Firebase] Initialization Failed:", err.message);
