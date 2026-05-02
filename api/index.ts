@@ -10,6 +10,8 @@ import Groq from "groq-sdk";
 import multer from "multer";
 import os from "os";
 
+const groq = process.env.GROQ_API_KEY ? new Groq({ apiKey: process.env.GROQ_API_KEY }) : null;
+
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
@@ -478,5 +480,48 @@ if (process.env.NODE_ENV === "production") {
 if (process.env.NODE_ENV !== "production") {
   app.listen(PORT, "0.0.0.0", () => console.log(`Server running on http://localhost:${PORT}`));
 }
+
+// --- AI Intelligence Endpoints ---
+app.post("/api/ai/analyze", async (req, res) => {
+  try {
+    if (!groq) return res.status(503).json({ error: "AI Service Unavailable (Missing Key)" });
+    const { systemPrompt, userPrompt, model = "llama-3.3-70b-versatile" } = req.body;
+
+    const chatCompletion = await groq.chat.completions.create({
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt }
+      ],
+      model: model,
+      temperature: 0.3,
+      response_format: { type: "json_object" }
+    });
+
+    const reply = chatCompletion.choices[0]?.message?.content || "{}";
+    res.json(JSON.parse(reply));
+  } catch (error: any) {
+    console.error("[AI Analysis Error]", error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post("/api/ai/chat", async (req, res) => {
+  try {
+    if (!groq) return res.status(503).json({ error: "AI Service Unavailable (Missing Key)" });
+    const { messages, model = "llama-3.3-70b-versatile" } = req.body;
+
+    const chatCompletion = await groq.chat.completions.create({
+      messages,
+      model,
+      temperature: 0.7,
+      max_tokens: 1024
+    });
+
+    res.json({ content: chatCompletion.choices[0]?.message?.content || "" });
+  } catch (error: any) {
+    console.error("[AI Chat Error]", error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 export default app;

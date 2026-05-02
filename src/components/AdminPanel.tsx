@@ -18,67 +18,66 @@ export default function AdminPanel() {
     const isTeamLead = profile?.role === 'TEAM_LEAD';
     const canAccess = isCaptainMode || isTeamLead;
 
-    // Admin Panel Refresh Logic (using API polling to bypass RTDB read restrictions)
+    const refreshData = async () => {
+        try {
+            const teamIds = isCaptainMode ? ['all'] : (profile?.approvedTeams || []);
+            const [pending, members] = await Promise.all([
+                fetchPendingMembers(teamIds),
+                fetchAllUsers()
+            ]);
+            
+            setPendingRequests(pending);
+            setAllUsers(members);
+            
+            const teamIdsList = profile?.approvedTeams || [];
+            const approved = members.filter(u => {
+                if (isCaptainMode) return true;
+                if (u.uid === profile?.uid) return false;
+                if (u.role === 'CAPTAIN') return false;
+                return u.approvedTeams?.some(t => teamIdsList.includes(t));
+            });
+            setApprovedMembers(approved);
+        } catch (err) {
+            console.error("Admin refresh failed:", err);
+        }
+    };
+
+    // Admin Panel Refresh Logic
     useEffect(() => {
         if (!profile || !canAccess) return;
-        
-        const refreshData = async () => {
-            try {
-                const teamIds = isCaptainMode ? ['all'] : (profile.approvedTeams || []);
-                const [pending, members] = await Promise.all([
-                    fetchPendingMembers(teamIds),
-                    fetchAllUsers()
-                ]);
-                
-                setPendingRequests(pending);
-                setAllUsers(members);
-                
-                // Approved members filter logic (mirrors previous listener logic)
-                const teamIdsList = profile.approvedTeams || [];
-                const approved = members.filter(u => {
-                    if (isCaptainMode) return true;
-                    if (u.uid === profile.uid) return false;
-                    if (u.role === 'CAPTAIN') return false;
-                    return u.approvedTeams?.some(t => teamIdsList.includes(t));
-                });
-                setApprovedMembers(approved);
-            } catch (err) {
-                console.error("Admin refresh failed:", err);
-            }
-        };
-
         refreshData();
         const interval = setInterval(refreshData, 30000); // Refresh every 30s
         return () => clearInterval(interval);
     }, [profile, canAccess, isCaptainMode]);
 
     const handleApprove = async (uid: string, teamId: string) => {
-        if (!uid || !teamId) {
-            alert("Internal Error: Missing UID or TeamID. Contact developer.");
-            return;
-        }
+        if (!uid || !teamId) return;
         setActionLoading(uid + teamId);
         try {
             await approveMember(uid, teamId);
+            // Poll for up to 5 seconds to ensure the UI updates
+            for (let i = 0; i < 5; i++) {
+                await new Promise(r => setTimeout(r, 1000));
+                await refreshData();
+                const stillPending = pendingRequests.some(u => u.uid === uid && u.teams?.some(t => t.teamId === teamId && t.status === 'PENDING'));
+                if (!stillPending) break;
+            }
         } catch (error: any) {
             alert(error.message || "Failed to approve member.");
-            console.error(error);
         } finally {
             setActionLoading(null);
         }
     };
 
     const handleReject = async (uid: string, teamId: string) => {
-        if (!uid || !teamId) {
-            alert("Internal Error: Missing UID or TeamID. Contact developer.");
-            return;
-        }
+        if (!uid || !teamId) return;
         setActionLoading(uid + teamId + 'reject');
         try {
             await rejectMember(uid, teamId);
+            await new Promise(r => setTimeout(r, 1000));
+            await refreshData();
         } catch (error: any) {
             alert(error.message || "Failed to reject member.");
-            console.error(error);
         } finally {
             setActionLoading(null);
         }

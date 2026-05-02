@@ -88,7 +88,10 @@ export default function Dashboard() {
   const readinessPct = averageProgress; 
 
   // Filter out any ghost updates (updates for tasks that have been deleted)
-  const validUpdates = allUpdates.filter(u => allTasks.some(t => t.id === u.taskId));
+  // Filter out any ghost updates (updates for tasks that have been deleted)
+  const validUpdates = allTasks.length > 0 
+    ? allUpdates.filter(u => allTasks.some(t => t.id === u.taskId))
+    : allUpdates;
 
   // Filter subsystems based on role
   const visibleSubsystems = profile.role === 'CAPTAIN'
