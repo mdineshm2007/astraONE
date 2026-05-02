@@ -214,6 +214,45 @@ app.post("/api/users/profile/:uid/update", async (req, res) => {
   }
 });
 
+app.post("/api/users/teams/request", async (req, res) => {
+  try {
+    const { uid, teamIds } = req.body;
+    if (!uid || !teamIds) return res.status(400).json({ error: "UID and teamIds required" });
+
+    if (admin.apps.length > 0) {
+      const userRef = admin.database().ref(`users/${uid}`);
+      const snapshot = await userRef.once("value");
+      if (snapshot.exists()) {
+        const profile = snapshot.val();
+        const currentTeams = profile.teams || [];
+        const newTeamRequests = teamIds
+          .filter((id: string) => !currentTeams.some((t: any) => t.teamId === id))
+          .map((id: string) => ({ teamId: id, status: 'PENDING' }));
+        if (newTeamRequests.length > 0) {
+          const updatedTeams = [...currentTeams, ...newTeamRequests];
+          await userRef.update({ teams: updatedTeams });
+        }
+        res.json({ success: true });
+      } else res.status(404).json({ error: "User not found" });
+    } else {
+      const profile = await firebaseRest.get(`users/${uid}`);
+      if (profile) {
+        const currentTeams = profile.teams || [];
+        const newTeamRequests = teamIds
+          .filter((id: string) => !currentTeams.some((t: any) => t.teamId === id))
+          .map((id: string) => ({ teamId: id, status: 'PENDING' }));
+        if (newTeamRequests.length > 0) {
+          const updatedTeams = [...currentTeams, ...newTeamRequests];
+          await firebaseRest.update(`users/${uid}`, { teams: updatedTeams });
+        }
+        res.json({ success: true });
+      } else res.status(404).json({ error: "User not found" });
+    }
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
   const getBaseUrl = (req: express.Request) => {
     const protocol = req.headers['x-forwarded-proto'] || 'http';
     return `${protocol}://${req.headers.host}`;

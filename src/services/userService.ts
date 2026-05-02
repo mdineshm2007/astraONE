@@ -3,22 +3,14 @@ import { rtdb } from '../firebase';
 import { UserProfile } from '../types';
 
 export async function requestToJoinTeams(uid: string, teamIds: string[]) {
-  const userRef = ref(rtdb, `users/${uid}`);
-  const snapshot = await get(userRef);
-  
-  if (snapshot.exists()) {
-    const profile = snapshot.val() as UserProfile;
-    const currentTeams = profile.teams || [];
-    
-    // Filter out teams the user has already requested or joined
-    const newTeamRequests = teamIds
-      .filter(id => !currentTeams.some(t => t.teamId === id))
-      .map(id => ({ teamId: id, status: 'PENDING' as const }));
-
-    if (newTeamRequests.length > 0) {
-      const updatedTeams = [...currentTeams, ...newTeamRequests];
-      await update(userRef, { teams: updatedTeams });
-    }
+  const response = await fetch('/api/users/teams/request', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ uid, teamIds })
+  });
+  if (!response.ok) {
+    const err = await response.json();
+    throw new Error(err.error || "Failed to send join request via server");
   }
 }
 
