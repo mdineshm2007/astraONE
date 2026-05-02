@@ -173,6 +173,47 @@ const firebaseRest = {
 
 app.get("/api/test", (req, res) => res.json({ ok: true }));
 
+app.get("/api/users/profile/:uid", async (req, res) => {
+  try {
+    const { uid } = req.params;
+    if (!uid) return res.status(400).json({ error: "UID required" });
+
+    let profile = await firebaseRest.get(`users/${uid}`);
+    
+    if (!profile && admin.apps.length > 0) {
+      try {
+        const snapshot = await admin.database().ref(`users/${uid}`).once("value");
+        if (snapshot.exists()) profile = snapshot.val();
+      } catch (e) {}
+    }
+
+    if (profile) {
+      res.json(profile);
+    } else {
+      res.status(404).json({ error: "Profile not found" });
+    }
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post("/api/users/profile/:uid/update", async (req, res) => {
+  try {
+    const { uid } = req.params;
+    const updates = req.body;
+    if (!uid) return res.status(400).json({ error: "UID required" });
+    
+    if (admin.apps.length > 0) {
+      await admin.database().ref(`users/${uid}`).update(updates);
+    } else {
+      await firebaseRest.update(`users/${uid}`, updates);
+    }
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
   const getBaseUrl = (req: express.Request) => {
     const protocol = req.headers['x-forwarded-proto'] || 'http';
     return `${protocol}://${req.headers.host}`;

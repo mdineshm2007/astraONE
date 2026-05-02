@@ -209,6 +209,19 @@ app.get("/api/users/profile/:uid", async (req, res) => {
   }
 });
 
+app.post("/api/users/profile/:uid/update", async (req, res) => {
+  try {
+    const { uid } = req.params;
+    const updates = req.body;
+    if (!uid) return res.status(400).json({ error: "UID required" });
+    
+    await admin.database().ref(`users/${uid}`).update(updates);
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.post("/api/users/approve", async (req, res) => {
   try {
     const { uid, teamId } = req.body;

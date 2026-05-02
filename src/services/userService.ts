@@ -163,6 +163,13 @@ export function subscribeToUsers(callback: (users: UserProfile[]) => void) {
 }
 
 export async function updateUserProfile(uid: string, updates: Partial<UserProfile>) {
-  const userRef = ref(rtdb, `users/${uid}`);
-  await update(userRef, updates);
+  const response = await fetch(`/api/users/profile/${uid}/update`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(updates)
+  });
+  if (!response.ok) {
+    const err = await response.json();
+    throw new Error(err.error || "Failed to update profile via server");
+  }
 }
