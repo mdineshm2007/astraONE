@@ -13,6 +13,7 @@ interface AuthContextType {
   signIn: () => Promise<void>;
   logout: () => Promise<void>;
   refreshProfile: () => Promise<void>;
+  error: string | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -56,6 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let unsubProfile: (() => void) | null = null;
@@ -105,15 +107,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             console.log(`[Auth] Profile loaded successfully from backend (${source})`);
             setProfile(data);
             setLoading(false);
+            setError(null);
             return true;
           } else {
-            console.warn(`[Auth] Backend fallback failed (${source}):`, response.status);
+            const errText = await response.text();
+            console.warn(`[Auth] Backend fallback failed (${source}):`, response.status, errText);
+            setError(`Backend Error ${response.status}: ${errText.slice(0, 50)}`);
           }
         } catch (e: any) {
           if (e.name === 'AbortError') {
             console.error(`[Auth] Backend fallback TIMED OUT (${source})`);
+            setError("Handshake Timeout");
           } else {
             console.error(`[Auth] Backend fallback error (${source}):`, e.message);
+            setError(`Handshake Error: ${e.message}`);
           }
         }
         return false;
@@ -287,7 +294,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signIn, logout, refreshProfile }}>
+    <AuthContext.Provider value={{ user, profile, loading, signIn, logout, refreshProfile, error }}>
       {children}
     </AuthContext.Provider>
   );

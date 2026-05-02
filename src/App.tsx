@@ -57,7 +57,7 @@ function AppContent() {
             </p>
           </div>
           <div className="bg-white/5 p-4 rounded-2xl border border-white/5 text-[10px] font-bold uppercase tracking-widest text-slate-500">
-             Current Status: <span className="text-error">Database Handshake Failed</span>
+             Current Status: <span className="text-error">{error || 'Database Handshake Failed'}</span>
           </div>
           <button 
             onClick={() => window.location.reload()}
