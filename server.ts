@@ -155,6 +155,26 @@ const firebaseRest = {
       return null;
     }
   },
+  put: async (path: string, data: any) => {
+    try {
+      const cleanUrl = (process.env.FIREBASE_DATABASE_URL || "").replace(/\/$/, "");
+      const cleanPath = path.startsWith("/") ? path : `/${path}`;
+      const url = `${cleanUrl}${cleanPath}.json?auth=${process.env.FIREBASE_DATABASE_SECRET}`;
+      const res = await fetch(url, {
+        method: 'PUT',
+        body: JSON.stringify(data)
+      });
+      if (!res.ok) {
+        const errText = await res.text();
+        console.error(`[Firebase REST] PUT ${path} failed (${res.status}):`, errText);
+        return null;
+      }
+      return res.json();
+    } catch (e) {
+      console.error(`[Firebase REST] PUT ${path} error:`, e);
+      return null;
+    }
+  },
   remove: async (path: string) => {
     try {
       const cleanUrl = (process.env.FIREBASE_DATABASE_URL || "").replace(/\/$/, "");
