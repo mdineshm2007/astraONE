@@ -51,20 +51,29 @@ export default function TaskHeatmap({ updates }: TaskHeatmapProps) {
     const deduplicated = new Map<string, TaskUpdate & { delta: number }>();
     updates.forEach(u => {
       if (!u.createdAt) return;
-      const dateKey = format(new Date(u.createdAt), 'yyyy-MM-dd');
-      const compositeKey = `${dateKey}_${u.userId}`;
+      
+      const date = new Date(u.createdAt);
+      if (isNaN(date.getTime())) return;
+      
+      const dateKey = format(date, 'yyyy-MM-dd');
+      // Use UID as primary key, email as fallback to group contributions correctly
+      const userKey = u.userId || u.userEmail || 'unknown';
+      const compositeKey = `${dateKey}_${userKey}`;
       const delta = deltas.get(u.id) || 0;
       
       // Take the latest update for that day/user
-      if (!deduplicated.has(compositeKey) || new Date(u.createdAt) > new Date(deduplicated.get(compositeKey)!.createdAt)) {
+      const existing = deduplicated.get(compositeKey);
+      if (!existing || new Date(u.createdAt).getTime() > new Date(existing.createdAt as string).getTime()) {
         deduplicated.set(compositeKey, { ...u, delta });
       }
     });
 
     deduplicated.forEach(u => {
       try {
-        const date = new Date(u.createdAt);
+        const dateStr = String(u.createdAt);
+        const date = new Date(dateStr);
         if (isNaN(date.getTime())) return;
+        
         const dateKey = format(date, 'yyyy-MM-dd');
         if (!map[dateKey]) {
           map[dateKey] = { count: 0, logs: [] };

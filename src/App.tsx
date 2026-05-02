@@ -15,7 +15,7 @@ import DriveWorkspace from './components/DriveWorkspace';
 import { ShieldAlert } from 'lucide-react';
 
 function AppContent() {
-  const { user, profile, loading } = useAuth();
+  const { user, profile, loading, error } = useAuth();
   const [currentView, setCurrentView] = useState<AppView>('dashboard');
 
   useEffect(() => {

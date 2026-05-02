@@ -134,7 +134,7 @@ export default function Teams() {
         resourcesNeeded: dailyLog.resourcesNeeded,
         event: dailyLog.event,
         remarks: dailyLog.remarks,
-        createdAt: null,
+        createdAt: new Date().toISOString(),
       });
       
       const { updatePerformanceMetric } = await import('../services/analyticsService');
