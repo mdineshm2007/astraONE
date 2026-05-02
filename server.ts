@@ -287,10 +287,19 @@ app.get("/api/admin/members", async (req, res) => {
   }
 });
 
-app.delete("/api/admin/users/:uid", async (req, res) => {
+app.post("/api/admin/users/delete", async (req, res) => {
   try {
-    const { uid } = req.params;
+    const { uid } = req.body;
     if (!uid) return res.status(400).json({ error: "UID required" });
+    
+    const snapshot = await admin.database().ref(`users/${uid}`).once("value");
+    if (snapshot.exists()) {
+      const profile = snapshot.val();
+      if (profile.role === 'CAPTAIN') {
+        return res.status(403).json({ error: "Cannot delete a Captain account." });
+      }
+    }
+
     await admin.database().ref(`users/${uid}`).remove();
     res.json({ success: true });
   } catch (error: any) {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldAlert, Users, CheckCircle2, X, Clock, AlertCircle, UserX, Trash2, Loader2 } from 'lucide-react';
+import { ShieldAlert, Users, CheckCircle2, X, Clock, AlertCircle, UserX } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { subscribeToMultipleTeamsPendingMembers, approveMember, rejectMember, subscribeToUsers, updateUserProfile, fetchPendingMembers, fetchAllUsers, deleteUserAccount } from '../services/userService';
+import { subscribeToMultipleTeamsPendingMembers, approveMember, rejectMember, subscribeToUsers, updateUserProfile, fetchPendingMembers, fetchAllUsers, deleteUser } from '../services/userService';
 import { UserProfile } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { resolveNameFromEmail } from '../utils/userUtils';
@@ -87,31 +87,60 @@ export default function AdminPanel() {
     const handleRemoveMember = async (member: UserProfile, teamId: string) => {
         if (!window.confirm(`Remove ${member.displayName || resolveNameFromEmail(member.email)} from "${teamId}"?`)) return;
         setActionLoading(member.uid + teamId + 'remove');
+        // Filter out the target team from the member's teams array
+        const updatedTeams = (member.teams || []).filter(t => t.teamId !== teamId);
+        const updatedApprovedTeams = updatedTeams.filter(t => t.status === 'APPROVED').map(t => t.teamId);
+        await updateUserProfile(member.uid, {
+            teams: updatedTeams,
+            approvedTeams: updatedApprovedTeams,
+        });
+        setActionLoading(null);
+    };
+
+    const handleDeleteUser = async (member: UserProfile) => {
+        if (member.role === 'CAPTAIN') {
+            alert("Cannot delete a Captain.");
+            return;
+        }
+        if (!window.confirm(`PERMANENTLY DELETE user ${member.displayName || member.email}? This cannot be undone.`)) return;
+        
+        setActionLoading(member.uid + 'delete');
         try {
-            // Filter out the target team from the member's teams array
-            const updatedTeams = (member.teams || []).filter(t => t.teamId !== teamId);
-            const updatedApprovedTeams = updatedTeams.filter(t => t.status === 'APPROVED').map(t => t.teamId);
-            await updateUserProfile(member.uid, {
-                teams: updatedTeams,
-                approvedTeams: updatedApprovedTeams,
-            });
+            await deleteUser(member.uid);
         } catch (error: any) {
-            alert("Failed to remove member: " + error.message);
+            alert(error.message);
         } finally {
             setActionLoading(null);
         }
     };
 
-    const handleDeleteUser = async (uid: string, name: string) => {
-        if (!window.confirm(`PERMANENTLY delete user "${name}"? This cannot be undone.`)) return;
-        setActionLoading(uid + 'delete');
-        try {
-            await deleteUserAccount(uid);
-        } catch (error: any) {
-            alert("Failed to delete user: " + error.message);
-        } finally {
-            setActionLoading(null);
+    const handlePruneIdleUsers = async () => {
+        const idleUsers = allUsers.filter(u => {
+            if (u.role === 'CAPTAIN' || u.role === 'TEAM_LEAD') return false;
+            const hasTeams = u.teams && u.teams.length > 0;
+            const hasApprovedTeams = u.approvedTeams && u.approvedTeams.length > 0;
+            return !hasTeams && !hasApprovedTeams;
+        });
+
+        if (idleUsers.length === 0) {
+            alert("No idle users found. Your database is clean!");
+            return;
         }
+
+        if (!window.confirm(`This will permanently remove ${idleUsers.length} users who have not joined any team. Captains and Team Leads are safe. Proceed?`)) return;
+
+        setActionLoading('pruning');
+        let successCount = 0;
+        for (const user of idleUsers) {
+            try {
+                await deleteUser(user.uid);
+                successCount++;
+            } catch (e) {
+                console.error(`Failed to prune user ${user.uid}:`, e);
+            }
+        }
+        alert(`Cleanup complete. Removed ${successCount} idle users.`);
+        setActionLoading(null);
     };
 
     if (!canAccess) {
@@ -138,36 +167,49 @@ export default function AdminPanel() {
                 </p>
             </div>
 
-            {/* Tab Switcher */}
-            <div className="flex gap-2 p-1 bg-white/5 rounded-2xl w-fit border border-white/5">
-                <button
-                    onClick={() => setActiveTab('pending')}
-                    className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'pending' ? 'bg-primary text-black' : 'text-slate-500 hover:text-white'}`}
-                >
-                    Pending Requests
-                    {pendingRequests.length > 0 && (
-                        <span className="ml-2 px-1.5 py-0.5 rounded-full bg-yellow-500 text-black text-[8px] font-black">
-                            {pendingRequests.length}
-                        </span>
-                    )}
-                </button>
-                <button
-                    onClick={() => setActiveTab('members')}
-                    className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'members' ? 'bg-primary text-black' : 'text-slate-500 hover:text-white'}`}
-                >
-                    Approved Members
-                </button>
-                <button
-                    onClick={() => setActiveTab('users')}
-                    className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'users' ? 'bg-primary text-black' : 'text-slate-500 hover:text-white'}`}
-                >
-                    App Users
-                    {allUsers.length > 0 && (
-                        <span className="ml-2 px-1.5 py-0.5 rounded-full bg-white/10 text-slate-400 text-[8px] font-black">
-                            {allUsers.length}
-                        </span>
-                    )}
-                </button>
+            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                {/* Tab Switcher */}
+                <div className="flex gap-2 p-1 bg-white/5 rounded-2xl w-fit border border-white/5">
+                    <button
+                        onClick={() => setActiveTab('pending')}
+                        className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'pending' ? 'bg-primary text-black' : 'text-slate-500 hover:text-white'}`}
+                    >
+                        Pending Requests
+                        {pendingRequests.length > 0 && (
+                            <span className="ml-2 px-1.5 py-0.5 rounded-full bg-yellow-500 text-black text-[8px] font-black">
+                                {pendingRequests.length}
+                            </span>
+                        )}
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('members')}
+                        className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'members' ? 'bg-primary text-black' : 'text-slate-500 hover:text-white'}`}
+                    >
+                        Approved Members
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('users')}
+                        className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'users' ? 'bg-primary text-black' : 'text-slate-500 hover:text-white'}`}
+                    >
+                        App Users
+                        {allUsers.length > 0 && (
+                            <span className="ml-2 px-1.5 py-0.5 rounded-full bg-white/10 text-slate-400 text-[8px] font-black">
+                                {allUsers.length}
+                            </span>
+                        )}
+                    </button>
+                </div>
+
+                {isCaptainMode && (
+                    <button
+                        onClick={handlePruneIdleUsers}
+                        disabled={actionLoading === 'pruning'}
+                        className="flex items-center gap-2 px-6 py-2.5 bg-red-500/10 text-red-400 border border-red-500/20 rounded-2xl hover:bg-red-500/20 transition-all text-[10px] font-black uppercase tracking-widest disabled:opacity-50"
+                    >
+                        <UserX size={16} />
+                        {actionLoading === 'pruning' ? 'Cleaning up...' : 'Cleanup Workspace (Prune Idle)'}
+                    </button>
+                )}
             </div>
 
             <AnimatePresence mode="wait">
@@ -370,7 +412,7 @@ export default function AdminPanel() {
                                         <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-bold">
                                             {(u.displayName || resolveNameFromEmail(u.email)).charAt(0).toUpperCase()}
                                         </div>
-                                        <div className="flex-1 min-w-0">
+                                        <div className="min-w-0">
                                             <p className="font-bold text-slate-200 truncate text-sm">
                                                 {u.displayName || resolveNameFromEmail(u.email)}
                                             </p>
@@ -385,18 +427,14 @@ export default function AdminPanel() {
                                                 </span>
                                             </div>
                                         </div>
-                                        {isCaptainMode && u.role === 'MEMBER' && (!u.teams || u.teams.length === 0) && (
+                                        {isCaptainMode && u.role !== 'CAPTAIN' && (
                                             <button
-                                                onClick={() => handleDeleteUser(u.uid, u.displayName || u.email)}
+                                                onClick={() => handleDeleteUser(u)}
                                                 disabled={actionLoading === u.uid + 'delete'}
-                                                className="p-2 text-slate-600 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
-                                                title="Delete User Account"
+                                                className="ml-auto p-2 bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500/20 transition-all disabled:opacity-50"
+                                                title="Delete user record"
                                             >
-                                                {actionLoading === u.uid + 'delete' ? (
-                                                    <Loader2 size={16} className="animate-spin" />
-                                                ) : (
-                                                    <Trash2 size={16} />
-                                                )}
+                                                {actionLoading === u.uid + 'delete' ? <Loader2 size={16} className="animate-spin" /> : <UserX size={16} />}
                                             </button>
                                         )}
                                     </div>

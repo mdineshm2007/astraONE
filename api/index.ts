@@ -289,13 +289,21 @@ app.get("/api/admin/members", async (req, res) => {
   }
 });
 
-app.delete("/api/admin/users/:uid", async (req, res) => {
+app.post("/api/admin/users/delete", async (req, res) => {
   try {
-    const { uid } = req.params;
+    const { uid } = req.body;
     if (!uid) return res.status(400).json({ error: "UID required" });
     
-    // We only delete from RTDB, we don't delete the Firebase Auth account to avoid accidental lockout
-    // but the user will be effectively "reset" or gone from the app's perspective.
+    // Safety check: Don't delete captains via this endpoint 
+    // (Actual role check happens in the frontend but backend should also protect)
+    const snapshot = await admin.database().ref(`users/${uid}`).once("value");
+    if (snapshot.exists()) {
+      const profile = snapshot.val();
+      if (profile.role === 'CAPTAIN') {
+        return res.status(403).json({ error: "Cannot delete a Captain account." });
+      }
+    }
+
     await admin.database().ref(`users/${uid}`).remove();
     res.json({ success: true });
   } catch (error: any) {

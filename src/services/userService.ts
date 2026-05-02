@@ -147,13 +147,15 @@ export async function fetchAllUsers() {
   return response.json() as Promise<UserProfile[]>;
 }
 
-export async function deleteUserAccount(uid: string) {
-  const response = await fetch(`/api/admin/users/${uid}`, {
-    method: 'DELETE'
+export async function deleteUser(uid: string) {
+  const response = await fetch('/api/admin/users/delete', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ uid })
   });
   if (!response.ok) {
     const err = await response.json();
-    throw new Error(err.error || "Failed to delete user account");
+    throw new Error(err.error || "Failed to delete user record");
   }
 }
 
