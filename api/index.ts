@@ -137,7 +137,7 @@ const firebaseRest = {
       const cleanUrl = baseUrl.replace(/\/$/, "");
       const cleanPath = path.startsWith("/") ? path : `/${path}`;
       const url = `${cleanUrl}${cleanPath}.json?auth=${process.env.FIREBASE_DATABASE_SECRET || ""}`;
-      const res = await fetch(url);
+      const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
       if (!res.ok) return null;
       return res.json();
     } catch (e) {
@@ -149,7 +149,11 @@ const firebaseRest = {
       const cleanUrl = (process.env.FIREBASE_DATABASE_URL || "").replace(/\/$/, "");
       const cleanPath = path.startsWith("/") ? path : `/${path}`;
       const url = `${cleanUrl}${cleanPath}.json?auth=${process.env.FIREBASE_DATABASE_SECRET}`;
-      const res = await fetch(url, { method: 'PATCH', body: JSON.stringify(data) });
+      const res = await fetch(url, { 
+        method: 'PATCH', 
+        body: JSON.stringify(data),
+        signal: AbortSignal.timeout(8000)
+      });
       if (!res.ok) return null;
       return res.json();
     } catch (e) {
@@ -182,8 +186,80 @@ const getAuthForUser = async (uid: string, req?: express.Request) => {
   }
 };
 
+function resolveRoleFromEmail(email: string): { role: string; teams: { teamId: string; status: 'PENDING' | 'APPROVED' }[] } {
+  const e = email.toLowerCase().trim();
+  const captains = [
+    '727724eumc054@skcet.ac.in', '727724eumc036@skcet.ac.in', '727724eumc011@skcet.ac.in',
+    '727725eumc604@skcet.ac.in', '727724eumc044@skcet.ac.in', '25mz122@skcet.ac.in', '727725eumc608@skcet.ac.in'
+  ];
+  if (captains.includes(e)) {
+    const teams: { teamId: string; status: 'APPROVED' }[] = [];
+    if (e === '727724eumc044@skcet.ac.in') teams.push({ teamId: 'steering', status: 'APPROVED' }, { teamId: 'cost', status: 'APPROVED' });
+    if (e === '25mz122@skcet.ac.in') teams.push({ teamId: 'innovation', status: 'APPROVED' });
+    if (e === '727725eumc608@skcet.ac.in') teams.push({ teamId: 'pro', status: 'APPROVED' });
+    return { role: 'CAPTAIN', teams };
+  }
+  if (e === '25mz096@skcet.ac.in') return { role: 'TEAM_LEAD', teams: [{ teamId: 'suspension', status: 'APPROVED' }] };
+  if (e === '727724eumc114@skcet.ac.in') return { role: 'TEAM_LEAD', teams: [{ teamId: 'brakes', status: 'APPROVED' }] };
+  if (e === '25mz021@skcet.ac.in') return { role: 'TEAM_LEAD', teams: [{ teamId: 'transmission', status: 'APPROVED' }] };
+  if (e === '25mz045@skcet.ac.in') return { role: 'TEAM_LEAD', teams: [{ teamId: 'design', status: 'APPROVED' }] };
+  if (e === '727724eumc093@skcet.ac.in') return { role: 'TEAM_LEAD', teams: [{ teamId: 'electrical', status: 'APPROVED' }] };
+  if (e === '727724eumc026@skcet.ac.in') return { role: 'TEAM_LEAD', teams: [{ teamId: 'autonomous', status: 'APPROVED' }] };
+  return { role: 'MEMBER', teams: [] };
+}
+
 // Endpoints
 app.get("/api/test", (req, res) => res.json({ ok: true }));
+
+app.get("/api/users/profile/:uid", async (req, res) => {
+  try {
+    const { uid } = req.params;
+    if (!uid) return res.status(400).json({ error: "UID required" });
+    
+    let profile = null;
+
+    // 1. Try REST (Secret) first as it is reliable on Vercel
+    try {
+      profile = await firebaseRest.get(`users/${uid}`);
+    } catch (e) {}
+
+    // 2. Try Admin SDK
+    if (!profile && admin.apps.length > 0) {
+      try {
+        const snapshot = await admin.database().ref(`users/${uid}`).once("value");
+        if (snapshot.exists()) profile = snapshot.val();
+      } catch (e) {}
+    }
+
+    if (profile) {
+      res.json(profile);
+    } else {
+      try {
+        let email = '', displayName = '', photoURL = '';
+        try {
+          const userRecord = await admin.auth().getUser(uid);
+          email = userRecord.email || '';
+          displayName = userRecord.displayName || email.split('@')[0];
+          photoURL = userRecord.photoURL || '';
+        } catch (e) {
+          return res.status(404).json({ error: "User not found" });
+        }
+        const { role, teams } = resolveRoleFromEmail(email);
+        const newProfile = {
+          uid, email, displayName, photoURL, role, teams,
+          approvedTeams: teams.filter((t: any) => t.status === 'APPROVED').map((t: any) => t.teamId),
+          createdAt: new Date().toISOString(), isOnline: true, lastActive: new Date().toISOString(),
+        };
+        await firebaseRest.update(`users/${uid}`, newProfile);
+        res.json(newProfile);
+      } catch (error) {
+        res.status(500).json({ error: "Failed to create profile" });
+      }
+    }
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 app.post("/api/users/approve", async (req, res) => {
   try {
