@@ -287,6 +287,47 @@ app.get("/api/admin/members", async (req, res) => {
   }
 });
 
+app.post("/api/users/approve", async (req, res) => {
+  try {
+    const { uid, teamId } = req.body;
+    if (!uid || !teamId) return res.status(400).json({ error: "UID and teamId required" });
+
+    const userRef = admin.database().ref(`users/${uid}`);
+    const snapshot = await userRef.once("value");
+    
+    if (snapshot.exists()) {
+      const profile = snapshot.val();
+      const teams = profile.teams || [];
+      const updatedTeams = teams.map((t: any) => t.teamId === teamId ? { ...t, status: 'APPROVED' } : t);
+      const approvedTeams = updatedTeams.filter((t: any) => t.status === 'APPROVED').map((t: any) => t.teamId);
+      await userRef.update({ teams: updatedTeams, approvedTeams });
+      res.json({ success: true });
+    } else res.status(404).json({ error: "User not found" });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post("/api/users/reject", async (req, res) => {
+  try {
+    const { uid, teamId } = req.body;
+    if (!uid || !teamId) return res.status(400).json({ error: "UID and teamId required" });
+
+    const userRef = admin.database().ref(`users/${uid}`);
+    const snapshot = await userRef.once("value");
+    
+    if (snapshot.exists()) {
+      const profile = snapshot.val();
+      const updatedTeams = (profile.teams || []).filter((t: any) => t.teamId !== teamId);
+      const approvedTeams = updatedTeams.filter((t: any) => t.status === 'APPROVED').map((t: any) => t.teamId);
+      await userRef.update({ teams: updatedTeams, approvedTeams });
+      res.json({ success: true });
+    } else res.status(404).json({ error: "User not found" });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
   const getBaseUrl = (req: express.Request) => {
     const protocol = req.headers['x-forwarded-proto'] || 'http';
     return `${protocol}://${req.headers.host}`;

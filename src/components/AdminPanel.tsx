@@ -11,7 +11,8 @@ export default function AdminPanel() {
     const [pendingRequests, setPendingRequests] = useState<UserProfile[]>([]);
     const [approvedMembers, setApprovedMembers] = useState<UserProfile[]>([]);
     const [actionLoading, setActionLoading] = useState<string | null>(null);
-    const [activeTab, setActiveTab] = useState<'pending' | 'members'>('pending');
+    const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
+    const [activeTab, setActiveTab] = useState<'pending' | 'members' | 'users'>('pending');
 
     const isCaptainMode = profile?.role === 'CAPTAIN';
     const isTeamLead = profile?.role === 'TEAM_LEAD';
@@ -30,6 +31,7 @@ export default function AdminPanel() {
                 ]);
                 
                 setPendingRequests(pending);
+                setAllUsers(members);
                 
                 // Approved members filter logic (mirrors previous listener logic)
                 const teamIdsList = profile.approvedTeams || [];
@@ -137,9 +139,15 @@ export default function AdminPanel() {
                     className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'members' ? 'bg-primary text-black' : 'text-slate-500 hover:text-white'}`}
                 >
                     Approved Members
-                    {approvedMembers.length > 0 && (
+                </button>
+                <button
+                    onClick={() => setActiveTab('users')}
+                    className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'users' ? 'bg-primary text-black' : 'text-slate-500 hover:text-white'}`}
+                >
+                    App Users
+                    {allUsers.length > 0 && (
                         <span className="ml-2 px-1.5 py-0.5 rounded-full bg-white/10 text-slate-400 text-[8px] font-black">
-                            {approvedMembers.length}
+                            {allUsers.length}
                         </span>
                     )}
                 </button>
@@ -325,6 +333,44 @@ export default function AdminPanel() {
                                     </AnimatePresence>
                                 </div>
                             )}
+                        </div>
+                    </motion.div>
+                )}
+                {activeTab === 'users' && (
+                    <motion.div key="users" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }}>
+                        <div className="glass-panel p-8 rounded-3xl border-t-2 border-t-primary/30">
+                            <h3 className="text-xl font-bold text-slate-200 mb-6 flex items-center gap-2">
+                                <Users size={24} />
+                                All Registered App Users
+                                <span className="ml-2 px-2 py-0.5 rounded-full bg-white/5 text-slate-400 text-xs font-black border border-white/10">
+                                    {allUsers.length} total
+                                </span>
+                            </h3>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {allUsers.map(u => (
+                                    <div key={u.uid} className="bg-surface-elevated p-4 rounded-2xl border border-white/5 flex items-center gap-4">
+                                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-bold">
+                                            {(u.displayName || resolveNameFromEmail(u.email)).charAt(0).toUpperCase()}
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="font-bold text-slate-200 truncate text-sm">
+                                                {u.displayName || resolveNameFromEmail(u.email)}
+                                            </p>
+                                            <p className="text-[10px] text-slate-500 truncate">{u.email}</p>
+                                            <div className="flex gap-1 mt-1">
+                                                <span className={`text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-widest ${
+                                                    u.role === 'CAPTAIN' ? 'bg-red-500/20 text-red-400' :
+                                                    u.role === 'TEAM_LEAD' ? 'bg-primary/20 text-primary' :
+                                                    'bg-white/5 text-slate-500'
+                                                }`}>
+                                                    {u.role || 'MEMBER'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     </motion.div>
                 )}

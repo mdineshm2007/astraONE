@@ -292,12 +292,17 @@ app.get("/api/admin/members", async (req, res) => {
 app.post("/api/users/approve", async (req, res) => {
   try {
     const { uid, teamId } = req.body;
-    const profile = await firebaseRest.get(`users/${uid}`);
-    if (profile) {
+    if (!uid || !teamId) return res.status(400).json({ error: "UID and teamId required" });
+
+    const userRef = admin.database().ref(`users/${uid}`);
+    const snapshot = await userRef.once("value");
+    
+    if (snapshot.exists()) {
+      const profile = snapshot.val();
       const teams = profile.teams || [];
       const updatedTeams = teams.map((t: any) => t.teamId === teamId ? { ...t, status: 'APPROVED' } : t);
       const approvedTeams = updatedTeams.filter((t: any) => t.status === 'APPROVED').map((t: any) => t.teamId);
-      await firebaseRest.update(`users/${uid}`, { teams: updatedTeams, approvedTeams });
+      await userRef.update({ teams: updatedTeams, approvedTeams });
       res.json({ success: true });
     } else res.status(404).json({ error: "User not found" });
   } catch (error: any) {
@@ -308,11 +313,16 @@ app.post("/api/users/approve", async (req, res) => {
 app.post("/api/users/reject", async (req, res) => {
   try {
     const { uid, teamId } = req.body;
-    const profile = await firebaseRest.get(`users/${uid}`);
-    if (profile) {
-      const teams = (profile.teams || []).filter((t: any) => t.teamId !== teamId);
-      const approvedTeams = teams.filter((t: any) => t.status === 'APPROVED').map((t: any) => t.teamId);
-      await firebaseRest.update(`users/${uid}`, { teams, approvedTeams });
+    if (!uid || !teamId) return res.status(400).json({ error: "UID and teamId required" });
+
+    const userRef = admin.database().ref(`users/${uid}`);
+    const snapshot = await userRef.once("value");
+    
+    if (snapshot.exists()) {
+      const profile = snapshot.val();
+      const updatedTeams = (profile.teams || []).filter((t: any) => t.teamId !== teamId);
+      const approvedTeams = updatedTeams.filter((t: any) => t.status === 'APPROVED').map((t: any) => t.teamId);
+      await userRef.update({ teams: updatedTeams, approvedTeams });
       res.json({ success: true });
     } else res.status(404).json({ error: "User not found" });
   } catch (error: any) {
