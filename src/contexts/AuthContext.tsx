@@ -267,10 +267,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     if (user) {
-      const userRef = ref(rtdb, `users/${user.uid}`);
-      await update(userRef, { isOnline: false, lastActive: new Date().toISOString() });
+      try {
+        const userRef = ref(rtdb, `users/${user.uid}`);
+        await update(userRef, { isOnline: false, lastActive: new Date().toISOString() });
+      } catch (err) {
+        console.warn("Could not update online status during logout:", err);
+      }
     }
-    await signOut(auth);
+    try {
+      await signOut(auth);
+    } catch (err) {
+      console.error("Sign out error:", err);
+    }
   };
 
   return (

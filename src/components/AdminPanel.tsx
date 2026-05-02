@@ -31,12 +31,11 @@ export default function AdminPanel() {
         return subscribeToUsers((users) => {
             const teamIds = profile.approvedTeams || [];
             const approved = users.filter(u => {
-                if (u.uid === profile.uid) return false; // Don't show self
-                if (u.role === 'CAPTAIN') return false;  // Don't show captains
-                if (isCaptainMode) {
-                    // Captain sees all members with approved teams
-                    return u.approvedTeams && u.approvedTeams.length > 0;
-                }
+                if (isCaptainMode) return true; // Captains see absolutely everyone
+                
+                if (u.uid === profile.uid) return false; // Team leads don't show self
+                if (u.role === 'CAPTAIN') return false;  // Team leads don't see captains
+                
                 // Team lead sees members in their teams
                 return u.approvedTeams?.some(t => teamIds.includes(t));
             });
@@ -264,7 +263,7 @@ export default function AdminPanel() {
                                                 return profile?.approvedTeams?.includes(t);
                                             });
 
-                                            if (visibleTeams.length === 0) return null;
+                                            if (!isCaptainMode && visibleTeams.length === 0) return null;
 
                                             return (
                                                 <motion.div
@@ -293,19 +292,25 @@ export default function AdminPanel() {
 
                                                     {/* Per-team remove buttons */}
                                                     <div className="space-y-2">
-                                                        {visibleTeams.map(teamId => (
-                                                            <div key={teamId} className="flex items-center justify-between bg-white/5 rounded-xl px-3 py-2">
-                                                                <span className="text-xs font-black text-primary uppercase tracking-wider">{teamId}</span>
-                                                                <button
-                                                                    onClick={() => handleRemoveMember(member, teamId)}
-                                                                    disabled={actionLoading === member.uid + teamId + 'remove'}
-                                                                    className="flex items-center gap-1.5 px-3 py-1 bg-red-500/10 text-red-400 border border-red-500/20 rounded-lg hover:bg-red-500/20 transition-all text-xs font-bold disabled:opacity-50"
-                                                                >
-                                                                    <UserX size={12} />
-                                                                    {actionLoading === member.uid + teamId + 'remove' ? 'Removing...' : 'Remove'}
-                                                                </button>
+                                                        {visibleTeams.length === 0 ? (
+                                                            <div className="text-xs text-slate-500 italic bg-white/5 px-3 py-2 rounded-xl text-center">
+                                                                No teams assigned yet.
                                                             </div>
-                                                        ))}
+                                                        ) : (
+                                                            visibleTeams.map(teamId => (
+                                                                <div key={teamId} className="flex items-center justify-between bg-white/5 rounded-xl px-3 py-2">
+                                                                    <span className="text-xs font-black text-primary uppercase tracking-wider">{teamId}</span>
+                                                                    <button
+                                                                        onClick={() => handleRemoveMember(member, teamId)}
+                                                                        disabled={actionLoading === member.uid + teamId + 'remove'}
+                                                                        className="flex items-center gap-1.5 px-3 py-1 bg-red-500/10 text-red-400 border border-red-500/20 rounded-lg hover:bg-red-500/20 transition-all text-xs font-bold disabled:opacity-50"
+                                                                    >
+                                                                        <UserX size={12} />
+                                                                        {actionLoading === member.uid + teamId + 'remove' ? 'Removing...' : 'Remove'}
+                                                                    </button>
+                                                                </div>
+                                                            ))
+                                                        )}
                                                     </div>
                                                 </motion.div>
                                             );
