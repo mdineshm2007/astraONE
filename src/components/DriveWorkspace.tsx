@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Cloud, Upload, ExternalLink, FileText, CheckCircle2, AlertCircle, Loader2, IndianRupee, Table2, TrendingUp, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { rtdb } from '../firebase';
+import { rtdb, auth } from '../firebase';
 import { ref, onValue } from 'firebase/database';
 import BOMTable from './BOMTable';
 
@@ -21,7 +21,7 @@ export default function DriveWorkspace() {
   useEffect(() => {
     const foldersRef = ref(rtdb, 'drive_folders');
     const financesRef = ref(rtdb, 'finances');
-    const tokensRef = ref(rtdb, `drive_config/tokens`);
+    const statusRef = ref(rtdb, `drive_config/status`);
     
     const unsubFolders = onValue(foldersRef, (snapshot) => {
       setFolders(snapshot.val());
@@ -31,14 +31,14 @@ export default function DriveWorkspace() {
       setFinances(snapshot.val());
     });
 
-    const unsubTokens = onValue(tokensRef, (snapshot) => {
-      setDriveConnected(snapshot.exists());
+    const unsubStatus = onValue(statusRef, (snapshot) => {
+      setDriveConnected(snapshot.exists() && snapshot.val().connected === true);
     });
     
     return () => {
       unsubFolders();
       unsubFinances();
-      unsubTokens();
+      unsubStatus();
     };
   }, [profile?.uid]);
 
@@ -165,11 +165,19 @@ export default function DriveWorkspace() {
   };
 
   const handleConnectGoogle = async () => {
+    const userId = profile?.uid || (auth.currentUser?.uid);
+    
+    if (!userId) {
+      alert("Auth error: User ID not found. Please refresh the page and try again.");
+      return;
+    }
+
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-      const res = await fetch(`/api/auth/google/url?uid=${profile?.uid}`, { signal: controller.signal });
+      console.log(`[Drive] Requesting auth URL for UID: ${userId}`);
+      const res = await fetch(`/api/auth/google/url?uid=${userId}`, { signal: controller.signal });
       clearTimeout(timeoutId);
 
       if (!res.ok) {

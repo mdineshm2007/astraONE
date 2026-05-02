@@ -185,6 +185,30 @@ const getAuthForUser = async (uid: string, req?: express.Request) => {
 // Endpoints
 app.get("/api/test", (req, res) => res.json({ ok: true }));
 
+app.get("/api/users/profile/:uid", async (req, res) => {
+  try {
+    const { uid } = req.params;
+    if (!uid) return res.status(400).json({ error: "UID required" });
+
+    let profile = await firebaseRest.get(`users/${uid}`);
+    
+    if (!profile && admin.apps.length > 0) {
+      try {
+        const snapshot = await admin.database().ref(`users/${uid}`).once("value");
+        if (snapshot.exists()) profile = snapshot.val();
+      } catch (e) {}
+    }
+
+    if (profile) {
+      res.json(profile);
+    } else {
+      res.status(404).json({ error: "Profile not found" });
+    }
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.post("/api/users/approve", async (req, res) => {
   try {
     const { uid, teamId } = req.body;
@@ -230,13 +254,19 @@ app.get("/api/auth/google/callback", async (req, res) => {
   try {
     const { code, state } = req.query;
     const baseUrl = getBaseUrl(req);
+
+    if (!code || !state) return res.redirect(`${baseUrl}/workspace?error=missing_params`);
+
     const oauth2Client = createOAuth2Client(`${baseUrl}/api/auth/google/callback`);
     const { tokens } = await oauth2Client.getToken(code as string);
     await admin.database().ref('drive_config/tokens').set(tokens);
+    await admin.database().ref('drive_config/status').set({ connected: true, timestamp: Date.now() });
     await admin.database().ref(`users/${state}/drive_tokens`).set(tokens);
     res.redirect(`${baseUrl}/workspace?auth=success`);
   } catch (error: any) {
-    res.redirect(`${getBaseUrl(req)}/?error=auth_failed`);
+    console.error("[Auth Callback Error]", error.message);
+    const baseUrl = getBaseUrl(req);
+    res.redirect(`${baseUrl}/workspace?error=auth_failed`);
   }
 });
 
