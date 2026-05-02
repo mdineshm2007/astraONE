@@ -134,6 +134,19 @@ export async function assignTeamHead(uid: string, teamId: string) {
   }
 }
 
+export async function fetchPendingMembers(teamIds: string[]) {
+  const query = teamIds.includes('all') ? 'all' : teamIds.join(',');
+  const response = await fetch(`/api/admin/pending?teamIds=${query}`);
+  if (!response.ok) throw new Error("Failed to fetch pending members");
+  return response.json() as Promise<UserProfile[]>;
+}
+
+export async function fetchAllUsers() {
+  const response = await fetch('/api/admin/members');
+  if (!response.ok) throw new Error("Failed to fetch all members");
+  return response.json() as Promise<UserProfile[]>;
+}
+
 export function subscribeToUsers(callback: (users: UserProfile[]) => void) {
   const usersRef = ref(rtdb, 'users');
   return onValue(usersRef, (snapshot) => {

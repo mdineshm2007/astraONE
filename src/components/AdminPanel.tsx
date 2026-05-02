@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ShieldAlert, Users, CheckCircle2, X, Clock, AlertCircle, UserX } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { subscribeToMultipleTeamsPendingMembers, approveMember, rejectMember, subscribeToUsers, updateUserProfile } from '../services/userService';
+import { subscribeToMultipleTeamsPendingMembers, approveMember, rejectMember, subscribeToUsers, updateUserProfile, fetchPendingMembers, fetchAllUsers } from '../services/userService';
 import { UserProfile } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { resolveNameFromEmail } from '../utils/userUtils';
@@ -17,30 +17,37 @@ export default function AdminPanel() {
     const isTeamLead = profile?.role === 'TEAM_LEAD';
     const canAccess = isCaptainMode || isTeamLead;
 
-    // Pending requests subscription
+    // Admin Panel Refresh Logic (using API polling to bypass RTDB read restrictions)
     useEffect(() => {
         if (!profile || !canAccess) return;
-        const teamIds = isCaptainMode ? ['all'] : (profile.approvedTeams || []);
-        if (teamIds.length === 0) return;
-        return subscribeToMultipleTeamsPendingMembers(teamIds, setPendingRequests);
-    }, [profile, canAccess, isCaptainMode, isTeamLead]);
+        
+        const refreshData = async () => {
+            try {
+                const teamIds = isCaptainMode ? ['all'] : (profile.approvedTeams || []);
+                const [pending, members] = await Promise.all([
+                    fetchPendingMembers(teamIds),
+                    fetchAllUsers()
+                ]);
+                
+                setPendingRequests(pending);
+                
+                // Approved members filter logic (mirrors previous listener logic)
+                const teamIdsList = profile.approvedTeams || [];
+                const approved = members.filter(u => {
+                    if (isCaptainMode) return true;
+                    if (u.uid === profile.uid) return false;
+                    if (u.role === 'CAPTAIN') return false;
+                    return u.approvedTeams?.some(t => teamIdsList.includes(t));
+                });
+                setApprovedMembers(approved);
+            } catch (err) {
+                console.error("Admin refresh failed:", err);
+            }
+        };
 
-    // All approved members subscription
-    useEffect(() => {
-        if (!profile || !canAccess) return;
-        return subscribeToUsers((users) => {
-            const teamIds = profile.approvedTeams || [];
-            const approved = users.filter(u => {
-                if (isCaptainMode) return true; // Captains see absolutely everyone
-                
-                if (u.uid === profile.uid) return false; // Team leads don't show self
-                if (u.role === 'CAPTAIN') return false;  // Team leads don't see captains
-                
-                // Team lead sees members in their teams
-                return u.approvedTeams?.some(t => teamIds.includes(t));
-            });
-            setApprovedMembers(approved);
-        });
+        refreshData();
+        const interval = setInterval(refreshData, 30000); // Refresh every 30s
+        return () => clearInterval(interval);
     }, [profile, canAccess, isCaptainMode]);
 
     const handleApprove = async (uid: string, teamId: string) => {

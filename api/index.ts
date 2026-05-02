@@ -251,6 +251,44 @@ app.post("/api/users/teams/request", async (req, res) => {
   }
 });
 
+app.get("/api/admin/pending", async (req, res) => {
+  try {
+    const { teamIds } = req.query; // Expecting comma-separated or 'all'
+    const snapshot = await admin.database().ref('users').once("value");
+    const data = snapshot.val() || {};
+    const members = Object.entries(data).map(([key, val]: [string, any]) => ({
+      ...val,
+      uid: val.uid || key
+    }));
+
+    const targets = teamIds === 'all' ? ['all'] : (teamIds as string || '').split(',');
+
+    const filtered = members.filter((profile: any) => {
+      if (targets.includes('all')) {
+        return profile.teams?.some((t: any) => t.status === 'PENDING');
+      }
+      return profile.teams?.some((t: any) => t.status === 'PENDING' && targets.includes(t.teamId));
+    });
+    res.json(filtered);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get("/api/admin/members", async (req, res) => {
+  try {
+    const snapshot = await admin.database().ref('users').once("value");
+    const data = snapshot.val() || {};
+    const members = Object.entries(data).map(([key, val]: [string, any]) => ({
+      ...val,
+      uid: val.uid || key
+    }));
+    res.json(members);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.post("/api/users/approve", async (req, res) => {
   try {
     const { uid, teamId } = req.body;
