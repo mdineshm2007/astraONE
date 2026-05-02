@@ -250,6 +250,16 @@ app.get("/api/auth/google/url", (req, res) => {
   res.json({ url });
 });
 
+app.get("/api/drive/status", async (req, res) => {
+  try {
+    const status = await firebaseRest.get('drive_config/status');
+    const tokens = await firebaseRest.get('drive_config/tokens');
+    res.json({ connected: !!status?.connected || !!tokens });
+  } catch (error) {
+    res.json({ connected: false });
+  }
+});
+
 app.get("/api/auth/google/callback", async (req, res) => {
   try {
     const { code, state } = req.query;

@@ -21,24 +21,28 @@ export default function DriveWorkspace() {
   useEffect(() => {
     const foldersRef = ref(rtdb, 'drive_folders');
     const financesRef = ref(rtdb, 'finances');
-    const statusRef = ref(rtdb, `drive_config/status`);
     
+    // Fetch initial status from API to bypass Firebase RTDB read rules
+    fetch('/api/drive/status')
+      .then(res => res.json())
+      .then(data => {
+        if (data.connected) setDriveConnected(true);
+      })
+      .catch(console.error);
+
     const unsubFolders = onValue(foldersRef, (snapshot) => {
-      setFolders(snapshot.val());
+      const data = snapshot.val();
+      setFolders(data);
+      if (data) setDriveConnected(true); // If folders exist, we know it's connected
     });
     
     const unsubFinances = onValue(financesRef, (snapshot) => {
       setFinances(snapshot.val());
     });
-
-    const unsubStatus = onValue(statusRef, (snapshot) => {
-      setDriveConnected(snapshot.exists() && snapshot.val().connected === true);
-    });
     
     return () => {
       unsubFolders();
       unsubFinances();
-      unsubStatus();
     };
   }, [profile?.uid]);
 
