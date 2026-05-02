@@ -34,10 +34,16 @@ export default function Login() {
           Authenticate with SSO
         </button>
         
-        <div className="mt-8 pt-8 border-t border-primary/10 flex justify-center gap-4 text-[10px] uppercase font-bold tracking-widest text-slate-500">
-           <span>Solar Car v2.4</span>
-           <span>•</span>
-           <span>R&D Hub</span>
+        <div className="mt-8 pt-8 border-t border-primary/10 flex flex-col items-center gap-4">
+           <div className="flex justify-center gap-4 text-[10px] uppercase font-bold tracking-widest text-slate-500">
+              <span>Solar Car v2.4</span>
+              <span>•</span>
+              <span>R&D Hub</span>
+           </div>
+           <div className="flex justify-center gap-6 text-[10px] uppercase font-bold tracking-widest text-slate-400">
+              <a href="/privacy.html" className="hover:text-primary transition-colors">Privacy Policy</a>
+              <a href="/terms.html" className="hover:text-primary transition-colors">Terms of Service</a>
+           </div>
         </div>
       </motion.div>
     </div>
