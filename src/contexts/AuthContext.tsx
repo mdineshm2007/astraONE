@@ -74,7 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const timeoutId = setTimeout(() => {
         setLoading(false);
         console.warn("Auth setup timed out - opening app anyway");
-      }, 5000);
+      }, 15000);
 
       try {
         const email = firebaseUser.email || '';
