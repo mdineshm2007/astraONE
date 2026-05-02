@@ -492,44 +492,119 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 // --- AI Intelligence Endpoints ---
-app.post("/api/ai/analyze", async (req, res) => {
+
+/** Generic Analysis Endpoint - Used by getTaskInsights */
+app.post("/api/analyze", async (req, res) => {
   try {
     if (!groq) return res.status(503).json({ error: "AI Service Unavailable (Missing Key)" });
-    const { systemPrompt, userPrompt, model = "llama-3.3-70b-versatile" } = req.body;
+    const { type, data, context = 'Mission Control' } = req.body;
 
-    const chatCompletion = await groq.chat.completions.create({
+    let systemPrompt = "You are ASTRA AI, the project intelligence lead. Provide a concise, professional summary (max 4 sentences) of the telemetry provided.";
+    if (type === 'TASK_PROGRESS') {
+      systemPrompt = "You are ASTRA AI, the project intelligence lead. Analyze the task telemetry and progress updates. Provide a concise, professional summary (max 4 sentences) of progress and bottlenecks. Use engineering terminology.";
+    }
+
+    const completion = await groq.chat.completions.create({
       messages: [
         { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt }
+        { role: "user", content: `Telemetry (${type}): ${JSON.stringify(data)}. Context: ${context}` }
       ],
-      model: model,
-      temperature: 0.3,
-      response_format: { type: "json_object" }
+      model: "llama-3.1-8b-instant",
+      temperature: 0.7,
+      max_tokens: 300
     });
 
-    const reply = chatCompletion.choices[0]?.message?.content || "{}";
-    res.json(JSON.parse(reply));
+    res.json({ analysis: completion.choices[0]?.message?.content });
   } catch (error: any) {
-    console.error("[AI Analysis Error]", error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
-app.post("/api/ai/chat", async (req, res) => {
+/** Team-Specific Strategy - Used by getTeamAnalysis */
+app.post("/api/ai/team-analysis", async (req, res) => {
   try {
     if (!groq) return res.status(503).json({ error: "AI Service Unavailable (Missing Key)" });
-    const { messages, model = "llama-3.3-70b-versatile" } = req.body;
+    const { tasks = [], members = [], progress = [], delays = [], subsystem = "General" } = req.body;
 
-    const chatCompletion = await groq.chat.completions.create({
+    const systemPrompt = `You are an AI Project Manager for a solar car team.
+Analyze the provided telemetry and return a strategic assessment in STRICT JSON format:
+{
+  "priority_tasks": ["task 1", "task 2"],
+  "at_risk_tasks": ["task 3"],
+  "blocked_members": ["member name"],
+  "team_efficiency": "Percentage or descriptive string",
+  "recommendations": ["rec 1", "rec 2"],
+  "team_summary": "1-sentence summary"
+}`;
+
+    const completion = await groq.chat.completions.create({
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: `Subsystem: ${subsystem}\nTasks: ${JSON.stringify(tasks)}\nMembers: ${JSON.stringify(members)}\nProgress: ${JSON.stringify(progress)}\nDelays: ${JSON.stringify(delays)}` }
+      ],
+      model: "llama-3.3-70b-versatile",
+      temperature: 0.3,
+      response_format: { type: "json_object" }
+    });
+
+    res.json(JSON.parse(completion.choices[0]?.message?.content || "{}"));
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/** Summarize Notes - Used by summarizeNotes */
+app.post("/api/summarize", async (req, res) => {
+  try {
+    if (!groq) return res.status(503).json({ error: "AI Service Unavailable" });
+    const { notes } = req.body;
+    const completion = await groq.chat.completions.create({
+      messages: [
+        { role: "system", content: "You are ASTRA Project Intelligence. Summarize the provided notes concisely." },
+        { role: "user", content: `Notes: ${JSON.stringify(notes)}` }
+      ],
+      model: "llama-3.1-8b-instant",
+      max_tokens: 300
+    });
+    res.json({ summary: completion.choices[0]?.message?.content });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/** Generic AI Analyze - Used by generateSchedule */
+app.post("/api/ai/analyze", async (req, res) => {
+  try {
+    if (!groq) return res.status(503).json({ error: "AI Service Unavailable" });
+    const { systemPrompt, userPrompt, model = "llama-3.1-8b-instant" } = req.body;
+    const completion = await groq.chat.completions.create({
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt }
+      ],
+      model,
+      temperature: 0.3,
+      response_format: { type: "json_object" }
+    });
+    res.json(JSON.parse(completion.choices[0]?.message?.content || "{}"));
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/** Generic AI Chat - Used by chatAssistant */
+app.post("/api/ai/chat", async (req, res) => {
+  try {
+    if (!groq) return res.status(503).json({ error: "AI Service Unavailable" });
+    const { messages, model = "llama-3.3-70b-versatile" } = req.body;
+    const completion = await groq.chat.completions.create({
       messages,
       model,
       temperature: 0.7,
       max_tokens: 1024
     });
-
-    res.json({ content: chatCompletion.choices[0]?.message?.content || "" });
+    res.json({ message: completion.choices[0]?.message?.content || "" });
   } catch (error: any) {
-    console.error("[AI Chat Error]", error.message);
     res.status(500).json({ error: error.message });
   }
 });
