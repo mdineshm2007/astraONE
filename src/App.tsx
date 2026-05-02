@@ -19,7 +19,13 @@ function AppContent() {
   const [currentView, setCurrentView] = useState<AppView>('dashboard');
 
   useEffect(() => {
-    seedSubsystems();
+    seedSubsystems().catch(e => {
+       if (e.message.includes('permission_denied')) {
+         console.warn("[App] Client-side seeding denied - this is expected if rules are locked.");
+       } else {
+         console.error("[App] Seeding failed:", e);
+       }
+    });
   }, []);
 
   if (loading) {
@@ -40,20 +46,28 @@ function AppContent() {
   if (!profile) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-6 text-center">
-        <div className="max-w-md space-y-4">
-          <div className="w-16 h-16 bg-error/20 rounded-2xl flex items-center justify-center mx-auto text-error">
-             <ShieldAlert size={32} />
+        <div className="max-w-md space-y-6">
+          <div className="w-20 h-20 bg-error/10 rounded-3xl flex items-center justify-center mx-auto text-error border border-error/20">
+             <ShieldAlert size={40} />
           </div>
-          <h1 className="text-2xl font-bold">Profile Unavailable</h1>
-          <p className="text-slate-400">
-            We couldn't load your engineering profile. This usually happens if your account doesn't have the required permissions or the database is misconfigured.
-          </p>
+          <div className="space-y-2">
+            <h1 className="text-3xl font-black tracking-tighter">Profile Unavailable</h1>
+            <p className="text-slate-400 leading-relaxed">
+              We couldn't synchronize your engineering profile with the mission database. This usually happens during network transitions or if the database is under maintenance.
+            </p>
+          </div>
+          <div className="bg-white/5 p-4 rounded-2xl border border-white/5 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+             Current Status: <span className="text-error">Database Handshake Failed</span>
+          </div>
           <button 
             onClick={() => window.location.reload()}
-            className="px-6 py-2 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors"
+            className="w-full py-4 bg-white text-black font-black rounded-2xl hover:bg-primary transition-all shadow-xl shadow-white/5 active:scale-[0.98]"
           >
-            Retry Connection
+            Reconnect to ASTRA
           </button>
+          <p className="text-[10px] text-slate-600 font-bold uppercase tracking-widest">
+            If this persists, contact the App Technician (25mz122@skcet.ac.in)
+          </p>
         </div>
       </div>
     );

@@ -298,26 +298,67 @@ app.get("/api/test", (req, res) => res.json({ ok: true }));
 
       console.log(`[Profile] Fetching profile for UID: ${uid}`);
       
-      const userRef = admin.database().ref(`users/${uid}`);
-      const snapshot = await userRef.once("value");
+      let profile = null;
+
+      // 1. Try REST Fallback (using Secret) FIRST as it is currently the only reliable method
+      try {
+        console.log(`[Profile] Attempting REST (Secret) fetch for ${uid}`);
+        profile = await firebaseRest.get(`users/${uid}`);
+        if (profile) {
+          console.log(`[Profile] Found via REST (Secret) for ${uid}`);
+        }
+      } catch (restError: any) {
+        console.warn(`[Profile] REST fetch failed for ${uid}:`, restError.message);
+      }
+
+      // 2. Try Admin SDK as secondary fallback
+      if (!profile && admin.apps.length > 0) {
+        try {
+          console.log(`[Profile] Attempting Admin SDK fetch for ${uid}`);
+          const userRef = admin.database().ref(`users/${uid}`);
+          const snapshot = await Promise.race([
+            userRef.once("value"),
+            new Promise((_, reject) => setTimeout(() => reject(new Error("Admin SDK Timeout")), 5000))
+          ]) as admin.database.DataSnapshot;
+          
+          if (snapshot.exists()) {
+            profile = snapshot.val();
+            console.log(`[Profile] Found via Admin SDK for ${uid}`);
+          }
+        } catch (adminError: any) {
+          console.warn(`[Profile] Admin SDK failed for ${uid}:`, adminError.message);
+        }
+      }
       
-      if (snapshot.exists()) {
-        res.json(snapshot.val());
+      if (profile) {
+        res.json(profile);
       } else {
         console.log(`[Profile] Profile not found for ${uid}, creating default`);
-        // We need the email to create a profile, but if we don't have it here, 
-        // we might have to wait for the frontend to provide it.
-        // However, we can try to get it from Firebase Auth.
         try {
-          const userRecord = await admin.auth().getUser(uid);
-          const email = userRecord.email || '';
+          // We can't always get userRecord if Admin Auth failed, so we'll construct a minimal profile
+          let email = '';
+          let displayName = '';
+          let photoURL = '';
+
+          try {
+             const userRecord = await admin.auth().getUser(uid);
+             email = userRecord.email || '';
+             displayName = userRecord.displayName || email.split('@')[0];
+             photoURL = userRecord.photoURL || '';
+          } catch (e) {
+             console.warn("[Profile] Admin Auth failed, creating skeleton profile");
+             // If we don't have email, we might have to wait for frontend to provide it,
+             // but for now let's return a 404 so the frontend can try to set it.
+             return res.status(404).json({ error: "Profile not found and could not be retrieved from Auth" });
+          }
+
           const { role, teams } = resolveRoleFromEmail(email);
           
           const newProfile = {
             uid,
             email,
-            displayName: userRecord.displayName || email.split('@')[0],
-            photoURL: userRecord.photoURL || '',
+            displayName,
+            photoURL,
             role,
             teams,
             approvedTeams: teams.filter((t: any) => t.status === 'APPROVED').map((t: any) => t.teamId),
@@ -326,11 +367,12 @@ app.get("/api/test", (req, res) => res.json({ ok: true }));
             lastActive: new Date().toISOString(),
           };
           
-          await userRef.set(newProfile);
+          // Try to save using REST
+          await firebaseRest.update(`users/${uid}`, newProfile);
           res.json(newProfile);
-        } catch (authError) {
-          console.error("[Profile] Failed to fetch user from Auth:", authError);
-          res.status(404).json({ error: "User not found and could not be created" });
+        } catch (createError: any) {
+          console.error("[Profile] Failed to create profile:", createError);
+          res.status(500).json({ error: "Failed to create user profile" });
         }
       }
     } catch (error: any) {

@@ -60,8 +60,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let unsubProfile: (() => void) | null = null;
 
     const unsubAuth = onAuthStateChanged(auth, async (firebaseUser) => {
-      console.log("Auth state changed:", firebaseUser?.email || "No user");
-      if (unsubProfile) { unsubProfile(); unsubProfile = null; }
+      console.log("[Auth] State changed:", firebaseUser?.email || "No user");
+      
+      // Clean up previous listeners
+      if (unsubProfile) { 
+        console.log("[Auth] Cleaning up previous profile listener");
+        unsubProfile(); 
+        unsubProfile = null; 
+      }
+
       setUser(firebaseUser);
 
       if (!firebaseUser) {
@@ -70,51 +77,83 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      // Safety timeout to ensure app opens even if DB is slow
-      const timeoutId = setTimeout(() => {
-        setLoading(false);
-        console.warn("Auth setup timed out - opening app anyway");
+      // 1. Set loading to true while we fetch the new profile
+      setLoading(true);
+
+      const email = firebaseUser.email || '';
+      const { role: correctRole, teams: initialTeams } = resolveRoleFromEmail(email);
+      const userRef = ref(rtdb, `users/${firebaseUser.uid}`);
+
+      // Helper for backend fallback
+      const fetchProfileFallback = async (source: string) => {
+        try {
+          console.log(`[Auth] Attempting backend profile fallback (${source}) for:`, firebaseUser.uid);
+          
+          // Use AbortController for timeout
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 10000);
+          
+          const response = await fetch(`/api/users/profile/${firebaseUser.uid}`, {
+            signal: controller.signal
+          });
+          
+          clearTimeout(timeout);
+          
+          if (response.ok) {
+            const data = await response.json();
+            console.log(`[Auth] Profile loaded successfully from backend (${source})`);
+            setProfile(data);
+            setLoading(false);
+            return true;
+          } else {
+            console.warn(`[Auth] Backend fallback failed (${source}):`, response.status);
+          }
+        } catch (e: any) {
+          if (e.name === 'AbortError') {
+            console.error(`[Auth] Backend fallback TIMED OUT (${source})`);
+          } else {
+            console.error(`[Auth] Backend fallback error (${source}):`, e.message);
+          }
+        }
+        return false;
+      };
+
+      // 2. Soft Timeout (5s): Try backend if RTDB is slow but keep waiting for RTDB
+      const softTimeoutId = setTimeout(async () => {
+        if (!profile) {
+          console.warn("[Auth] RTDB slow - triggering early backend fallback");
+          await fetchProfileFallback("soft-timeout");
+        }
+      }, 5000);
+
+      // 3. Hard Safety Timeout (15s): Stop loading even if everything fails
+      const hardTimeoutId = setTimeout(() => {
+        if (loading) {
+          console.warn("[Auth] Critical timeout - forcing loading to false");
+          setLoading(false);
+        }
       }, 15000);
 
       try {
-        const email = firebaseUser.email || '';
-        const { role: correctRole, teams: initialTeams } = resolveRoleFromEmail(email);
-        const userRef = ref(rtdb, `users/${firebaseUser.uid}`);
-        
-        // Function to fetch profile from backend as a reliable fallback
-        const fetchProfileFallback = async () => {
-          try {
-            console.log("Attempting backend profile fallback for:", firebaseUser.uid);
-            const response = await fetch(`/api/users/profile/${firebaseUser.uid}`);
-            if (response.ok) {
-              const data = await response.json();
-              console.log("Profile loaded from backend fallback");
-              setProfile(data);
-              setLoading(false);
-              clearTimeout(timeoutId);
-              return true;
-            }
-          } catch (e) {
-            console.error("Backend fallback failed:", e);
-          }
-          return false;
-        };
-
-        // Use a single onValue for both initialization and updates
+        console.log("[Auth] Connecting to RTDB Profile Listener...");
         unsubProfile = onValue(userRef, async (snap) => {
           try {
-            console.log("Profile data received from RTDB");
-            clearTimeout(timeoutId);
+            console.log("[Auth] RTDB Data received");
+            clearTimeout(softTimeoutId);
+            clearTimeout(hardTimeoutId);
             
             if (snap.exists()) {
-              const existing = { ...snap.val(), uid: firebaseUser.uid } as UserProfile;
+              const data = snap.val();
+              const existing = { ...data, uid: firebaseUser.uid } as UserProfile;
               setProfile(existing);
               
-              // Background check for role/team updates
+              // Background sync logic (don't block UI)
               const existingApproved = existing.approvedTeams || [];
               const correctApproved = initialTeams.filter(t => t.status === 'APPROVED').map(t => t.teamId);
               const isMissingTeams = correctApproved.some(id => !existingApproved.includes(id));
+              
               if (existing.role !== correctRole || isMissingTeams) {
+                console.log("[Auth] Auto-syncing profile permissions/roles");
                 const mergedTeams = [...(existing.teams || [])];
                 initialTeams.forEach(it => {
                   if (!mergedTeams.some(et => et.teamId === it.teamId)) {
@@ -128,10 +167,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                   role: correctRole,
                   teams: mergedTeams,
                   approvedTeams: mergedTeams.filter(t => t.status === 'APPROVED').map(t => t.teamId),
-                }).catch(e => console.warn("Background profile update failed:", e));
+                }).catch(e => {
+                   if (e.message.includes('permission_denied')) {
+                     console.warn("[Auth] Client-side update denied, backend will sync eventually.");
+                   } else {
+                     console.warn("[Auth] Background sync failed:", e.message);
+                   }
+                });
               }
             } else {
-              console.log("Creating new user profile in RTDB");
+              console.log("[Auth] Profile missing in RTDB, creating default...");
               const newProfile: UserProfile = {
                 uid: firebaseUser.uid,
                 email,
@@ -145,37 +190,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 lastActive: new Date().toISOString(),
               };
               
-              // Try to create profile on client, if fails, the backend fallback might have already done it or will do it.
-              await set(userRef, newProfile).catch(async (e) => {
-                console.warn("Client-side profile creation failed, trying backend:", e.message);
-                await fetchProfileFallback();
-              });
               setProfile(newProfile);
+              await set(userRef, newProfile).catch(async (e) => {
+                console.error("[Auth] Client-side profile creation denied, using backend proxy:", e.message);
+                await fetchProfileFallback("creation-denied");
+              });
             }
             setLoading(false);
-          } catch (error) {
-            console.error("Error in profile listener callback:", error);
-            await fetchProfileFallback();
+          } catch (err) {
+            console.error("[Auth] Listener callback error:", err);
+            await fetchProfileFallback("callback-error");
           }
         }, async (error) => {
-          console.error("RTDB Profile Listener Error:", error);
-          const success = await fetchProfileFallback();
-          if (!success) {
-            clearTimeout(timeoutId);
-            setLoading(false);
+          console.error("[Auth] RTDB Listener Connection Error:", error);
+          clearTimeout(softTimeoutId);
+          clearTimeout(hardTimeoutId);
+          
+          // CRITICAL: If permission denied, trigger backend fallback IMMEDIATELY
+          const isPermissionDenied = error.message.toLowerCase().includes('permission') || error.message.toLowerCase().includes('access_denied');
+          if (isPermissionDenied) {
+            console.warn("[Auth] Permission Denied from RTDB - bypassing to backend proxy");
           }
+          
+          const success = await fetchProfileFallback(isPermissionDenied ? "permission-denied" : "rtdb-error");
+          if (!success) setLoading(false);
         });
 
-        // Setup online status and presence separately
+        // Setup presence
         const statusRef = ref(rtdb, `users/${firebaseUser.uid}/isOnline`);
         const lastActiveRef = ref(rtdb, `users/${firebaseUser.uid}/lastActive`);
-        update(userRef, { isOnline: true }).catch(e => console.warn("Presence update failed:", e));
+        update(userRef, { isOnline: true }).catch(e => console.warn("[Auth] Presence update failed:", e.message));
         onDisconnect(statusRef).set(false);
         onDisconnect(lastActiveRef).set(new Date().toISOString());
 
-      } catch (error) {
-        console.error('Error setting up user profile:', error);
-        clearTimeout(timeoutId);
+      } catch (err) {
+        console.error("[Auth] Setup error:", err);
+        clearTimeout(softTimeoutId);
+        clearTimeout(hardTimeoutId);
         setLoading(false);
       }
     });
