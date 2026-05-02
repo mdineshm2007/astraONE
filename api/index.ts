@@ -289,6 +289,20 @@ app.get("/api/admin/members", async (req, res) => {
   }
 });
 
+app.delete("/api/admin/users/:uid", async (req, res) => {
+  try {
+    const { uid } = req.params;
+    if (!uid) return res.status(400).json({ error: "UID required" });
+    
+    // We only delete from RTDB, we don't delete the Firebase Auth account to avoid accidental lockout
+    // but the user will be effectively "reset" or gone from the app's perspective.
+    await admin.database().ref(`users/${uid}`).remove();
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.post("/api/users/approve", async (req, res) => {
   try {
     const { uid, teamId } = req.body;

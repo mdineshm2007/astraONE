@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldAlert, Users, CheckCircle2, X, Clock, AlertCircle, UserX } from 'lucide-react';
+import { ShieldAlert, Users, CheckCircle2, X, Clock, AlertCircle, UserX, Trash2, Loader2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { subscribeToMultipleTeamsPendingMembers, approveMember, rejectMember, subscribeToUsers, updateUserProfile, fetchPendingMembers, fetchAllUsers } from '../services/userService';
+import { subscribeToMultipleTeamsPendingMembers, approveMember, rejectMember, subscribeToUsers, updateUserProfile, fetchPendingMembers, fetchAllUsers, deleteUserAccount } from '../services/userService';
 import { UserProfile } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { resolveNameFromEmail } from '../utils/userUtils';
@@ -87,14 +87,31 @@ export default function AdminPanel() {
     const handleRemoveMember = async (member: UserProfile, teamId: string) => {
         if (!window.confirm(`Remove ${member.displayName || resolveNameFromEmail(member.email)} from "${teamId}"?`)) return;
         setActionLoading(member.uid + teamId + 'remove');
-        // Filter out the target team from the member's teams array
-        const updatedTeams = (member.teams || []).filter(t => t.teamId !== teamId);
-        const updatedApprovedTeams = updatedTeams.filter(t => t.status === 'APPROVED').map(t => t.teamId);
-        await updateUserProfile(member.uid, {
-            teams: updatedTeams,
-            approvedTeams: updatedApprovedTeams,
-        });
-        setActionLoading(null);
+        try {
+            // Filter out the target team from the member's teams array
+            const updatedTeams = (member.teams || []).filter(t => t.teamId !== teamId);
+            const updatedApprovedTeams = updatedTeams.filter(t => t.status === 'APPROVED').map(t => t.teamId);
+            await updateUserProfile(member.uid, {
+                teams: updatedTeams,
+                approvedTeams: updatedApprovedTeams,
+            });
+        } catch (error: any) {
+            alert("Failed to remove member: " + error.message);
+        } finally {
+            setActionLoading(null);
+        }
+    };
+
+    const handleDeleteUser = async (uid: string, name: string) => {
+        if (!window.confirm(`PERMANENTLY delete user "${name}"? This cannot be undone.`)) return;
+        setActionLoading(uid + 'delete');
+        try {
+            await deleteUserAccount(uid);
+        } catch (error: any) {
+            alert("Failed to delete user: " + error.message);
+        } finally {
+            setActionLoading(null);
+        }
     };
 
     if (!canAccess) {
@@ -353,7 +370,7 @@ export default function AdminPanel() {
                                         <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-bold">
                                             {(u.displayName || resolveNameFromEmail(u.email)).charAt(0).toUpperCase()}
                                         </div>
-                                        <div className="min-w-0">
+                                        <div className="flex-1 min-w-0">
                                             <p className="font-bold text-slate-200 truncate text-sm">
                                                 {u.displayName || resolveNameFromEmail(u.email)}
                                             </p>
@@ -368,6 +385,20 @@ export default function AdminPanel() {
                                                 </span>
                                             </div>
                                         </div>
+                                        {isCaptainMode && u.role === 'MEMBER' && (!u.teams || u.teams.length === 0) && (
+                                            <button
+                                                onClick={() => handleDeleteUser(u.uid, u.displayName || u.email)}
+                                                disabled={actionLoading === u.uid + 'delete'}
+                                                className="p-2 text-slate-600 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
+                                                title="Delete User Account"
+                                            >
+                                                {actionLoading === u.uid + 'delete' ? (
+                                                    <Loader2 size={16} className="animate-spin" />
+                                                ) : (
+                                                    <Trash2 size={16} />
+                                                )}
+                                            </button>
+                                        )}
                                     </div>
                                 ))}
                             </div>

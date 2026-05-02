@@ -147,6 +147,16 @@ export async function fetchAllUsers() {
   return response.json() as Promise<UserProfile[]>;
 }
 
+export async function deleteUserAccount(uid: string) {
+  const response = await fetch(`/api/admin/users/${uid}`, {
+    method: 'DELETE'
+  });
+  if (!response.ok) {
+    const err = await response.json();
+    throw new Error(err.error || "Failed to delete user account");
+  }
+}
+
 export function subscribeToUsers(callback: (users: UserProfile[]) => void) {
   const usersRef = ref(rtdb, 'users');
   return onValue(usersRef, (snapshot) => {

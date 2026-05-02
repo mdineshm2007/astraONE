@@ -287,6 +287,17 @@ app.get("/api/admin/members", async (req, res) => {
   }
 });
 
+app.delete("/api/admin/users/:uid", async (req, res) => {
+  try {
+    const { uid } = req.params;
+    if (!uid) return res.status(400).json({ error: "UID required" });
+    await admin.database().ref(`users/${uid}`).remove();
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.post("/api/users/approve", async (req, res) => {
   try {
     const { uid, teamId } = req.body;
