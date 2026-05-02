@@ -81,57 +81,89 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { role: correctRole, teams: initialTeams } = resolveRoleFromEmail(email);
         const userRef = ref(rtdb, `users/${firebaseUser.uid}`);
         
+        // Function to fetch profile from backend as a reliable fallback
+        const fetchProfileFallback = async () => {
+          try {
+            console.log("Attempting backend profile fallback for:", firebaseUser.uid);
+            const response = await fetch(`/api/users/profile/${firebaseUser.uid}`);
+            if (response.ok) {
+              const data = await response.json();
+              console.log("Profile loaded from backend fallback");
+              setProfile(data);
+              setLoading(false);
+              clearTimeout(timeoutId);
+              return true;
+            }
+          } catch (e) {
+            console.error("Backend fallback failed:", e);
+          }
+          return false;
+        };
+
         // Use a single onValue for both initialization and updates
         unsubProfile = onValue(userRef, async (snap) => {
-          console.log("Profile data received from RTDB");
-          clearTimeout(timeoutId);
-          
-          if (snap.exists()) {
-            const existing = { ...snap.val(), uid: firebaseUser.uid } as UserProfile;
-            setProfile(existing);
+          try {
+            console.log("Profile data received from RTDB");
+            clearTimeout(timeoutId);
             
-            // Background check for role/team updates
-            const existingApproved = existing.approvedTeams || [];
-            const correctApproved = initialTeams.filter(t => t.status === 'APPROVED').map(t => t.teamId);
-            const isMissingTeams = correctApproved.some(id => !existingApproved.includes(id));
-            if (existing.role !== correctRole || isMissingTeams) {
-              const mergedTeams = [...(existing.teams || [])];
-              initialTeams.forEach(it => {
-                if (!mergedTeams.some(et => et.teamId === it.teamId)) {
-                  mergedTeams.push(it);
-                } else if (it.status === 'APPROVED') {
-                  const idx = mergedTeams.findIndex(et => et.teamId === it.teamId);
-                  if (mergedTeams[idx].status === 'PENDING') mergedTeams[idx] = it;
-                }
-              });
-              await update(userRef, {
+            if (snap.exists()) {
+              const existing = { ...snap.val(), uid: firebaseUser.uid } as UserProfile;
+              setProfile(existing);
+              
+              // Background check for role/team updates
+              const existingApproved = existing.approvedTeams || [];
+              const correctApproved = initialTeams.filter(t => t.status === 'APPROVED').map(t => t.teamId);
+              const isMissingTeams = correctApproved.some(id => !existingApproved.includes(id));
+              if (existing.role !== correctRole || isMissingTeams) {
+                const mergedTeams = [...(existing.teams || [])];
+                initialTeams.forEach(it => {
+                  if (!mergedTeams.some(et => et.teamId === it.teamId)) {
+                    mergedTeams.push(it);
+                  } else if (it.status === 'APPROVED') {
+                    const idx = mergedTeams.findIndex(et => et.teamId === it.teamId);
+                    if (mergedTeams[idx].status === 'PENDING') mergedTeams[idx] = it;
+                  }
+                });
+                await update(userRef, {
+                  role: correctRole,
+                  teams: mergedTeams,
+                  approvedTeams: mergedTeams.filter(t => t.status === 'APPROVED').map(t => t.teamId),
+                }).catch(e => console.warn("Background profile update failed:", e));
+              }
+            } else {
+              console.log("Creating new user profile in RTDB");
+              const newProfile: UserProfile = {
+                uid: firebaseUser.uid,
+                email,
+                displayName: firebaseUser.displayName || resolveNameFromEmail(email),
+                photoURL: firebaseUser.photoURL || '',
                 role: correctRole,
-                teams: mergedTeams,
-                approvedTeams: mergedTeams.filter(t => t.status === 'APPROVED').map(t => t.teamId),
+                teams: initialTeams,
+                approvedTeams: initialTeams.filter(t => t.status === 'APPROVED').map(t => t.teamId),
+                createdAt: new Date().toISOString(),
+                isOnline: true,
+                lastActive: new Date().toISOString(),
+              };
+              
+              // Try to create profile on client, if fails, the backend fallback might have already done it or will do it.
+              await set(userRef, newProfile).catch(async (e) => {
+                console.warn("Client-side profile creation failed, trying backend:", e.message);
+                await fetchProfileFallback();
               });
+              setProfile(newProfile);
             }
-          } else {
-            console.log("Creating new user profile in RTDB");
-            const newProfile: UserProfile = {
-              uid: firebaseUser.uid,
-              email,
-              displayName: firebaseUser.displayName || resolveNameFromEmail(email),
-              photoURL: firebaseUser.photoURL || '',
-              role: correctRole,
-              teams: initialTeams,
-              approvedTeams: initialTeams.filter(t => t.status === 'APPROVED').map(t => t.teamId),
-              createdAt: new Date().toISOString(),
-              isOnline: true,
-              lastActive: new Date().toISOString(),
-            };
-            await set(userRef, newProfile);
-            setProfile(newProfile);
+            setLoading(false);
+          } catch (error) {
+            console.error("Error in profile listener callback:", error);
+            await fetchProfileFallback();
           }
-          setLoading(false);
-        }, (error) => {
-          console.error("RTDB Profile Error:", error);
-          clearTimeout(timeoutId);
-          setLoading(false);
+        }, async (error) => {
+          console.error("RTDB Profile Listener Error:", error);
+          const success = await fetchProfileFallback();
+          if (!success) {
+            clearTimeout(timeoutId);
+            setLoading(false);
+          }
         });
 
         // Setup online status and presence separately

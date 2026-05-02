@@ -6,7 +6,7 @@ import { getDatabase } from 'firebase/database';
 import firebaseConfig from '../firebase-applet-config.json';
 
 // Use the explicit RTDB URL from the environment or fallback
-const databaseURL = "https://studio-1045950084-89865-default-rtdb.asia-southeast1.firebasedatabase.app/";
+const databaseURL = "https://studio-1045950084-89865-default-rtdb.asia-southeast1.firebasedatabase.app";
 
 const app = initializeApp({
   ...firebaseConfig,

@@ -64,6 +64,41 @@ const PORT = 3001;
 app.use(express.json());
 app.use(cors());
 
+// Determine the correct role and initial teams from the user's email (mirrored from AuthContext)
+function resolveRoleFromEmail(email: string): { role: string; teams: { teamId: string; status: 'PENDING' | 'APPROVED' }[] } {
+  const e = email.toLowerCase().trim();
+  
+  // Captains (Global Admin)
+  const captains = [
+    '727724eumc054@skcet.ac.in', // Kanishka (Captain)
+    '727724eumc036@skcet.ac.in', // Haresh kumar (Vice Captain)
+    '727724eumc011@skcet.ac.in', // Asma (Static Captain)
+    '727725eumc604@skcet.ac.in', // Harish (Dynamic Captain)
+    '727724eumc044@skcet.ac.in', // Janani (Manager, Cost & Steering Lead)
+    '25mz122@skcet.ac.in',       // Dinesh (App Technician, Innovation Lead)
+    '727725eumc608@skcet.ac.in'  // Nitheesh (PRO)
+  ];
+
+  if (captains.includes(e)) {
+    const teams: { teamId: string; status: 'APPROVED' }[] = [];
+    if (e === '727724eumc044@skcet.ac.in') teams.push({ teamId: 'steering', status: 'APPROVED' }, { teamId: 'cost', status: 'APPROVED' });
+    if (e === '25mz122@skcet.ac.in') teams.push({ teamId: 'innovation', status: 'APPROVED' });
+    if (e === '727725eumc608@skcet.ac.in') teams.push({ teamId: 'pro', status: 'APPROVED' });
+    return { role: 'CAPTAIN', teams };
+  }
+  
+  // Team Leads (Assigned Subsystems)
+  if (e === '25mz096@skcet.ac.in') return { role: 'TEAM_LEAD', teams: [{ teamId: 'suspension', status: 'APPROVED' }] };
+  if (e === '727724eumc114@skcet.ac.in') return { role: 'TEAM_LEAD', teams: [{ teamId: 'brakes', status: 'APPROVED' }] };
+  if (e === '25mz021@skcet.ac.in') return { role: 'TEAM_LEAD', teams: [{ teamId: 'transmission', status: 'APPROVED' }] };
+  if (e === '25mz045@skcet.ac.in') return { role: 'TEAM_LEAD', teams: [{ teamId: 'design', status: 'APPROVED' }] };
+  if (e === '727724eumc093@skcet.ac.in') return { role: 'TEAM_LEAD', teams: [{ teamId: 'electrical', status: 'APPROVED' }] };
+  if (e === '727724eumc026@skcet.ac.in') return { role: 'TEAM_LEAD', teams: [{ teamId: 'autonomous', status: 'APPROVED' }] };
+  
+  // Default: Team Member
+  return { role: 'MEMBER', teams: [] };
+}
+
 app.use((req, res, next) => {
   console.log(`[${new Date().toLocaleTimeString()}] ${req.method} ${req.url}`);
   next();
@@ -251,6 +286,55 @@ app.get("/api/test", (req, res) => res.json({ ok: true }));
       res.json({ success: true });
     } catch (error: any) {
       console.error("Disconnect Error:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // User Profile Endpoints
+  app.get("/api/users/profile/:uid", async (req, res) => {
+    try {
+      const { uid } = req.params;
+      if (!uid) return res.status(400).json({ error: "UID required" });
+
+      console.log(`[Profile] Fetching profile for UID: ${uid}`);
+      
+      const userRef = admin.database().ref(`users/${uid}`);
+      const snapshot = await userRef.once("value");
+      
+      if (snapshot.exists()) {
+        res.json(snapshot.val());
+      } else {
+        console.log(`[Profile] Profile not found for ${uid}, creating default`);
+        // We need the email to create a profile, but if we don't have it here, 
+        // we might have to wait for the frontend to provide it.
+        // However, we can try to get it from Firebase Auth.
+        try {
+          const userRecord = await admin.auth().getUser(uid);
+          const email = userRecord.email || '';
+          const { role, teams } = resolveRoleFromEmail(email);
+          
+          const newProfile = {
+            uid,
+            email,
+            displayName: userRecord.displayName || email.split('@')[0],
+            photoURL: userRecord.photoURL || '',
+            role,
+            teams,
+            approvedTeams: teams.filter((t: any) => t.status === 'APPROVED').map((t: any) => t.teamId),
+            createdAt: new Date().toISOString(),
+            isOnline: true,
+            lastActive: new Date().toISOString(),
+          };
+          
+          await userRef.set(newProfile);
+          res.json(newProfile);
+        } catch (authError) {
+          console.error("[Profile] Failed to fetch user from Auth:", authError);
+          res.status(404).json({ error: "User not found and could not be created" });
+        }
+      }
+    } catch (error: any) {
+      console.error("Profile Fetch Error:", error);
       res.status(500).json({ error: error.message });
     }
   });
