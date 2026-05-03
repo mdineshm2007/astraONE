@@ -95,10 +95,11 @@ export default function AIIntelligencePanel({ type, data, context, subsystem, me
             "Click the Repair Link button to verify your new key."
           ],
           team_summary: "A.S.T.R.A. is currently in simulation mode due to an invalid neural handshake (401).",
-          live_status: 'on-track'
+          live_status: 'on-track',
+          isSimulated: true
         };
         setAnalysis(simulated);
-        setError('Mission Credentials Invalid: Please update your GROQ_API_KEY.');
+        setError(null); // Clear error so the simulation can be seen
       } else {
         setError(err.detail || err.message || 'AI analysis failed.');
       }
@@ -161,9 +162,14 @@ export default function AIIntelligencePanel({ type, data, context, subsystem, me
           <h3 className="text-xs font-black uppercase tracking-widest text-primary">
             Live ASTRA Intelligence
           </h3>
+          {(analysis as any)?.isSimulated && (
+            <span className="px-2 py-0.5 rounded-full bg-yellow-400/10 text-yellow-400 border border-yellow-400/20 text-[8px] font-black uppercase tracking-tighter">
+              Simulation Mode
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-2">
-          {error && (
+          {(error || (analysis as any)?.isSimulated) && (
             <button
               onClick={testConnection}
               className="text-[9px] font-black uppercase text-primary border border-primary/20 bg-primary/5 hover:bg-primary/10 transition-colors px-2 py-1 rounded-lg"
