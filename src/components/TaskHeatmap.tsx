@@ -1,22 +1,46 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { format, subDays, addDays, eachDayOfInterval, startOfWeek, endOfWeek, isSameDay, differenceInDays, startOfDay } from 'date-fns';
 import { TaskUpdate } from '../types';
-import { Calendar, ChevronRight, MessageSquare, User } from 'lucide-react';
+import { Calendar, ChevronRight, User, RefreshCw } from 'lucide-react';
 import { resolveNameFromEmail } from '../utils/userUtils';
 
 interface TaskHeatmapProps {
-  updates: TaskUpdate[];
+  updates?: TaskUpdate[]; // optional — component self-fetches
 }
 
-export default function TaskHeatmap({ updates }: TaskHeatmapProps) {
+export default function TaskHeatmap({ updates: propUpdates }: TaskHeatmapProps) {
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
+  const [updates, setUpdates] = useState<TaskUpdate[]>(propUpdates || []);
+  const [fetching, setFetching] = useState(false);
 
-  // Debug: log what we receive
-  console.log('[Heatmap] Received updates count:', updates.length, 
-    updates.length > 0 ? 'First entry:' : '', 
-    updates.length > 0 ? JSON.stringify(updates[0]).slice(0, 200) : ''
-  );
+  const fetchFromBackend = async () => {
+    setFetching(true);
+    try {
+      const res = await fetch('/api/admin/telemetry/updates');
+      if (!res.ok) throw new Error('Backend error');
+      const data = await res.json();
+      setUpdates(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('[Heatmap] Backend fetch failed:', err);
+      // Keep propUpdates as fallback
+      if (propUpdates && propUpdates.length > 0) setUpdates(propUpdates);
+    } finally {
+      setFetching(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchFromBackend();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Also update from props if they arrive later
+  useEffect(() => {
+    if (propUpdates && propUpdates.length > 0 && updates.length === 0) {
+      setUpdates(propUpdates);
+    }
+  }, [propUpdates]);
 
   const days = useMemo(() => {
     const today = startOfDay(new Date());
@@ -143,15 +167,27 @@ export default function TaskHeatmap({ updates }: TaskHeatmapProps) {
             </div>
             <div>
               <h3 className="text-sm font-black uppercase tracking-widest text-white">Contribution Calendar</h3>
-              <p className="text-[10px] text-slate-500 font-bold">DAILY PROGRESS TELEMETRY</p>
+              <p className="text-[10px] text-slate-500 font-bold">
+                {updates.length > 0 ? `${updates.length} activity entries loaded` : 'DAILY PROGRESS TELEMETRY'}
+              </p>
             </div>
           </div>
-          <div className="flex items-center gap-2 text-[8px] font-black uppercase text-slate-500 bg-white/5 px-3 py-1.5 rounded-full border border-white/5">
-            <span>Less</span>
-            {[0, 1, 2, 3, 4].map(v => (
-              <div key={v} className={`w-2.5 h-2.5 rounded-[2px] ${getColor(v)}`} />
-            ))}
-            <span>More</span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={fetchFromBackend}
+              disabled={fetching}
+              className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-500 hover:text-primary transition-colors"
+              title="Refresh activity data"
+            >
+              <RefreshCw size={12} className={fetching ? 'animate-spin text-primary' : ''} />
+            </button>
+            <div className="flex items-center gap-2 text-[8px] font-black uppercase text-slate-500 bg-white/5 px-3 py-1.5 rounded-full border border-white/5">
+              <span>Less</span>
+              {[0, 1, 2, 3, 4].map(v => (
+                <div key={v} className={`w-2.5 h-2.5 rounded-[2px] ${getColor(v)}`} />
+              ))}
+              <span>More</span>
+            </div>
           </div>
         </div>
 
