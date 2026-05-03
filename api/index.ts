@@ -507,7 +507,7 @@ app.post("/api/analyze", async (req, res) => {
     const completion = await groq.chat.completions.create({
       messages: [
         { role: "system", content: systemPrompt },
-        { role: "user", content: `Telemetry (${type}): ${JSON.stringify(data)}. Context: ${context}` }
+        { role: "user", content: `Telemetry (${type}): ${JSON.stringify(data).slice(0, 4000)}. Context: ${context}` }
       ],
       model: "llama-3.1-8b-instant",
       temperature: 0.7,
@@ -540,16 +540,21 @@ Analyze the provided telemetry and return a strategic assessment in STRICT JSON 
     const completion = await groq.chat.completions.create({
       messages: [
         { role: "system", content: systemPrompt },
-        { role: "user", content: `Subsystem: ${subsystem}\nTasks: ${JSON.stringify(tasks)}\nMembers: ${JSON.stringify(members)}\nProgress: ${JSON.stringify(progress)}\nDelays: ${JSON.stringify(delays)}` }
+        { role: "user", content: `Subsystem: ${subsystem}\nTasks: ${JSON.stringify(tasks).slice(0, 4000)}\nMembers: ${JSON.stringify(members)}\nProgress: ${JSON.stringify(progress)}\nDelays: ${JSON.stringify(delays)}` }
       ],
-      model: "llama-3.3-70b-versatile",
+      model: "llama-3.1-8b-instant",
       temperature: 0.3,
       response_format: { type: "json_object" }
     });
 
-    res.json(JSON.parse(completion.choices[0]?.message?.content || "{}"));
+    const content = completion.choices[0]?.message?.content || "{}";
+    try {
+      res.json(JSON.parse(content));
+    } catch (e) {
+      res.json({ team_summary: content.slice(0, 200), recommendations: ["Review logs manually (AI Parse Error)"] });
+    }
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: "AI Engine Busy", detail: error.message });
   }
 });
 
@@ -561,14 +566,14 @@ app.post("/api/summarize", async (req, res) => {
     const completion = await groq.chat.completions.create({
       messages: [
         { role: "system", content: "You are ASTRA Project Intelligence. Summarize the provided notes concisely." },
-        { role: "user", content: `Notes: ${JSON.stringify(notes)}` }
+        { role: "user", content: `Notes: ${JSON.stringify(notes).slice(0, 4000)}` }
       ],
       model: "llama-3.1-8b-instant",
       max_tokens: 300
     });
     res.json({ summary: completion.choices[0]?.message?.content });
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: "Summary Engine Busy", detail: error.message });
   }
 });
 
@@ -596,16 +601,16 @@ app.post("/api/ai/analyze", async (req, res) => {
 app.post("/api/ai/chat", async (req, res) => {
   try {
     if (!groq) return res.status(503).json({ error: "AI Service Unavailable" });
-    const { messages, model = "llama-3.3-70b-versatile" } = req.body;
+    const { messages } = req.body;
     const completion = await groq.chat.completions.create({
       messages,
-      model,
+      model: "llama-3.1-8b-instant",
       temperature: 0.7,
       max_tokens: 1024
     });
     res.json({ message: completion.choices[0]?.message?.content || "" });
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: "Chat Engine Busy", detail: error.message });
   }
 });
 
