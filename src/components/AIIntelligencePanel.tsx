@@ -123,13 +123,14 @@ export default function AIIntelligencePanel({ type, data, context, subsystem, me
       const res = await fetch('/api/ai/test-key');
       const data = await res.json();
       if (data.ok) {
-        alert(`Neural Link Active: ${data.message}\nKey Prefix: ${data.keyPrefix}`);
-        fetchAnalysis();
+        // Key is valid — fetch real analysis
+        await fetchAnalysis();
       } else {
-        alert(`Authentication Failure: ${data.error}\n\nDetail: ${data.detail || 'The API key provided is rejected by Groq.'}`);
+        // Stay in simulation mode silently — no popup
+        console.warn('[ASTRA] Neural handshake failed:', data.error);
       }
     } catch (err: any) {
-      alert(`Network Error: ${err.message}`);
+      console.error('[ASTRA] Connection test failed:', err.message);
     } finally {
       setLoading(false);
     }
@@ -211,11 +212,15 @@ export default function AIIntelligencePanel({ type, data, context, subsystem, me
             <motion.div 
               initial={{ opacity: 0 }} 
               animate={{ opacity: 1 }} 
-              className="text-xs text-red-400 flex items-center gap-2 bg-red-400/5 p-3 rounded-xl border border-red-400/10"
+              className="space-y-4"
             >
-              <AlertCircle size={14} />
-              {error}
-              <button onClick={fetchAnalysis} className="ml-auto text-primary underline text-[10px]">Retry</button>
+              {/* Show structured simulation instead of red error box */}
+              <div className="flex items-center gap-2 p-3 rounded-xl bg-yellow-400/5 border border-yellow-400/20">
+                <AlertCircle size={14} className="text-yellow-400 shrink-0" />
+                <span className="text-[10px] font-bold text-yellow-400 uppercase tracking-wider">A.S.T.R.A. Neural Link — Simulation Active</span>
+                <button onClick={fetchAnalysis} className="ml-auto text-primary text-[9px] font-black uppercase hover:opacity-70">↻ Retry</button>
+              </div>
+              <p className="text-[11px] text-slate-400 leading-relaxed">{error}</p>
             </motion.div>
           ) : analysis ? (
             <motion.div
