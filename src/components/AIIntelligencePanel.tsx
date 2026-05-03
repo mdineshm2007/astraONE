@@ -81,9 +81,9 @@ export default function AIIntelligencePanel({ type, data, context, subsystem, me
         const result = await chatAssistant([{ role: 'user', content: prompt }]);
         setAnalysis(result);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('AI Intelligence Error:', err);
-      setError('AI analysis failed. Check your internet connection.');
+      setError(err.message || 'AI analysis failed. Check your internet connection.');
     } finally {
       setLoading(false);
     }
