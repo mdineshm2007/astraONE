@@ -35,9 +35,33 @@ export default function TaskHeatmap({ updates }: TaskHeatmapProps) {
 
   const contributionMap = useMemo(() => {
     const map: Record<string, { count: number; logs: any[] }> = {};
-    
+
+    /** Parse any createdAt value safely */
+    const parseDate = (createdAt: any): Date | null => {
+      if (!createdAt) return null;
+      // Handle numeric timestamp
+      if (typeof createdAt === 'number') {
+        const d = new Date(createdAt > 1e10 ? createdAt : createdAt * 1000);
+        return isNaN(d.getTime()) ? null : d;
+      }
+      // Handle ISO string or date string
+      if (typeof createdAt === 'string') {
+        const d = new Date(createdAt);
+        return isNaN(d.getTime()) ? null : d;
+      }
+      // Handle Firestore Timestamp object
+      if (typeof createdAt === 'object' && createdAt.seconds) {
+        return new Date(createdAt.seconds * 1000);
+      }
+      return null;
+    };
+
     // 1. Sort all updates by date to calculate deltas
-    const sortedAll = [...updates].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    const sortedAll = [...updates].sort((a, b) => {
+      const dA = parseDate(a.createdAt)?.getTime() || 0;
+      const dB = parseDate(b.createdAt)?.getTime() || 0;
+      return dA - dB;
+    });
     const taskLastProgress: Record<string, number> = {};
     const deltas = new Map<string, number>();
 
@@ -50,30 +74,28 @@ export default function TaskHeatmap({ updates }: TaskHeatmapProps) {
     // 2. Deduplicate updates: only one update per member per day
     const deduplicated = new Map<string, TaskUpdate & { delta: number }>();
     updates.forEach(u => {
-      if (!u.createdAt) return;
-      
-      const date = new Date(u.createdAt);
-      if (isNaN(date.getTime())) return;
-      
+      const date = parseDate(u.createdAt);
+      if (!date) return;
+
       const dateKey = format(date, 'yyyy-MM-dd');
-      // Use UID as primary key, email as fallback to group contributions correctly
       const userKey = u.userId || u.userEmail || 'unknown';
       const compositeKey = `${dateKey}_${userKey}`;
       const delta = deltas.get(u.id) || 0;
-      
+
       // Take the latest update for that day/user
       const existing = deduplicated.get(compositeKey);
-      if (!existing || new Date(u.createdAt).getTime() > new Date(existing.createdAt as string).getTime()) {
+      const existingTime = existing ? (parseDate(existing.createdAt)?.getTime() || 0) : 0;
+      const currentTime = date.getTime();
+      if (!existing || currentTime > existingTime) {
         deduplicated.set(compositeKey, { ...u, delta });
       }
     });
 
     deduplicated.forEach(u => {
       try {
-        const dateStr = String(u.createdAt);
-        const date = new Date(dateStr);
-        if (isNaN(date.getTime())) return;
-        
+        const date = parseDate(u.createdAt);
+        if (!date) return;
+
         const dateKey = format(date, 'yyyy-MM-dd');
         if (!map[dateKey]) {
           map[dateKey] = { count: 0, logs: [] };

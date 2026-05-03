@@ -87,11 +87,9 @@ export default function Dashboard() {
     : 0;
   const readinessPct = averageProgress; 
 
-  // Filter out any ghost updates (updates for tasks that have been deleted)
-  // Filter out any ghost updates (updates for tasks that have been deleted)
-  const validUpdates = allTasks.length > 0 
-    ? allUpdates.filter(u => allTasks.some(t => t.id === u.taskId))
-    : allUpdates;
+  // For heatmap: use ALL updates (including ones for deleted tasks)
+  // The heatmap is a permanent activity log — should never drop historical data
+  const validUpdates = allUpdates;
 
   // Filter subsystems based on role
   const visibleSubsystems = profile.role === 'CAPTAIN'
