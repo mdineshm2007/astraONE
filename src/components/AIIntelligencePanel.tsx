@@ -83,7 +83,8 @@ export default function AIIntelligencePanel({ type, data, context, subsystem, me
       }
     } catch (err: any) {
       console.error('AI Intelligence Error:', err);
-      setError(err.message || 'AI analysis failed. Check your internet connection.');
+      const msg = err.detail || err.message || 'AI analysis failed.';
+      setError(msg);
     } finally {
       setLoading(false);
     }

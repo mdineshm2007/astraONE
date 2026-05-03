@@ -11,8 +11,11 @@ async function callBackendAI(endpoint: string, body: any) {
   });
 
   if (!response.ok) {
-    const err = await response.text();
-    throw new Error(`AI API error ${response.status}: ${err}`);
+    const errData = await response.json().catch(() => ({ error: 'Unknown Error' }));
+    const error = new Error(errData.error || `AI API error ${response.status}`);
+    (error as any).detail = errData.detail;
+    (error as any).status = response.status;
+    throw error;
   }
 
   return await response.json();
