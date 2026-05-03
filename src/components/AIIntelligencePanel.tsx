@@ -102,6 +102,24 @@ export default function AIIntelligencePanel({ type, data, context, subsystem, me
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(data), type, members.length]);
 
+  const testConnection = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/ai/test-key');
+      const data = await res.json();
+      if (data.ok) {
+        alert(`Neural Link Active: ${data.message}\nKey Prefix: ${data.keyPrefix}`);
+        fetchAnalysis();
+      } else {
+        alert(`Authentication Failure: ${data.error}\n\nDetail: ${data.detail || 'The API key provided is rejected by Groq.'}`);
+      }
+    } catch (err: any) {
+      alert(`Network Error: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const isStructured = (a: any): a is TeamAnalysis => {
     return a && typeof a === 'object' && 'priority_tasks' in a;
   };
@@ -131,6 +149,14 @@ export default function AIIntelligencePanel({ type, data, context, subsystem, me
           </h3>
         </div>
         <div className="flex items-center gap-2">
+          {error && (
+            <button
+              onClick={testConnection}
+              className="text-[9px] font-black uppercase text-primary border border-primary/20 bg-primary/5 hover:bg-primary/10 transition-colors px-2 py-1 rounded-lg"
+            >
+              ⚡ Repair Link
+            </button>
+          )}
           {loading && <Loader2 size={14} className="text-primary animate-spin" />}
           <button
             onClick={fetchAnalysis}

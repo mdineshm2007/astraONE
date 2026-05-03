@@ -615,4 +615,23 @@ app.post("/api/ai/chat", async (req, res) => {
   }
 });
 
+/** Test AI Connection - Diagnostics */
+app.get("/api/ai/test-key", async (req, res) => {
+  try {
+    const apiKey = (process.env.GROQ_API_KEY || "").trim();
+    if (!apiKey) return res.json({ ok: false, error: "Missing GROQ_API_KEY env var" });
+    
+    const testGroq = new Groq({ apiKey });
+    await testGroq.chat.completions.create({
+      messages: [{ role: "user", content: "ping" }],
+      model: "llama-3.1-8b-instant",
+      max_tokens: 1
+    });
+    
+    res.json({ ok: true, message: "AI Neural Link Active", keyPrefix: `${apiKey.slice(0, 6)}...` });
+  } catch (error: any) {
+    res.status(401).json({ ok: false, error: "Invalid API Key", detail: error.message });
+  }
+});
+
 export default app;
