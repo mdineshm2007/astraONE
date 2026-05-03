@@ -34,75 +34,108 @@ export default function AIIntelligencePanel({ type, data, context, subsystem, me
   const [isVsExpanded, setIsVsExpanded] = useState(false);
   const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
 
+  /** ── LOCAL INTELLIGENCE ENGINE ─────────────────────────────────────────────
+   * Generates real data-driven insights from task data.
+   * No external API. No API keys. No network calls. Works 100% always.
+   * ──────────────────────────────────────────────────────────────────────── */
+  const runLocalIntelligence = (taskArr: any[]): TeamAnalysis => {
+    const total = taskArr.length;
+    const completed = taskArr.filter((t: any) => t.status === 'COMPLETED');
+    const blocked = taskArr.filter((t: any) => t.status === 'BLOCKED');
+    const inProgress = taskArr.filter((t: any) => t.status === 'IN_PROGRESS');
+    const pending = taskArr.filter((t: any) => t.status === 'PENDING');
+    const critical = taskArr.filter((t: any) => t.priority === 'CRITICAL' && t.status !== 'COMPLETED');
+    const high = taskArr.filter((t: any) => t.priority === 'HIGH' && t.status !== 'COMPLETED');
+    const avgProgress = total > 0 ? Math.round(taskArr.reduce((s: number, t: any) => s + (t.progressPercent || 0), 0) / total) : 0;
+
+    // Overdue tasks (deadline passed and not completed)
+    const now = new Date();
+    const overdue = taskArr.filter((t: any) =>
+      t.deadline && new Date(t.deadline) < now && t.status !== 'COMPLETED'
+    );
+
+    // Priority tasks = critical + high not completed
+    const priorityTasks = [...critical, ...high]
+      .slice(0, 5)
+      .map((t: any) => `${t.title}${t.priority === 'CRITICAL' ? ' 🔴' : ' 🟠'}`);
+    if (priorityTasks.length === 0) priorityTasks.push('All priority tasks on track ✅');
+
+    // At-risk = overdue + blocked
+    const atRisk = [...overdue, ...blocked]
+      .slice(0, 4)
+      .map((t: any) => t.title);
+    if (atRisk.length === 0) atRisk.push('No tasks at risk — excellent execution');
+
+    // Blocked members
+    const blockedMemberSet = new Set<string>();
+    blocked.forEach((t: any) => {
+      if (t.assignedTo && t.assignedTo !== 'Unassigned' && t.assignedTo !== 'Engineer') {
+        blockedMemberSet.add(t.assignedTo);
+      }
+    });
+    const blockedMembers = blockedMemberSet.size > 0
+      ? Array.from(blockedMemberSet)
+      : ['None — all team members active'];
+
+    // Efficiency label
+    const efficiencyLabel = avgProgress >= 80 ? '🟢 High Performance' :
+      avgProgress >= 60 ? '🟡 On Track' :
+      avgProgress >= 40 ? '🟠 Needs Attention' : '🔴 Critical — Intervention Required';
+    const efficiency = `${avgProgress}% avg (${completed.length}/${total} done) — ${efficiencyLabel}`;
+
+    // Recommendations based on real data
+    const recs: string[] = [];
+    if (blocked.length > 0) recs.push(`Unblock ${blocked.length} task${blocked.length > 1 ? 's' : ''}: ${blocked.slice(0,2).map((t:any)=>t.title).join(', ')}`);
+    if (overdue.length > 0) recs.push(`${overdue.length} task${overdue.length > 1 ? 's are' : ' is'} past deadline — immediate escalation needed`);
+    if (critical.length > 0) recs.push(`${critical.length} CRITICAL task${critical.length > 1 ? 's' : ''} require priority attention`);
+    if (pending.length > inProgress.length) recs.push(`${pending.length} tasks pending — consider distributing workload across team`);
+    if (avgProgress < 50) recs.push('Overall progress below 50% — schedule a team sync to identify bottlenecks');
+    if (avgProgress >= 80) recs.push('Strong execution — maintain current velocity to hit deadline');
+    if (recs.length === 0) recs.push('Continue current momentum — all systems nominal');
+
+    // Summary
+    const sub = subsystem || context || 'team';
+    let summary = `${sub} subsystem: ${completed.length}/${total} tasks completed (${avgProgress}% avg progress).`;
+    if (blocked.length > 0) summary += ` ${blocked.length} task${blocked.length > 1 ? 's' : ''} currently blocked.`;
+    if (overdue.length > 0) summary += ` ${overdue.length} overdue — immediate action required.`;
+    if (blocked.length === 0 && overdue.length === 0) summary += ' All tasks progressing nominally.';
+
+    const liveStatus: 'on-track' | 'behind' | 'delayed' =
+      blocked.length > 2 || overdue.length > 2 ? 'delayed' :
+      avgProgress < 50 ? 'behind' : 'on-track';
+
+    return {
+      priority_tasks: priorityTasks,
+      at_risk_tasks: atRisk,
+      blocked_members: blockedMembers,
+      team_efficiency: efficiency,
+      recommendations: recs.slice(0, 4),
+      team_summary: summary,
+      live_status: liveStatus,
+    };
+  };
+
   const fetchAnalysis = async () => {
     if (!data || (Array.isArray(data) && data.length === 0)) return;
-    
     setLoading(true);
     setError(null);
     try {
       if (type === 'TASKS' || type === 'PERFORMANCE') {
-        // Build member list from passed members prop — fixes "Unknown due to lack of member data"
-        const memberNames = members.length > 0
-          ? members.map(m => m.displayName || m.email || 'Unknown')
-          : ['No member data available'];
-
-        // Calculate efficiency directly from task data
         const taskArr = Array.isArray(data) ? data : [];
-        const totalTasks = taskArr.length;
-        const completedTasks = taskArr.filter((t: any) => t.status === 'COMPLETED').length;
-        const avgProgress = totalTasks > 0
-          ? Math.round(taskArr.reduce((s: number, t: any) => s + (t.progressPercent || 0), 0) / totalTasks)
-          : 0;
-        const computedEfficiency = `${avgProgress}% avg progress (${completedTasks}/${totalTasks} completed)`;
-
-        const analysisData = {
-          tasks: taskArr,
-          members: memberNames,
-          progress: taskArr.map((t: any) => ({ title: t.title, progress: t.progressPercent || 0 })),
-          delays: taskArr.filter((t: any) => t.status === 'BLOCKED' || t.priority === 'CRITICAL'),
-          subsystem: subsystem || context || 'General',
-          computed_efficiency: computedEfficiency,
-          last_year_context: buildAstraContext(600), // inject historical knowledge
-        };
-        
-        const result = await getTeamAnalysis(analysisData);
-        // If AI didn't compute efficiency, use our local value
-        if (!result.team_efficiency || result.team_efficiency.toLowerCase().includes('unknown') || result.team_efficiency.toLowerCase().includes('lack')) {
-          result.team_efficiency = computedEfficiency;
-        }
+        // Run purely local — no API, no key, no network needed
+        const result = runLocalIntelligence(taskArr);
         setAnalysis(result);
       } else if (type === 'DASHBOARD') {
-        // Dashboard uses high-density task list instead of LLM summary
         setAnalysis({ isTaskList: true });
       } else {
-        // Legacy text analysis via direct Groq call (no server needed)
-        const { chatAssistant } = await import('../geminiService');
-        const prompt = `Analyze this ASTRA engineering data and provide a 2-3 sentence technical summary:\nType: ${type}\nData: ${JSON.stringify(data).slice(0, 2000)}\nContext: ${context || 'General'}`;
-        const result = await chatAssistant([{ role: 'user', content: prompt }]);
+        // For NOTES type — generate a simple local summary
+        const taskArr = Array.isArray(data?.tasks) ? data.tasks : [];
+        const result = runLocalIntelligence(taskArr);
         setAnalysis(result);
       }
     } catch (err: any) {
       console.error('AI Intelligence Error:', err);
-      if (err.status === 401) {
-        // Fallback to Simulated Mode for 401 to keep the UI beautiful
-        const simulated: TeamAnalysis = {
-          priority_tasks: ["Neural Link Sync", "Core Calibration"],
-          at_risk_tasks: ["Credential Handshake"],
-          blocked_members: ["A.S.T.R.A. System"],
-          team_efficiency: "94% (Targeting 100%)",
-          recommendations: [
-            "CREDENTIALS INVALID: Please update your GROQ_API_KEY in Vercel settings.",
-            "Click the Repair Link button to verify your new key."
-          ],
-          team_summary: "A.S.T.R.A. is currently in simulation mode due to an invalid neural handshake (401).",
-          live_status: 'on-track',
-          isSimulated: true
-        };
-        setAnalysis(simulated);
-        setError(null); // Clear error so the simulation can be seen
-      } else {
-        setError(err.detail || err.message || 'AI analysis failed.');
-      }
+      setError(err.message || 'Analysis failed.');
     } finally {
       setLoading(false);
     }
@@ -117,24 +150,7 @@ export default function AIIntelligencePanel({ type, data, context, subsystem, me
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(data), type, members.length]);
 
-  const testConnection = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch('/api/ai/test-key');
-      const data = await res.json();
-      if (data.ok) {
-        // Key is valid — fetch real analysis
-        await fetchAnalysis();
-      } else {
-        // Stay in simulation mode silently — no popup
-        console.warn('[ASTRA] Neural handshake failed:', data.error);
-      }
-    } catch (err: any) {
-      console.error('[ASTRA] Connection test failed:', err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+
 
   const isStructured = (a: any): a is TeamAnalysis => {
     return a && typeof a === 'object' && 'priority_tasks' in a;
@@ -163,21 +179,9 @@ export default function AIIntelligencePanel({ type, data, context, subsystem, me
           <h3 className="text-xs font-black uppercase tracking-widest text-primary">
             Live ASTRA Intelligence
           </h3>
-          {(analysis as any)?.isSimulated && (
-            <span className="px-2 py-0.5 rounded-full bg-yellow-400/10 text-yellow-400 border border-yellow-400/20 text-[8px] font-black uppercase tracking-tighter">
-              Simulation Mode
-            </span>
-          )}
+          <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 text-[8px] font-black uppercase tracking-tighter">Local Engine</span>
         </div>
         <div className="flex items-center gap-2">
-          {(error || (analysis as any)?.isSimulated) && (
-            <button
-              onClick={testConnection}
-              className="text-[9px] font-black uppercase text-primary border border-primary/20 bg-primary/5 hover:bg-primary/10 transition-colors px-2 py-1 rounded-lg"
-            >
-              ⚡ Repair Link
-            </button>
-          )}
           {loading && <Loader2 size={14} className="text-primary animate-spin" />}
           <button
             onClick={fetchAnalysis}
