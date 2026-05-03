@@ -66,12 +66,26 @@ export default function Dashboard() {
     setShowProfileSetup(false);
   };
   
-  // Fetch all updates for heatmap
+  // Fetch all updates for heatmap via backend (bypasses Firebase security rules)
   useEffect(() => {
-    const unsub = subscribeToTaskUpdates('', (updates) => {
-      setAllUpdates(updates);
-    });
-    return unsub;
+    let cancelled = false;
+    const fetchUpdates = async () => {
+      try {
+        const res = await fetch('/api/admin/telemetry/updates');
+        if (!res.ok) throw new Error('Backend fetch failed');
+        const updates = await res.json();
+        if (!cancelled) setAllUpdates(updates);
+      } catch (err) {
+        console.error('[Heatmap] Failed to fetch updates via backend, trying client fallback:', err);
+        // Fallback to client-side subscription
+        const unsub = subscribeToTaskUpdates('', (updates) => {
+          if (!cancelled) setAllUpdates(updates);
+        });
+        return unsub;
+      }
+    };
+    fetchUpdates();
+    return () => { cancelled = true; };
   }, []);
   if (!profile) return null;
 

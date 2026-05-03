@@ -12,6 +12,12 @@ interface TaskHeatmapProps {
 export default function TaskHeatmap({ updates }: TaskHeatmapProps) {
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
 
+  // Debug: log what we receive
+  console.log('[Heatmap] Received updates count:', updates.length, 
+    updates.length > 0 ? 'First entry:' : '', 
+    updates.length > 0 ? JSON.stringify(updates[0]).slice(0, 200) : ''
+  );
+
   const days = useMemo(() => {
     const today = startOfDay(new Date());
     const anchorDate = startOfDay(new Date('2026-04-26'));
