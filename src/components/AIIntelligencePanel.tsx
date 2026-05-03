@@ -83,8 +83,11 @@ export default function AIIntelligencePanel({ type, data, context, subsystem, me
       }
     } catch (err: any) {
       console.error('AI Intelligence Error:', err);
-      const msg = err.detail || err.message || 'AI analysis failed.';
-      setError(msg);
+      if (err.status === 401) {
+        setError('Mission Credentials Invalid: Please update your GROQ_API_KEY in Vercel settings.');
+      } else {
+        setError(err.detail || err.message || 'AI analysis failed.');
+      }
     } finally {
       setLoading(false);
     }

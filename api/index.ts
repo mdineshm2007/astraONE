@@ -124,9 +124,10 @@ if (!admin.apps.length) {
 // --- Groq Initialization ---
 let groq: Groq | null = null;
 try {
-  if (process.env.GROQ_API_KEY) {
-    groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-  }
+    const apiKey = (process.env.GROQ_API_KEY || "").trim();
+    if (apiKey) {
+      groq = new Groq({ apiKey });
+    }
 } catch (e: any) {
   console.error("[Groq] Initialization failed:", e.message);
 }
