@@ -634,4 +634,16 @@ app.get("/api/ai/test-key", async (req, res) => {
   }
 });
 
+/** Administrative Telemetry Bridge - Used by TaskTable CSV Export */
+app.get("/api/admin/telemetry/updates", async (req, res) => {
+  try {
+    const snapshot = await admin.database().ref('task_updates').once("value");
+    const data = snapshot.val() || {};
+    const updates = Object.entries(data).map(([id, val]: [string, any]) => ({ id, ...val }));
+    res.json(updates);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 export default app;

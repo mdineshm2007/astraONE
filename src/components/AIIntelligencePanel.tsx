@@ -84,7 +84,21 @@ export default function AIIntelligencePanel({ type, data, context, subsystem, me
     } catch (err: any) {
       console.error('AI Intelligence Error:', err);
       if (err.status === 401) {
-        setError('Mission Credentials Invalid: Please update your GROQ_API_KEY in Vercel settings.');
+        // Fallback to Simulated Mode for 401 to keep the UI beautiful
+        const simulated: TeamAnalysis = {
+          priority_tasks: ["Neural Link Sync", "Core Calibration"],
+          at_risk_tasks: ["Credential Handshake"],
+          blocked_members: ["A.S.T.R.A. System"],
+          team_efficiency: "94% (Targeting 100%)",
+          recommendations: [
+            "CREDENTIALS INVALID: Please update your GROQ_API_KEY in Vercel settings.",
+            "Click the Repair Link button to verify your new key."
+          ],
+          team_summary: "A.S.T.R.A. is currently in simulation mode due to an invalid neural handshake (401).",
+          live_status: 'on-track'
+        };
+        setAnalysis(simulated);
+        setError('Mission Credentials Invalid: Please update your GROQ_API_KEY.');
       } else {
         setError(err.detail || err.message || 'AI analysis failed.');
       }

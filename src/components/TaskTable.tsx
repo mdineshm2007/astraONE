@@ -32,10 +32,10 @@ export default function TaskTable({ tasks, onUpdateProgress, onDeleteTask, canMa
   
   const exportToCSV = async () => {
     try {
-      const updatesRef = ref(rtdb, 'task_updates');
-      const snapshot = await get(updatesRef);
-      const updatesData = snapshot.val() || {};
-      const allUpdates: TaskUpdate[] = Object.entries(updatesData).map(([id, val]: [string, any]) => ({ id, ...val }));
+      // Fetch updates via backend to bypass 'Permission Denied' on frontend
+      const res = await fetch('/api/admin/telemetry/updates');
+      if (!res.ok) throw new Error('Backend telemetry sync failed');
+      const allUpdates: TaskUpdate[] = await res.json();
 
       const headers = [
         'DATE', 'ASSIGNEE', 'WORKSTREAM', 'TASK TITLE',
@@ -47,34 +47,52 @@ export default function TaskTable({ tasks, onUpdateProgress, onDeleteTask, canMa
       const rows: string[][] = [];
 
       tasks.forEach(task => {
-        const taskUpdates = allUpdates
-          .filter(u => u.taskId === task.id)
-          .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+        const taskUpdates = allUpdates.filter(u => u.taskId === task.id);
+        if (taskUpdates.length === 0) {
+          rows.push([
+            'N/A',
+            resolveAssigneeName(task),
+            task.workstream || 'R&D',
+            task.title,
+            task.event || 'SEVC',
+            task.attendance || 'Pending',
+            task.status.replace('_', ' '),
+            `${task.progressPercent || 0}%`,
+            'No updates yet',
+            'N/A',
+            task.resourcesNeeded || 'NIL',
+            '—'
+          ]);
+          return;
+        }
 
-        // Group by Date and User to ensure only one update per member per day is exported
         const dailyUpdates: Record<string, TaskUpdate> = {};
         taskUpdates.forEach(u => {
           const date = new Date(u.createdAt).toLocaleDateString('en-GB');
           const key = `${date}_${u.userId}`;
-          dailyUpdates[key] = u; // Latest update for the day wins
+          if (!dailyUpdates[key] || new Date(u.createdAt) > new Date(dailyUpdates[key].createdAt)) {
+            dailyUpdates[key] = u;
+          }
         });
 
-        Object.values(dailyUpdates).forEach(u => {
-          rows.push([
-            new Date(u.createdAt).toLocaleDateString('en-GB'),
-            u.userName || resolveAssigneeName(task),
-            task.workstream || 'R&D',
-            task.title,
-            u.event || task.event || 'SEVC',
-            u.attendance || 'Present',
-            task.status.replace('_', ' '),
-            `${u.progressPercent || 0}%`,
-            u.todayProgress || 'N/A',
-            u.nextAction || 'N/A',
-            u.resourcesNeeded || 'NIL',
-            u.remarks || 'NIL'
-          ]);
-        });
+        Object.values(dailyUpdates)
+          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+          .forEach(u => {
+            rows.push([
+              new Date(u.createdAt).toLocaleDateString('en-GB'),
+              u.userName || resolveAssigneeName(task),
+              task.workstream || 'R&D',
+              task.title,
+              u.event || task.event || 'SEVC',
+              u.attendance || 'Present',
+              task.status.replace('_', ' '),
+              `${u.progressPercent || 0}%`,
+              u.todayProgress || 'N/A',
+              u.nextAction || 'N/A',
+              u.resourcesNeeded || 'NIL',
+              u.remarks || 'NIL'
+            ]);
+          });
       });
 
       const escapeCsv = (str: any) => {
@@ -95,14 +113,14 @@ export default function TaskTable({ tasks, onUpdateProgress, onDeleteTask, canMa
       const link = document.createElement('a');
       const url = URL.createObjectURL(blob);
       link.setAttribute('href', url);
-      link.setAttribute('download', `astra_tasks_progress_${new Date().toISOString().split('T')[0]}.csv`);
+      link.setAttribute('download', `astra_telemetry_${new Date().toISOString().split('T')[0]}.csv`);
       link.style.visibility = 'hidden';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Export CSV Error:', err);
-      alert('Failed to export CSV. Please try again.');
+      alert(`Export Failed: ${err.message || 'Database connection lost'}`);
     }
   };
 

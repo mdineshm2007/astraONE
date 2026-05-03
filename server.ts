@@ -977,4 +977,159 @@ ${teamId ? `Focus Team: ${teamId}` : 'All teams'}`;
     });
   }
 
+// --- AI Intelligence Endpoints ---
+
+/** Generic Analysis Endpoint - Used by getTaskInsights */
+app.post("/api/analyze", async (req, res) => {
+  try {
+    if (!groq) return res.status(503).json({ error: "AI Service Unavailable (Missing Key)" });
+    const { type, data, context = 'Mission Control' } = req.body;
+
+    let systemPrompt = "You are ASTRA AI, the project intelligence lead. Provide a concise, professional summary (max 4 sentences) of the telemetry provided.";
+    if (type === 'TASK_PROGRESS') {
+      systemPrompt = "You are ASTRA AI, the project intelligence lead. Analyze the task telemetry and progress updates. Provide a concise, professional summary (max 4 sentences) of progress and bottlenecks. Use engineering terminology.";
+    }
+
+    const completion = await groq.chat.completions.create({
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: `Telemetry (${type}): ${JSON.stringify(data).slice(0, 4000)}. Context: ${context}` }
+      ],
+      model: "llama-3.1-8b-instant",
+      temperature: 0.7,
+      max_tokens: 300
+    });
+
+    res.json({ analysis: completion.choices[0]?.message?.content });
+  } catch (error: any) {
+    res.status(500).json({ error: "Analysis Engine Busy", detail: error.message });
+  }
+});
+
+/** Team-Specific Strategy - Used by getTeamAnalysis */
+app.post("/api/ai/team-analysis", async (req, res) => {
+  try {
+    if (!groq) return res.status(503).json({ error: "AI Service Unavailable (Missing Key)" });
+    const { tasks = [], members = [], progress = [], delays = [], subsystem = "General" } = req.body;
+
+    const systemPrompt = `You are an AI Project Manager for a solar car team.
+Analyze the provided telemetry and return a strategic assessment in STRICT JSON format:
+{
+  "priority_tasks": ["task 1", "task 2"],
+  "at_risk_tasks": ["task 3"],
+  "blocked_members": ["member name"],
+  "team_efficiency": "Percentage or descriptive string",
+  "recommendations": ["rec 1", "rec 2"],
+  "team_summary": "1-sentence summary"
+}`;
+
+    const completion = await groq.chat.completions.create({
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: `Subsystem: ${subsystem}\nTasks: ${JSON.stringify(tasks).slice(0, 4000)}\nMembers: ${JSON.stringify(members)}\nProgress: ${JSON.stringify(progress)}\nDelays: ${JSON.stringify(delays)}` }
+      ],
+      model: "llama-3.1-8b-instant",
+      temperature: 0.3,
+      response_format: { type: "json_object" }
+    });
+
+    const content = completion.choices[0]?.message?.content || "{}";
+    try {
+      res.json(JSON.parse(content));
+    } catch (e) {
+      res.json({ team_summary: content.slice(0, 200), recommendations: ["Review logs manually (AI Parse Error)"] });
+    }
+  } catch (error: any) {
+    res.status(500).json({ error: "AI Engine Busy", detail: error.message });
+  }
+});
+
+/** Summarize Notes - Used by summarizeNotes */
+app.post("/api/summarize", async (req, res) => {
+  try {
+    if (!groq) return res.status(503).json({ error: "AI Service Unavailable" });
+    const { notes } = req.body;
+    const completion = await groq.chat.completions.create({
+      messages: [
+        { role: "system", content: "You are ASTRA Project Intelligence. Summarize the provided notes concisely." },
+        { role: "user", content: `Notes: ${JSON.stringify(notes).slice(0, 4000)}` }
+      ],
+      model: "llama-3.1-8b-instant",
+      max_tokens: 300
+    });
+    res.json({ summary: completion.choices[0]?.message?.content });
+  } catch (error: any) {
+    res.status(500).json({ error: "Summary Engine Busy", detail: error.message });
+  }
+});
+
+/** Generic AI Analyze - Used by generateSchedule */
+app.post("/api/ai/analyze", async (req, res) => {
+  try {
+    if (!groq) return res.status(503).json({ error: "AI Service Unavailable" });
+    const { systemPrompt, userPrompt } = req.body;
+    const completion = await groq.chat.completions.create({
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt }
+      ],
+      model: "llama-3.1-8b-instant",
+      temperature: 0.3,
+      response_format: { type: "json_object" }
+    });
+    const content = completion.choices[0]?.message?.content || "{}";
+    res.json(JSON.parse(content));
+  } catch (error: any) {
+    res.status(500).json({ error: "Analysis Engine Busy", detail: error.message });
+  }
+});
+
+/** Generic AI Chat - Used by chatAssistant */
+app.post("/api/ai/chat", async (req, res) => {
+  try {
+    if (!groq) return res.status(503).json({ error: "AI Service Unavailable" });
+    const { messages } = req.body;
+    const completion = await groq.chat.completions.create({
+      messages,
+      model: "llama-3.1-8b-instant",
+      temperature: 0.7,
+      max_tokens: 1024
+    });
+    res.json({ message: completion.choices[0]?.message?.content || "" });
+  } catch (error: any) {
+    res.status(500).json({ error: "Chat Engine Busy", detail: error.message });
+  }
+});
+
+/** Test AI Connection - Diagnostics */
+app.get("/api/ai/test-key", async (req, res) => {
+  try {
+    const apiKey = (process.env.GROQ_API_KEY || "").trim();
+    if (!apiKey) return res.json({ ok: false, error: "Missing GROQ_API_KEY env var" });
+    
+    const testGroq = new Groq({ apiKey });
+    await testGroq.chat.completions.create({
+      messages: [{ role: "user", content: "ping" }],
+      model: "llama-3.1-8b-instant",
+      max_tokens: 1
+    });
+    
+    res.json({ ok: true, message: "AI Neural Link Active", keyPrefix: `${apiKey.slice(0, 6)}...` });
+  } catch (error: any) {
+    res.status(401).json({ ok: false, error: "Invalid API Key", detail: error.message });
+  }
+});
+
+/** Administrative Telemetry Bridge - Used by TaskTable CSV Export */
+app.get("/api/admin/telemetry/updates", async (req, res) => {
+  try {
+    const snapshot = await admin.database().ref('task_updates').once("value");
+    const data = snapshot.val() || {};
+    const updates = Object.entries(data).map(([id, val]: [string, any]) => ({ id, ...val }));
+    res.json(updates);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 export default app;
