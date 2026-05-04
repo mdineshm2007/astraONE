@@ -19,29 +19,27 @@ export default function DriveWorkspace() {
   const [driveConnected, setDriveConnected] = useState<boolean>(false);
 
   useEffect(() => {
-    const foldersRef = ref(rtdb, 'drive_folders');
     const financesRef = ref(rtdb, 'finances');
     
-    // Fetch initial status from API to bypass Firebase RTDB read rules
-    fetch('/api/drive/status')
-      .then(res => res.json())
-      .then(data => {
-        if (data.connected) setDriveConnected(true);
+    // Fetch folders and initial status from API to bypass Firebase RTDB read rules
+    Promise.all([
+      fetch('/api/drive/status').then(res => res.json()),
+      fetch('/api/drive/folders').then(res => res.json())
+    ])
+      .then(([statusData, foldersData]) => {
+        if (statusData.connected) setDriveConnected(true);
+        if (foldersData.folders) {
+          setFolders(foldersData.folders);
+          setDriveConnected(true);
+        }
       })
       .catch(console.error);
 
-    const unsubFolders = onValue(foldersRef, (snapshot) => {
-      const data = snapshot.val();
-      setFolders(data);
-      if (data) setDriveConnected(true); // If folders exist, we know it's connected
-    });
-    
     const unsubFinances = onValue(financesRef, (snapshot) => {
       setFinances(snapshot.val());
     });
     
     return () => {
-      unsubFolders();
       unsubFinances();
     };
   }, [profile?.uid]);

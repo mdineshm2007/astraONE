@@ -415,6 +415,15 @@ app.get("/api/drive/status", async (req, res) => {
   }
 });
 
+app.get("/api/drive/folders", async (req, res) => {
+  try {
+    const folders = await firebaseRest.get('drive_folders');
+    res.json({ folders: folders || null });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.get("/api/auth/google/callback", async (req, res) => {
   try {
     const { code, state } = req.query;

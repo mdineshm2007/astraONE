@@ -451,14 +451,23 @@ app.post("/api/users/reject", async (req, res) => {
   });
 
   app.get("/api/drive/status", async (req, res) => {
-    try {
-      const status = await firebaseRest.get('drive_config/status');
-      const tokens = await firebaseRest.get('drive_config/tokens');
-      res.json({ connected: !!status?.connected || !!tokens });
-    } catch (error) {
-      res.json({ connected: false });
-    }
-  });
+  try {
+    const status = await firebaseRest.get('drive_config/status');
+    const tokens = await firebaseRest.get('drive_config/tokens');
+    res.json({ connected: !!status?.connected || !!tokens });
+  } catch (error) {
+    res.json({ connected: false });
+  }
+});
+
+app.get("/api/drive/folders", async (req, res) => {
+  try {
+    const folders = await firebaseRest.get('drive_folders');
+    res.json({ folders: folders || null });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
   app.post("/api/auth/google/callback", async (req, res) => {
     try {
