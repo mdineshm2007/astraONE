@@ -193,43 +193,7 @@ const firebaseRest = {
 
 app.get("/api/test", (req, res) => res.json({ ok: true }));
 
-app.get("/api/users/profile/:uid", async (req, res) => {
-  try {
-    const { uid } = req.params;
-    if (!uid) return res.status(400).json({ error: "UID required" });
 
-    let profile = await firebaseRest.get(`users/${uid}`);
-    
-    if (!profile && admin.apps.length > 0) {
-      try {
-        const snapshot = await admin.database().ref(`users/${uid}`).once("value");
-        if (snapshot.exists()) profile = snapshot.val();
-      } catch (e) {}
-    }
-
-    if (!profile) {
-      // Create default profile if missing (auto-onboarding fallback)
-      const defaultProfile = {
-        uid,
-        displayName: 'Engineer',
-        role: 'MEMBER',
-        onboarded: false,
-        createdAt: new Date().toISOString()
-      };
-      
-      if (admin.apps.length > 0) {
-        await admin.database().ref(`users/${uid}`).set(defaultProfile);
-      } else {
-        await firebaseRest.put(`users/${uid}`, defaultProfile);
-      }
-      profile = defaultProfile;
-    }
-
-    res.json(profile);
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
 
 app.post("/api/users/profile/:uid/update", async (req, res) => {
   try {
@@ -341,46 +305,9 @@ app.post("/api/admin/users/delete", async (req, res) => {
   }
 });
 
-app.post("/api/users/approve", async (req, res) => {
-  try {
-    const { uid, teamId } = req.body;
-    if (!uid || !teamId) return res.status(400).json({ error: "UID and teamId required" });
 
-    const userRef = admin.database().ref(`users/${uid}`);
-    const snapshot = await userRef.once("value");
-    
-    if (snapshot.exists()) {
-      const profile = snapshot.val();
-      const teams = profile.teams || [];
-      const updatedTeams = teams.map((t: any) => t.teamId === teamId ? { ...t, status: 'APPROVED' } : t);
-      const approvedTeams = updatedTeams.filter((t: any) => t.status === 'APPROVED').map((t: any) => t.teamId);
-      await userRef.update({ teams: updatedTeams, approvedTeams });
-      res.json({ success: true });
-    } else res.status(404).json({ error: "User not found" });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
 
-app.post("/api/users/reject", async (req, res) => {
-  try {
-    const { uid, teamId } = req.body;
-    if (!uid || !teamId) return res.status(400).json({ error: "UID and teamId required" });
 
-    const userRef = admin.database().ref(`users/${uid}`);
-    const snapshot = await userRef.once("value");
-    
-    if (snapshot.exists()) {
-      const profile = snapshot.val();
-      const updatedTeams = (profile.teams || []).filter((t: any) => t.teamId !== teamId);
-      const approvedTeams = updatedTeams.filter((t: any) => t.status === 'APPROVED').map((t: any) => t.teamId);
-      await userRef.update({ teams: updatedTeams, approvedTeams });
-      res.json({ success: true });
-    } else res.status(404).json({ error: "User not found" });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
 
   const getBaseUrl = (req: express.Request) => {
     const protocol = req.headers['x-forwarded-proto'] || 'http';
@@ -505,19 +432,7 @@ app.get("/api/drive/folders", async (req, res) => {
     }
   });
 
-  app.post("/api/auth/google/disconnect", async (req, res) => {
-    try {
-      const { uid } = req.body;
-      console.log(`Disconnect request for UID: ${uid}`);
-      if (!uid) return res.status(400).json({ error: "UID required" });
-      await admin.database().ref(`users/${uid}/drive_tokens`).remove();
-      console.log(`Successfully disconnected UID: ${uid}`);
-      res.json({ success: true });
-    } catch (error: any) {
-      console.error("Disconnect Error:", error);
-      res.status(500).json({ error: error.message });
-    }
-  });
+
 
   // User Profile Endpoints
   app.get("/api/users/profile/:uid", async (req, res) => {
@@ -679,92 +594,10 @@ app.get("/api/drive/folders", async (req, res) => {
   });
 
   // Automated Intelligence Analysis (Llama 3.3 70B)
-  app.post("/api/analyze", async (req, res) => {
-    try {
-      const { type, data, context, uid } = req.body;
-      console.log(`Unified AI Analyzing ${type} for user ${uid}`);
 
-      let userContext = "";
-      if (uid) {
-        try {
-          const snapshot = await admin.database().ref(`logs/${uid}`).limitToLast(5).once("value");
-          if (snapshot.exists()) {
-            userContext = "\nUser Context: " + Object.values(snapshot.val()).map((l: any) => l.action).join(", ");
-          }
-        } catch (e) { }
-      }
-
-      let systemPrompt = "You are ASTRA AI, the core engineering brain of the Solar Car mission. Analyze the data provided and give a sharp, 1-sentence technical directive. Focus on prediction and efficiency.";
-
-      if (type === 'TASK_PROGRESS') {
-        systemPrompt = "You are ASTRA AI, the project intelligence lead. Analyze the task telemetry and progress updates provided. Follow the specific instructions in the context. Provide a concise, professional summary (max 4 sentences) of the tasks, their progress, and potential bottlenecks. Use engineering terminology.";
-      }
-
-      const userPrompt = `Telemetery (${type}): ${JSON.stringify(data)}. Context: ${context || 'Mission Control'}.${userContext}`;
-
-      if (!groq) throw new Error("ASTRA Brain Offline (Missing API Key)");
-      const completion = await groq.chat.completions.create({
-        messages: [{ role: "system", content: systemPrompt }, { role: "user", content: userPrompt }],
-        model: "llama-3.1-8b-instant",
-        temperature: 0.7,
-        max_tokens: 200 // Increased for summary
-      });
-
-      res.json({ analysis: completion.choices[0]?.message?.content });
-    } catch (error) {
-      console.error("Unified AI Error:", error);
-      res.status(500).json({ error: "ASTRA Brain Offline" });
-    }
-  });
 
   // Team-Specific Intelligence Analysis (Structured JSON)
-  app.post("/api/ai/team-analysis", async (req, res) => {
-    try {
-      const { tasks = [], members = [], progress = [], delays = [], subsystem = "General" } = req.body;
 
-      console.log(`AI Request: Analyzing team performance for ${subsystem}`);
-
-      const systemPrompt = `You are an AI Project Manager for a solar car team.
-Analyze the provided telemetry and return a strategic assessment.
-Return STRICT JSON format:
-{
-  "priority_tasks": ["task 1", "task 2"],
-  "at_risk_tasks": ["task 3"],
-  "blocked_members": ["member name"],
-  "team_efficiency": "Percentage or descriptive string",
-  "recommendations": ["rec 1", "rec 2"]
-}`;
-
-      const userPrompt = `
-Analyze:
-Subsystem: ${subsystem}
-Tasks: ${JSON.stringify(tasks)}
-Members: ${JSON.stringify(members)}
-Progress: ${JSON.stringify(progress)}
-Delays: ${JSON.stringify(delays)}
-`;
-
-      if (!groq) throw new Error("AI PM Offline (Missing API Key)");
-      const completion = await groq.chat.completions.create({
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt }
-        ],
-        model: "llama-3.3-70b-versatile", // High-performance model for complex analysis
-        temperature: 0.3, // Lower temperature for more consistent JSON
-        response_format: { type: "json_object" }
-      });
-
-      const responseContent = completion.choices[0]?.message?.content;
-      console.log("AI Response:", responseContent);
-
-      const analysis = JSON.parse(responseContent || "{}");
-      res.json(analysis);
-    } catch (error) {
-      console.error("Team Analysis API Error:", error);
-      res.status(500).json({ error: "AI temporarily unavailable" });
-    }
-  });
 
   app.post("/api/ai/cost-analysis", async (req, res) => {
     try {
@@ -814,22 +647,7 @@ ${teamId ? `Focus Team: ${teamId}` : 'All teams'}`;
 
 
   // Deep engineering logic - legacy endpoint redirecting to analyze if needed
-  app.post("/api/summarize", async (req, res) => {
-    try {
-      const { notes } = req.body;
-      if (!groq) throw new Error("AI Synthesis Offline (Missing API Key)");
-      const completion = await groq.chat.completions.create({
-        messages: [
-          { role: "system", content: "You are the ASTRA Project Intelligence. Technical synthesis specialist." },
-          { role: "user", content: `Summarize notes: ${JSON.stringify(notes)}` }
-        ],
-        model: "llama-3.1-8b-instant",
-      });
-      res.json({ summary: completion.choices[0]?.message?.content });
-    } catch (error: any) {
-      res.status(500).json({ error: "AI Synthesis failed: " + error.message });
-    }
-  });
+
 
 
   app.post("/api/auth/google/disconnect", async (req, res) => {
@@ -978,6 +796,64 @@ ${teamId ? `Focus Team: ${teamId}` : 'All teams'}`;
 
   // Run on startup
   // performDataSweep().catch(console.error);
+
+// --- BOM & Finances Proxy Endpoints ---
+app.get("/api/bom/:teamName", async (req, res) => {
+  try {
+    const data = await firebaseRest.get(`finances/bom/${req.params.teamName}`);
+    res.json(data || {});
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post("/api/bom/:teamName/add", async (req, res) => {
+  try {
+    const { teamName } = req.params;
+    const newItem = req.body;
+    let newId = "";
+    if (admin.apps.length > 0) {
+      newId = admin.database().ref().push().key || Date.now().toString();
+    } else {
+      newId = Date.now().toString(); // Fallback ID
+    }
+    await firebaseRest.put(`finances/bom/${teamName}/${newId}`, newItem);
+    res.json({ success: true, id: newId, data: newItem });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put("/api/bom/:teamName/:id", async (req, res) => {
+  try {
+    const { teamName, id } = req.params;
+    await firebaseRest.update(`finances/bom/${teamName}/${id}`, req.body);
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete("/api/bom/:teamName/:id", async (req, res) => {
+  try {
+    const { teamName, id } = req.params;
+    await firebaseRest.remove(`finances/bom/${teamName}/${id}`);
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post("/api/finances/teams/:teamName/total", async (req, res) => {
+  try {
+    const { teamName } = req.params;
+    const { total } = req.body;
+    await firebaseRest.put(`finances/teams/${teamName}`, total);
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
   // Only listen locally, Vercel uses the exported app
   if (process.env.NODE_ENV !== "production") {

@@ -192,11 +192,12 @@ export default function BOMTable({ teamName, onClose }: BOMTableProps) {
 
   const dbPath = `finances/bom/${teamName}`;
 
-  useEffect(() => {
-    const bomRef = ref(rtdb, dbPath);
-    const unsub = onValue(bomRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
+  const fetchBOM = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/bom/${teamName}`);
+      if (!res.ok) throw new Error("Failed to fetch BOM");
+      const data = await res.json();
+      if (data && Object.keys(data).length > 0) {
         const parsed: BOMRow[] = Object.entries(data).map(([id, val]: [string, any]) => ({
           id,
           sno: val.sno,
@@ -212,40 +213,78 @@ export default function BOMTable({ teamName, onClose }: BOMTableProps) {
       } else {
         setRows([]);
       }
+    } catch (error) {
+      console.error("BOM data fetch error:", error);
+    } finally {
       setLoading(false);
-    });
-    return () => unsub();
-  }, [dbPath]);
+    }
+  }, [teamName]);
+
+  useEffect(() => {
+    fetchBOM();
+  }, [fetchBOM]);
 
   // Auto-sync team total spend from BOM table
   useEffect(() => {
     if (loading) return;
     const total = rows.reduce((sum, r) => sum + (Number(r.totalMaterialCost) || 0), 0);
-    const teamTotalRef = ref(rtdb, `finances/teams/${teamName}`);
-    set(teamTotalRef, total);
+    fetch(`/api/finances/teams/${teamName}/total`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ total })
+    }).catch(error => {
+      console.error("Failed to auto-sync team total spend:", error);
+    });
   }, [rows, teamName, loading]);
 
   const handleSaveRow = useCallback(async (id: string, updated: Omit<BOMRow, 'id'>) => {
-    const rowRef = ref(rtdb, `${dbPath}/${id}`);
-    await set(rowRef, updated);
-  }, [dbPath]);
+    try {
+      await fetch(`/api/bom/${teamName}/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updated)
+      });
+      fetchBOM();
+    } catch (error) {
+      console.error("Failed to save row:", error);
+    }
+  }, [teamName, fetchBOM]);
 
   const handleAddRow = async () => {
-    const bomRef = ref(rtdb, dbPath);
-    await push(bomRef, {
-      partName: '',
-      vendor: '',
-      type: 'Purchased',
-      totalMaterialCost: 0,
-      remarks: '',
-      date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: '2-digit' }),
-    });
+    try {
+      const newItem = {
+        partName: '',
+        vendor: '',
+        type: 'Purchased',
+        totalMaterialCost: 0,
+        remarks: '',
+        date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: '2-digit' }),
+      };
+      
+      const res = await fetch(`/api/bom/${teamName}/add`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newItem)
+      });
+      
+      if (!res.ok) throw new Error("Failed to add item via API");
+      fetchBOM();
+    } catch (error: any) {
+      console.error("Failed to add item:", error);
+      alert(`Failed to add item: ${error.message || "Permission Denied or Network Error"}`);
+    }
   };
 
   const handleDeleteRow = async (id: string) => {
     if (!window.confirm('Remove this item?')) return;
-    const rowRef = ref(rtdb, `${dbPath}/${id}`);
-    await remove(rowRef);
+    try {
+      const res = await fetch(`/api/bom/${teamName}/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error("Failed to delete item via API");
+      fetchBOM();
+    } catch (error: any) {
+      console.error("Failed to delete item:", error);
+      alert(`Failed to delete item: ${error.message || "Permission Denied"}`);
+    }
   };
 
   const totalCost = rows.reduce((sum, r) => sum + (Number(r.totalMaterialCost) || 0), 0);

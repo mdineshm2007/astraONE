@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { onAuthStateChanged, User, signInWithPopup, GoogleAuthProvider, signOut, signInWithCredential } from 'firebase/auth';
 import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 import { ref, get, set, update, onValue, onDisconnect } from 'firebase/database';
@@ -59,6 +59,53 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Refs to track current state in stale closures (timeouts/listeners)
+  const profileRef = useRef<UserProfile | null>(null);
+  const loadingRef = useRef<boolean>(true);
+
+  // Synchronize refs with state
+  useEffect(() => { profileRef.current = profile; }, [profile]);
+  useEffect(() => { loadingRef.current = loading; }, [loading]);
+
+  // Helper for backend fallback - Memoized to be accessible outside useEffect
+  const fetchProfileFallback = useCallback(async (uid: string, source: string) => {
+    try {
+      console.log(`[Auth] Attempting backend profile fallback (${source}) for:`, uid);
+      
+      // Use AbortController for timeout
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000);
+      
+      const response = await fetch(`/api/users/profile/${uid}`, {
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeout);
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log(`[Auth] Profile loaded successfully from backend (${source})`);
+        setProfile(data);
+        setLoading(false);
+        setError(null);
+        return true;
+      } else {
+        const errText = await response.text();
+        console.warn(`[Auth] Backend fallback failed (${source}):`, response.status, errText);
+        setError(`Backend Error ${response.status}: ${errText.slice(0, 50)}`);
+      }
+    } catch (e: any) {
+      if (e.name === 'AbortError') {
+        console.error(`[Auth] Backend fallback TIMED OUT (${source})`);
+        setError("Handshake Timeout");
+      } else {
+        console.error(`[Auth] Backend fallback error (${source}):`, e.message);
+        setError(`Handshake Error: ${e.message}`);
+      }
+    }
+    return false;
+  }, []);
+
   useEffect(() => {
     let unsubProfile: (() => void) | null = null;
 
@@ -87,56 +134,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { role: correctRole, teams: initialTeams } = resolveRoleFromEmail(email);
       const userRef = ref(rtdb, `users/${firebaseUser.uid}`);
 
-      // Helper for backend fallback
-      const fetchProfileFallback = async (source: string) => {
-        try {
-          console.log(`[Auth] Attempting backend profile fallback (${source}) for:`, firebaseUser.uid);
-          
-          // Use AbortController for timeout
-          const controller = new AbortController();
-          const timeout = setTimeout(() => controller.abort(), 10000);
-          
-          const response = await fetch(`/api/users/profile/${firebaseUser.uid}`, {
-            signal: controller.signal
-          });
-          
-          clearTimeout(timeout);
-          
-          if (response.ok) {
-            const data = await response.json();
-            console.log(`[Auth] Profile loaded successfully from backend (${source})`);
-            setProfile(data);
-            setLoading(false);
-            setError(null);
-            return true;
-          } else {
-            const errText = await response.text();
-            console.warn(`[Auth] Backend fallback failed (${source}):`, response.status, errText);
-            setError(`Backend Error ${response.status}: ${errText.slice(0, 50)}`);
-          }
-        } catch (e: any) {
-          if (e.name === 'AbortError') {
-            console.error(`[Auth] Backend fallback TIMED OUT (${source})`);
-            setError("Handshake Timeout");
-          } else {
-            console.error(`[Auth] Backend fallback error (${source}):`, e.message);
-            setError(`Handshake Error: ${e.message}`);
-          }
-        }
-        return false;
-      };
-
       // 2. Soft Timeout (5s): Try backend if RTDB is slow but keep waiting for RTDB
       const softTimeoutId = setTimeout(async () => {
-        if (!profile) {
+        if (!profileRef.current) {
           console.warn("[Auth] RTDB slow - triggering early backend fallback");
-          await fetchProfileFallback("soft-timeout");
+          await fetchProfileFallback(firebaseUser.uid, "soft-timeout");
         }
       }, 5000);
 
       // 3. Hard Safety Timeout (15s): Stop loading even if everything fails
       const hardTimeoutId = setTimeout(() => {
-        if (loading) {
+        if (loadingRef.current) {
           console.warn("[Auth] Critical timeout - forcing loading to false");
           setLoading(false);
         }
@@ -201,13 +209,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               setProfile(newProfile);
               await set(userRef, newProfile).catch(async (e) => {
                 console.error("[Auth] Client-side profile creation denied, using backend proxy:", e.message);
-                await fetchProfileFallback("creation-denied");
+                await fetchProfileFallback(firebaseUser.uid, "creation-denied");
               });
             }
             setLoading(false);
           } catch (err) {
             console.error("[Auth] Listener callback error:", err);
-            await fetchProfileFallback("callback-error");
+            await fetchProfileFallback(firebaseUser.uid, "callback-error");
           }
         }, async (error) => {
           console.error("[Auth] RTDB Listener Connection Error:", error);
@@ -220,7 +228,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             console.warn("[Auth] Permission Denied from RTDB - bypassing to backend proxy");
           }
           
-          const success = await fetchProfileFallback(isPermissionDenied ? "permission-denied" : "rtdb-error");
+          const success = await fetchProfileFallback(firebaseUser.uid, isPermissionDenied ? "permission-denied" : "rtdb-error");
           if (!success) setLoading(false);
         });
 
@@ -243,7 +251,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       unsubAuth();
       if (unsubProfile) unsubProfile();
     };
-  }, []);
+  }, [fetchProfileFallback]); // Added dependency to be correct
 
   const signIn = async () => {
     try {
@@ -290,7 +298,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const refreshProfile = async () => {
-    await fetchProfileFallback("manual-refresh");
+    if (user) {
+      await fetchProfileFallback(user.uid, "manual-refresh");
+    }
   };
 
   return (
