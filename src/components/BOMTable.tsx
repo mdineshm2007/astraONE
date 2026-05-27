@@ -255,35 +255,52 @@ export default function BOMTable({ teamName, onClose }: BOMTableProps) {
       const newItem = {
         partName: '',
         vendor: '',
-        type: 'Purchased',
+        type: 'Purchased' as const,
         totalMaterialCost: 0,
         remarks: '',
         date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: '2-digit' }),
       };
-      
+
       const res = await fetch(`/api/bom/${teamName}/add`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newItem)
       });
-      
-      if (!res.ok) throw new Error("Failed to add item via API");
-      fetchBOM();
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({ error: 'Server error' }));
+        throw new Error(errData.error || `HTTP ${res.status}`);
+      }
+
+      const result = await res.json();
+      // Immediately add to local state — don't wait for fetchBOM (race condition)
+      if (result.id) {
+        setRows(prev => [...prev, { id: result.id, ...newItem }]);
+      }
+      // Background refresh to confirm sync
+      setTimeout(() => fetchBOM(), 1500);
     } catch (error: any) {
       console.error("Failed to add item:", error);
-      alert(`Failed to add item: ${error.message || "Permission Denied or Network Error"}`);
+      alert(`Failed to add item: ${error.message || "Network error"}`);
     }
   };
 
   const handleDeleteRow = async (id: string) => {
     if (!window.confirm('Remove this item?')) return;
+    // Optimistically remove immediately
+    setRows(prev => prev.filter(r => r.id !== id));
     try {
       const res = await fetch(`/api/bom/${teamName}/${id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error("Failed to delete item via API");
-      fetchBOM();
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({ error: 'Server error' }));
+        throw new Error(errData.error || `HTTP ${res.status}`);
+      }
+      setTimeout(() => fetchBOM(), 1500);
     } catch (error: any) {
       console.error("Failed to delete item:", error);
-      alert(`Failed to delete item: ${error.message || "Permission Denied"}`);
+      // Restore the row if delete failed
+      fetchBOM();
+      alert(`Failed to delete item: ${error.message || "Network error"}`);
     }
   };
 
