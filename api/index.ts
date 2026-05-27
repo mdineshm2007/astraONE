@@ -145,6 +145,21 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   res.status(500).json({ error: "Internal Server Error", message: err.message });
 });
 
+// Firebase-compatible push ID generator (pure JS — no admin SDK needed)
+function generatePushId(): string {
+  const PUSH_CHARS = '-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz';
+  let now = Date.now();
+  let id = '';
+  for (let i = 7; i >= 0; i--) {
+    id = PUSH_CHARS[now % 64] + id;
+    now = Math.floor(now / 64);
+  }
+  for (let i = 0; i < 12; i++) {
+    id += PUSH_CHARS[Math.floor(Math.random() * 64)];
+  }
+  return id;
+}
+
 // Firebase REST Helper
 const firebaseRest = {
   get: async (path: string) => {
@@ -162,28 +177,48 @@ const firebaseRest = {
     }
   },
   update: async (path: string, data: any) => {
-    try {
-      const cleanUrl = (process.env.FIREBASE_DATABASE_URL || "").replace(/\/$/, "");
-      const cleanPath = path.startsWith("/") ? path : `/${path}`;
-      const url = `${cleanUrl}${cleanPath}.json?auth=${process.env.FIREBASE_DATABASE_SECRET}`;
-      const res = await fetch(url, { method: 'PATCH', body: JSON.stringify(data) });
-      if (!res.ok) return null;
-      return res.json();
-    } catch (e) {
-      return null;
+    const cleanUrl = (process.env.FIREBASE_DATABASE_URL || "").replace(/\/$/, "");
+    if (!cleanUrl) throw new Error("FIREBASE_DATABASE_URL not set in environment");
+    const cleanPath = path.startsWith("/") ? path : `/${path}`;
+    const url = `${cleanUrl}${cleanPath}.json?auth=${process.env.FIREBASE_DATABASE_SECRET || ""}`;
+    const res = await fetch(url, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`Firebase PATCH failed (${res.status}): ${errText}`);
     }
+    return res.json();
   },
   put: async (path: string, data: any) => {
-    try {
-      const cleanUrl = (process.env.FIREBASE_DATABASE_URL || "").replace(/\/$/, "");
-      const cleanPath = path.startsWith("/") ? path : `/${path}`;
-      const url = `${cleanUrl}${cleanPath}.json?auth=${process.env.FIREBASE_DATABASE_SECRET}`;
-      const res = await fetch(url, { method: 'PUT', body: JSON.stringify(data) });
-      if (!res.ok) return null;
-      return res.json();
-    } catch (e) {
-      return null;
+    const cleanUrl = (process.env.FIREBASE_DATABASE_URL || "").replace(/\/$/, "");
+    if (!cleanUrl) throw new Error("FIREBASE_DATABASE_URL not set in environment");
+    const cleanPath = path.startsWith("/") ? path : `/${path}`;
+    const url = `${cleanUrl}${cleanPath}.json?auth=${process.env.FIREBASE_DATABASE_SECRET || ""}`;
+    const res = await fetch(url, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`Firebase PUT failed (${res.status}): ${errText}`);
     }
+    return res.json();
+  },
+  remove: async (path: string) => {
+    const cleanUrl = (process.env.FIREBASE_DATABASE_URL || "").replace(/\/$/, "");
+    if (!cleanUrl) throw new Error("FIREBASE_DATABASE_URL not set in environment");
+    const cleanPath = path.startsWith("/") ? path : `/${path}`;
+    const url = `${cleanUrl}${cleanPath}.json?auth=${process.env.FIREBASE_DATABASE_SECRET || ""}`;
+    const res = await fetch(url, { method: 'DELETE' });
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`Firebase DELETE failed (${res.status}): ${errText}`);
+    }
+    return true;
   }
 };
 
@@ -650,6 +685,63 @@ app.get("/api/admin/telemetry/updates", async (req, res) => {
     const data = snapshot.val() || {};
     const updates = Object.entries(data).map(([id, val]: [string, any]) => ({ id, ...val }));
     res.json(updates);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// --- BOM & Finances Proxy Endpoints ---
+app.get("/api/bom/:teamName", async (req, res) => {
+  try {
+    const data = await firebaseRest.get(`finances/bom/${req.params.teamName}`);
+    res.json(data || {});
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post("/api/bom/:teamName/add", async (req, res) => {
+  try {
+    const { teamName } = req.params;
+    const newItem = req.body;
+    // Use pure-JS Firebase-compatible push ID (no admin SDK dependency)
+    const newId = generatePushId();
+    console.log(`[BOM] Adding item to finances/bom/${teamName}/${newId}`);
+    await firebaseRest.put(`finances/bom/${teamName}/${newId}`, newItem);
+    console.log(`[BOM] Successfully added item ${newId}`);
+    res.json({ success: true, id: newId, data: newItem });
+  } catch (error: any) {
+    console.error("[BOM] Add error:", error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put("/api/bom/:teamName/:id", async (req, res) => {
+  try {
+    const { teamName, id } = req.params;
+    await firebaseRest.put(`finances/bom/${teamName}/${id}`, req.body);
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete("/api/bom/:teamName/:id", async (req, res) => {
+  try {
+    const { teamName, id } = req.params;
+    await firebaseRest.remove(`finances/bom/${teamName}/${id}`);
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post("/api/finances/teams/:teamName/total", async (req, res) => {
+  try {
+    const { teamName } = req.params;
+    const { total } = req.body;
+    await firebaseRest.put(`finances/teams/${teamName}`, total);
+    res.json({ success: true });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
