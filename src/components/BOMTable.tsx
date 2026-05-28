@@ -59,6 +59,26 @@ function EditableRow({
     onSave(row.id, local);
   };
 
+  // Debounced auto-save on typing to ensure background sync even if modal unmounts immediately
+  useEffect(() => {
+    const isUnchanged = 
+      local.sno === (row.sno !== undefined ? row.sno : String(index + 1)) &&
+      local.category === (row.category !== undefined ? row.category : teamName) &&
+      local.partName === row.partName &&
+      local.vendor === (row.vendor || '') &&
+      local.type === row.type &&
+      local.totalMaterialCost === row.totalMaterialCost &&
+      local.remarks === row.remarks;
+
+    if (isUnchanged) return;
+
+    const timer = setTimeout(() => {
+      onSave(row.id, local);
+    }, 600);
+
+    return () => clearTimeout(timer);
+  }, [local, row, index, teamName, onSave]);
+
   // For dropdown, save immediately since there's no "typing"
   const handleTypeChange = (value: 'Purchased' | 'Fabricated') => {
     const updated = { ...local, type: value };
