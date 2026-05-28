@@ -222,6 +222,45 @@ const firebaseRest = {
   }
 };
 
+// Mirror of AuthContext resolveRoleFromEmail - ensures backend profile creation gives correct role
+function resolveRoleFromEmail(email: string): { role: string; teams: { teamId: string; status: string }[]; approvedTeams: string[] } {
+  const e = email.toLowerCase().trim();
+  
+  const captains = [
+    '727724eumc054@skcet.ac.in',
+    '727724eumc036@skcet.ac.in',
+    '727724eumc011@skcet.ac.in',
+    '727725eumc604@skcet.ac.in',
+    '727724eumc044@skcet.ac.in',
+    '25mz122@skcet.ac.in',
+    '727725eumc608@skcet.ac.in'
+  ];
+
+  if (captains.includes(e)) {
+    const teams: { teamId: string; status: string }[] = [];
+    if (e === '727724eumc044@skcet.ac.in') teams.push({ teamId: 'steering', status: 'APPROVED' }, { teamId: 'cost', status: 'APPROVED' });
+    if (e === '25mz122@skcet.ac.in') teams.push({ teamId: 'innovation', status: 'APPROVED' });
+    if (e === '727725eumc608@skcet.ac.in') teams.push({ teamId: 'pro', status: 'APPROVED' });
+    return { role: 'CAPTAIN', teams, approvedTeams: teams.map(t => t.teamId) };
+  }
+  
+  const teamLeads: Record<string, string> = {
+    '25mz096@skcet.ac.in': 'suspension',
+    '727724eumc114@skcet.ac.in': 'brakes',
+    '25mz021@skcet.ac.in': 'transmission',
+    '25mz045@skcet.ac.in': 'design',
+    '727724eumc093@skcet.ac.in': 'electrical',
+    '727724eumc026@skcet.ac.in': 'autonomous',
+  };
+  
+  if (teamLeads[e]) {
+    const teamId = teamLeads[e];
+    return { role: 'TEAM_LEAD', teams: [{ teamId, status: 'APPROVED' }], approvedTeams: [teamId] };
+  }
+  
+  return { role: 'MEMBER', teams: [], approvedTeams: [] };
+}
+
 const getBaseUrl = (req: express.Request) => {
   const protocol = req.headers['x-forwarded-proto'] || 'http';
   return `${protocol}://${req.headers.host}`;
@@ -264,7 +303,8 @@ app.get("/api/users/profile/:uid", async (req, res) => {
     }
 
     if (!profile) {
-      // Create default profile if missing (auto-onboarding fallback)
+      // We don't have the email here, so create minimal profile
+      // The frontend will sync the role via resolveRoleFromEmail on next load
       const defaultProfile = {
         uid,
         displayName: 'Engineer',
@@ -281,7 +321,45 @@ app.get("/api/users/profile/:uid", async (req, res) => {
       profile = defaultProfile;
     }
 
+    // CRITICAL: Always re-apply email-based role resolution if email is available
+    // This ensures CAPTAIN/TEAM_LEAD users are never downgraded to MEMBER by the backend
+    const email = profile.email || '';
+    if (email) {
+      const { role, teams, approvedTeams } = resolveRoleFromEmail(email);
+      const needsRoleUpdate = profile.role !== role;
+      if (needsRoleUpdate) {
+        const merged = { ...profile, role, teams, approvedTeams };
+        if (admin.apps.length > 0) {
+          await admin.database().ref(`users/${uid}`).update({ role, teams, approvedTeams }).catch(() => {});
+        } else {
+          await firebaseRest.update(`users/${uid}`, { role, teams, approvedTeams }).catch(() => {});
+        }
+        return res.json(merged);
+      }
+    }
+
     res.json(profile);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post("/api/users/profile/:uid/fix-role", async (req, res) => {
+  try {
+    const { uid } = req.params;
+    const { email } = req.body;
+    if (!uid || !email) return res.status(400).json({ error: "UID and email required" });
+    
+    const { role, teams, approvedTeams } = resolveRoleFromEmail(email);
+    
+    const updates = { role, teams, approvedTeams };
+    if (admin.apps.length > 0) {
+      await admin.database().ref(`users/${uid}`).update(updates);
+    } else {
+      await firebaseRest.update(`users/${uid}`, updates);
+    }
+    
+    res.json({ success: true, role, teams, approvedTeams });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -741,6 +819,91 @@ app.post("/api/finances/teams/:teamName/total", async (req, res) => {
     const { teamName } = req.params;
     const { total } = req.body;
     await firebaseRest.put(`finances/teams/${teamName}`, total);
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// --- Rulebook Checklist Endpoints ---
+
+// GET /api/rulebook/:category?team=TeamName (or team=all for overall)
+app.get("/api/rulebook/:category", async (req, res) => {
+  try {
+    const { category } = req.params;
+    const { team } = req.query as { team?: string };
+
+    if (team && team !== 'all') {
+      // Single team view
+      const data = await firebaseRest.get(`rulebook/${category}/${team}`);
+      if (!data) return res.json([]);
+      const items = Object.entries(data).map(([id, val]: [string, any]) => ({ id, ...val }));
+      res.json(items);
+    } else {
+      // Overall view — fetch all teams
+      const data = await firebaseRest.get(`rulebook/${category}`);
+      if (!data) return res.json([]);
+      const items: any[] = [];
+      for (const [teamId, teamItems] of Object.entries(data as Record<string, any>)) {
+        if (teamItems && typeof teamItems === 'object') {
+          for (const [id, val] of Object.entries(teamItems as Record<string, any>)) {
+            items.push({ id, teamId, ...val });
+          }
+        }
+      }
+      res.json(items);
+    }
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// POST /api/rulebook/:category/add
+app.post("/api/rulebook/:category/add", async (req, res) => {
+  try {
+    const { category } = req.params;
+    const { title, description, teamId, createdBy, createdByName } = req.body;
+    if (!title || !teamId) return res.status(400).json({ error: "title and teamId required" });
+
+    const newId = generatePushId();
+    const newItem = {
+      title,
+      description: description || '',
+      category,
+      teamId,
+      checked: false,
+      createdBy: createdBy || 'unknown',
+      createdByName: createdByName || 'Unknown',
+      createdAt: new Date().toISOString(),
+    };
+    await firebaseRest.put(`rulebook/${category}/${teamId}/${newId}`, newItem);
+    res.json({ success: true, id: newId });
+  } catch (error: any) {
+    console.error("[Rulebook] Add error:", error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// PUT /api/rulebook/:category/:id/check  — toggle check
+app.put("/api/rulebook/:category/:id/check", async (req, res) => {
+  try {
+    const { category, id } = req.params;
+    const { checked, checkedBy, checkedAt, teamId } = req.body;
+    if (!teamId) return res.status(400).json({ error: "teamId required" });
+    await firebaseRest.update(`rulebook/${category}/${teamId}/${id}`, { checked, checkedBy, checkedAt });
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// DELETE /api/rulebook/:category/:id?teamId=...
+app.delete("/api/rulebook/:category/:id", async (req, res) => {
+  try {
+    const { category, id } = req.params;
+    const { teamId } = req.query as { teamId?: string };
+    if (!teamId) return res.status(400).json({ error: "teamId query param required" });
+    await firebaseRest.remove(`rulebook/${category}/${teamId}/${id}`);
     res.json({ success: true });
   } catch (error: any) {
     res.status(500).json({ error: error.message });

@@ -9,7 +9,8 @@ export type AppView =
   | 'admin'
   | 'members'
   | 'innovation'
-  | 'workspace';
+  | 'workspace'
+  | 'rulebook';
 
 export interface DriveFolder {
   id: string;
@@ -175,4 +176,18 @@ export interface Document {
   title: string;
   url?: string;
   [key: string]: any;
+}
+
+export interface RulebookItem {
+  id: string;
+  title: string;
+  description?: string;
+  category: 'assembly' | 'manufacture';
+  teamId: string;
+  checked: boolean;
+  checkedBy?: string;
+  checkedAt?: string;
+  createdBy: string;
+  createdByName: string;
+  createdAt: string;
 }

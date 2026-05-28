@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { LayoutDashboard, Users, Bell, Menu, Rocket, Notebook as NotebookIcon, ShieldAlert, Database, LogOut, Globe, HelpCircle, BarChart3, MessageSquare, X } from 'lucide-react';
+import { LayoutDashboard, Users, Bell, Menu, Rocket, Notebook as NotebookIcon, ShieldAlert, Database, LogOut, Globe, HelpCircle, BarChart3, MessageSquare, X, ClipboardList } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import AIAssistant from './AIAssistant';
 import { subscribeToMultipleTeamsPendingMembers, updateUserProfile } from '../services/userService';
@@ -93,6 +93,7 @@ export default function Layout({ children, currentView, onViewChange }: LayoutPr
     { id: 'posts', label: 'Engineering Feed', icon: Globe, roles: ['CAPTAIN', 'TEAM_LEAD', 'MEMBER'] },
     { id: 'queries', label: 'Query Panel', icon: HelpCircle, roles: ['CAPTAIN', 'TEAM_LEAD', 'MEMBER'] },
     { id: 'workspace', label: 'Cloud Infrastructure', icon: Database, roles: ['CAPTAIN', 'TEAM_LEAD', 'MEMBER'] },
+    { id: 'rulebook', label: 'Rulebook Checklist', icon: ClipboardList, roles: ['CAPTAIN', 'TEAM_LEAD', 'MEMBER'] },
     { id: 'admin', label: 'Admin Control', icon: ShieldAlert, roles: ['CAPTAIN', 'TEAM_LEAD'], badge: pendingCount },
   ];
 

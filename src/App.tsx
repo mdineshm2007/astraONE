@@ -12,6 +12,7 @@ import TeamSelection from './components/TeamSelection';
 import ProfileOnboarding from './components/ProfileOnboarding';
 import AdminPanel from './components/AdminPanel';
 import DriveWorkspace from './components/DriveWorkspace';
+import RulebookChecklist from './components/RulebookChecklist';
 import { ShieldAlert } from 'lucide-react';
 
 function AppContent() {
@@ -96,6 +97,7 @@ function AppContent() {
       case 'queries': return <Queries />;
       case 'admin': return <AdminPanel />;
       case 'workspace': return <DriveWorkspace />;
+      case 'rulebook': return <RulebookChecklist />;
       default: return <Dashboard />;
     }
   };
