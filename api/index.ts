@@ -779,7 +779,7 @@ async function recalculateTeamTotal(teamName: string) {
     const data = await firebaseRest.get(`finances/bom/${teamName}`);
     let total = 0;
     if (data && typeof data === 'object') {
-      total = Object.values(data).reduce((sum: number, item: any) => sum + (Number(item?.totalMaterialCost) || 0), 0);
+      total = (Object.values(data) as any[]).reduce((sum: number, item: any): number => sum + (Number(item?.totalMaterialCost) || 0), 0);
     }
     await firebaseRest.put(`finances/teams/${teamName}`, total);
     console.log(`[BOM] Recalculated total for ${teamName}: ${total}`);
