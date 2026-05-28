@@ -160,15 +160,16 @@ function generatePushId(): string {
   return id;
 }
 
+// Firebase credentials — env vars take priority, hardcoded fallbacks ensure Vercel works without manual setup
+const FIREBASE_DB_URL = (process.env.FIREBASE_DATABASE_URL || "https://studio-1045950084-89865-default-rtdb.asia-southeast1.firebasedatabase.app").replace(/\/$/, "");
+const FIREBASE_DB_SECRET = process.env.FIREBASE_DATABASE_SECRET || "nbN32sF35ZGFoP3IdVaGkVb5t9gW5NFj3V7Gu7rY";
+
 // Firebase REST Helper
 const firebaseRest = {
   get: async (path: string) => {
     try {
-      const baseUrl = process.env.FIREBASE_DATABASE_URL;
-      if (!baseUrl) throw new Error("FIREBASE_DATABASE_URL missing");
-      const cleanUrl = baseUrl.replace(/\/$/, "");
       const cleanPath = path.startsWith("/") ? path : `/${path}`;
-      const url = `${cleanUrl}${cleanPath}.json?auth=${process.env.FIREBASE_DATABASE_SECRET || ""}`;
+      const url = `${FIREBASE_DB_URL}${cleanPath}.json?auth=${FIREBASE_DB_SECRET}`;
       const res = await fetch(url);
       if (!res.ok) return null;
       return res.json();
@@ -177,10 +178,8 @@ const firebaseRest = {
     }
   },
   update: async (path: string, data: any) => {
-    const cleanUrl = (process.env.FIREBASE_DATABASE_URL || "").replace(/\/$/, "");
-    if (!cleanUrl) throw new Error("FIREBASE_DATABASE_URL not set in environment");
     const cleanPath = path.startsWith("/") ? path : `/${path}`;
-    const url = `${cleanUrl}${cleanPath}.json?auth=${process.env.FIREBASE_DATABASE_SECRET || ""}`;
+    const url = `${FIREBASE_DB_URL}${cleanPath}.json?auth=${FIREBASE_DB_SECRET}`;
     const res = await fetch(url, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -193,10 +192,8 @@ const firebaseRest = {
     return res.json();
   },
   put: async (path: string, data: any) => {
-    const cleanUrl = (process.env.FIREBASE_DATABASE_URL || "").replace(/\/$/, "");
-    if (!cleanUrl) throw new Error("FIREBASE_DATABASE_URL not set in environment");
     const cleanPath = path.startsWith("/") ? path : `/${path}`;
-    const url = `${cleanUrl}${cleanPath}.json?auth=${process.env.FIREBASE_DATABASE_SECRET || ""}`;
+    const url = `${FIREBASE_DB_URL}${cleanPath}.json?auth=${FIREBASE_DB_SECRET}`;
     const res = await fetch(url, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -209,10 +206,8 @@ const firebaseRest = {
     return res.json();
   },
   remove: async (path: string) => {
-    const cleanUrl = (process.env.FIREBASE_DATABASE_URL || "").replace(/\/$/, "");
-    if (!cleanUrl) throw new Error("FIREBASE_DATABASE_URL not set in environment");
     const cleanPath = path.startsWith("/") ? path : `/${path}`;
-    const url = `${cleanUrl}${cleanPath}.json?auth=${process.env.FIREBASE_DATABASE_SECRET || ""}`;
+    const url = `${FIREBASE_DB_URL}${cleanPath}.json?auth=${FIREBASE_DB_SECRET}`;
     const res = await fetch(url, { method: 'DELETE' });
     if (!res.ok) {
       const errText = await res.text();
