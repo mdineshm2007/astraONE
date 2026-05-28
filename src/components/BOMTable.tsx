@@ -34,6 +34,7 @@ function EditableRow({
     sno: row.sno !== undefined ? row.sno : String(index + 1),
     category: row.category !== undefined ? row.category : teamName,
     partName: row.partName,
+    vendor: row.vendor || '',
     type: row.type,
     totalMaterialCost: row.totalMaterialCost,
     remarks: row.remarks,
@@ -238,6 +239,8 @@ export default function BOMTable({ teamName, onClose }: BOMTableProps) {
   }, [rows, teamName, loading]);
 
   const handleSaveRow = useCallback(async (id: string, updated: Omit<BOMRow, 'id'>) => {
+    // Optimistically update local state immediately so that the total is updated instantly!
+    setRows(prev => prev.map(r => r.id === id ? { id, ...updated } : r));
     try {
       await fetch(`/api/bom/${teamName}/${id}`, {
         method: 'PUT',
@@ -247,12 +250,15 @@ export default function BOMTable({ teamName, onClose }: BOMTableProps) {
       fetchBOM();
     } catch (error) {
       console.error("Failed to save row:", error);
+      fetchBOM(); // Revert on failure
     }
   }, [teamName, fetchBOM]);
 
   const handleAddRow = async () => {
     try {
       const newItem = {
+        sno: String(rows.length + 1),
+        category: teamName,
         partName: '',
         vendor: '',
         type: 'Purchased' as const,

@@ -10,7 +10,7 @@ interface ChecklistItem {
   id: string;
   title: string;
   description?: string;
-  category: 'assembly' | 'manufacture';
+  category: string;
   teamId: string;
   checked: boolean;
   checkedBy?: string;
@@ -32,7 +32,7 @@ export default function RulebookChecklist() {
   const isCaptain = profile?.role === 'CAPTAIN';
 
   const [viewMode, setViewMode] = useState<'team' | 'overall'>('team');
-  const [activeCategory, setActiveCategory] = useState<'assembly' | 'manufacture'>('assembly');
+  const activeCategory = 'general';
   const [selectedTeam, setSelectedTeam] = useState<string>(
     profile?.approvedTeams?.[0] || 'Steering'
   );
@@ -235,30 +235,6 @@ export default function RulebookChecklist() {
             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" size={14} />
           </div>
         )}
-      </div>
-
-      {/* Category Tabs */}
-      <div className="flex gap-3 p-1.5 bg-white/5 rounded-[2rem] w-fit border border-white/5">
-        <button
-          onClick={() => setActiveCategory('assembly')}
-          className={`flex items-center gap-2 px-6 py-3 rounded-[1.5rem] text-[10px] font-black tracking-widest transition-all duration-300 ${
-            activeCategory === 'assembly'
-              ? 'bg-primary text-black shadow-[0_0_30px_rgba(var(--primary-rgb),0.3)]'
-              : 'text-slate-500 hover:text-white'
-          }`}
-        >
-          <Package size={14} /> ASSEMBLY
-        </button>
-        <button
-          onClick={() => setActiveCategory('manufacture')}
-          className={`flex items-center gap-2 px-6 py-3 rounded-[1.5rem] text-[10px] font-black tracking-widest transition-all duration-300 ${
-            activeCategory === 'manufacture'
-              ? 'bg-primary text-black shadow-[0_0_30px_rgba(var(--primary-rgb),0.3)]'
-              : 'text-slate-500 hover:text-white'
-          }`}
-        >
-          <Wrench size={14} /> MANUFACTURE
-        </button>
       </div>
 
       {/* Add Item Form (CAPTAIN/TEAM_LEAD only) */}
