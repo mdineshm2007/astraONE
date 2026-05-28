@@ -136,8 +136,17 @@ const upload = multer({ dest: os.tmpdir() });
 const app = express();
 const PORT = 3001;
 
+// Disable ETags to prevent Vercel/browser 304 caching
+app.disable('etag');
+
 app.use(express.json());
 app.use(cors());
+
+// Force no-cache headers for all API requests to ensure real-time data
+app.use((req, res, next) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  next();
+});
 
 // Global Error Handler
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -764,6 +773,21 @@ app.get("/api/admin/telemetry/updates", async (req, res) => {
 });
 
 // --- BOM & Finances Proxy Endpoints ---
+
+async function recalculateTeamTotal(teamName: string) {
+  try {
+    const data = await firebaseRest.get(`finances/bom/${teamName}`);
+    let total = 0;
+    if (data && typeof data === 'object') {
+      total = Object.values(data).reduce((sum: number, item: any) => sum + (Number(item?.totalMaterialCost) || 0), 0);
+    }
+    await firebaseRest.put(`finances/teams/${teamName}`, total);
+    console.log(`[BOM] Recalculated total for ${teamName}: ${total}`);
+  } catch (error: any) {
+    console.error(`[BOM] Failed to recalculate total for ${teamName}:`, error.message);
+  }
+}
+
 app.get("/api/bom/:teamName", async (req, res) => {
   try {
     const data = await firebaseRest.get(`finances/bom/${req.params.teamName}`);
@@ -782,6 +806,10 @@ app.post("/api/bom/:teamName/add", async (req, res) => {
     console.log(`[BOM] Adding item to finances/bom/${teamName}/${newId}`);
     await firebaseRest.put(`finances/bom/${teamName}/${newId}`, newItem);
     console.log(`[BOM] Successfully added item ${newId}`);
+    
+    // Automatically trigger backend total recalculation
+    await recalculateTeamTotal(teamName);
+    
     res.json({ success: true, id: newId, data: newItem });
   } catch (error: any) {
     console.error("[BOM] Add error:", error.message);
@@ -793,6 +821,10 @@ app.put("/api/bom/:teamName/:id", async (req, res) => {
   try {
     const { teamName, id } = req.params;
     await firebaseRest.put(`finances/bom/${teamName}/${id}`, req.body);
+    
+    // Automatically trigger backend total recalculation
+    await recalculateTeamTotal(teamName);
+    
     res.json({ success: true });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -803,6 +835,10 @@ app.delete("/api/bom/:teamName/:id", async (req, res) => {
   try {
     const { teamName, id } = req.params;
     await firebaseRest.remove(`finances/bom/${teamName}/${id}`);
+    
+    // Automatically trigger backend total recalculation
+    await recalculateTeamTotal(teamName);
+    
     res.json({ success: true });
   } catch (error: any) {
     res.status(500).json({ error: error.message });

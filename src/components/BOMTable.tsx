@@ -195,7 +195,7 @@ export default function BOMTable({ teamName, onClose }: BOMTableProps) {
 
   const fetchBOM = useCallback(async () => {
     try {
-      const res = await fetch(`/api/bom/${teamName}`);
+      const res = await fetch(`/api/bom/${teamName}?t=${Date.now()}`);
       if (!res.ok) throw new Error("Failed to fetch BOM");
       const data = await res.json();
       if (data && Object.keys(data).length > 0) {
@@ -224,19 +224,6 @@ export default function BOMTable({ teamName, onClose }: BOMTableProps) {
   useEffect(() => {
     fetchBOM();
   }, [fetchBOM]);
-
-  // Auto-sync team total spend from BOM table
-  useEffect(() => {
-    if (loading) return;
-    const total = rows.reduce((sum, r) => sum + (Number(r.totalMaterialCost) || 0), 0);
-    fetch(`/api/finances/teams/${teamName}/total`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ total })
-    }).catch(error => {
-      console.error("Failed to auto-sync team total spend:", error);
-    });
-  }, [rows, teamName, loading]);
 
   const handleSaveRow = useCallback(async (id: string, updated: Omit<BOMRow, 'id'>) => {
     // Optimistically update local state immediately so that the total is updated instantly!

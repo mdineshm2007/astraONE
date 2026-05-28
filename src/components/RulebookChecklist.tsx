@@ -47,7 +47,7 @@ export default function RulebookChecklist() {
     setLoading(true);
     try {
       const teamParam = viewMode === 'overall' ? 'all' : selectedTeam;
-      const res = await fetch(`/api/rulebook/${activeCategory}?team=${encodeURIComponent(teamParam)}`);
+      const res = await fetch(`/api/rulebook/${activeCategory}?team=${encodeURIComponent(teamParam)}&t=${Date.now()}`);
       if (!res.ok) throw new Error('Failed to fetch checklist');
       const data = await res.json();
       setItems(data);

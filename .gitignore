@@ -10,3 +10,4 @@ firebase-admin-sdk.json
 scratch/
 
 .vercel
+.env*
