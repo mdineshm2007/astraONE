@@ -1026,6 +1026,105 @@ app.get("/api/admin/telemetry/updates", async (req, res) => {
   }
 });
 
+// Helper to query/modify RTDB nodes dynamically (server-side)
+async function getDbData(path: string) {
+  if (admin.apps.length > 0) {
+    const snap = await admin.database().ref(path).once("value");
+    return snap.val();
+  } else {
+    return await firebaseRest.get(path);
+  }
+}
+
+async function setDbData(path: string, val: any) {
+  if (admin.apps.length > 0) {
+    await admin.database().ref(path).set(val);
+  } else {
+    await firebaseRest.put(path, val);
+  }
+}
+
+// Trigger daily task notifications for assigned members
+async function triggerDailyTaskNotifications() {
+  try {
+    console.log("[Notifications] Starting task notification scan...");
+    const tasks = await getDbData('tasks') || {};
+    const users = await getDbData('users') || {};
+    
+    const activeTasks = Object.entries(tasks).map(([id, val]: [string, any]) => ({ id, ...val }))
+      .filter(t => t.status !== 'COMPLETED');
+      
+    console.log(`[Notifications] Found ${activeTasks.length} active tasks.`);
+    
+    for (const task of activeTasks) {
+      let targetUserId = task.assignedToId;
+      let targetUser = null;
+      
+      if (targetUserId && users[targetUserId]) {
+        targetUser = users[targetUserId];
+      } else {
+        const targetSearch = (task.assignedTo || "").toLowerCase().trim();
+        if (targetSearch) {
+          const matchedEntry = Object.entries(users).find(([uid, u]: [string, any]) => {
+            return (u.email || "").toLowerCase().trim() === targetSearch || 
+                   (u.displayName || "").toLowerCase().trim() === targetSearch;
+          });
+          if (matchedEntry) {
+            targetUserId = matchedEntry[0];
+            targetUser = matchedEntry[1];
+          }
+        }
+      }
+      
+      if (targetUserId && targetUser) {
+        const notifId = `task_rem_${task.id}_${new Date().toISOString().split('T')[0]}`;
+        const userEmail = targetUser.email || "No email";
+        const userName = targetUser.displayName || "Member";
+        
+        const notification = {
+          title: "📌 Daily Task Reminder",
+          message: `Task "${task.title}" is in progress. Deadline: ${task.deadline}. Assigned to: ${userName} (${userEmail})`,
+          type: 'INFO',
+          timestamp: new Date().toISOString(),
+          read: false,
+          link: 'teams'
+        };
+        
+        await setDbData(`notifications/${targetUserId}/${notifId}`, notification);
+        console.log(`[Notifications] Sent reminder to ${userName} (${userEmail}) for task "${task.title}"`);
+      }
+    }
+  } catch (err: any) {
+    console.error("[Notifications] Error in task notification trigger:", err.message);
+  }
+}
+
+// Local dev background scheduler checking every 30 seconds
+let lastTriggeredTime = "";
+setInterval(() => {
+  const now = new Date();
+  const options = { timeZone: 'Asia/Kolkata', hour12: false, hour: '2-digit', minute: '2-digit' } as const;
+  const timeString = now.toLocaleTimeString('en-US', options); // e.g. "16:30" or "21:00"
+  
+  if ((timeString === "16:30" || timeString === "21:00") && timeString !== lastTriggeredTime) {
+    lastTriggeredTime = timeString;
+    console.log(`[Scheduler] Local trigger active: matches ${timeString} IST. Running daily task notifications...`);
+    triggerDailyTaskNotifications().catch(err => {
+      console.error('[Scheduler] Local trigger failed:', err);
+    });
+  }
+}, 30000);
+
+// Endpoint to trigger manually for testing
+app.get("/api/cron/notifications", async (req, res) => {
+  try {
+    await triggerDailyTaskNotifications();
+    res.json({ success: true, message: "Notifications manually triggered successfully" });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 if (process.env.NODE_ENV === "production") {
   const distPath = path.join(process.cwd(), "dist");
   app.use(express.static(distPath));

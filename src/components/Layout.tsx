@@ -6,6 +6,7 @@ import AIAssistant from './AIAssistant';
 import { subscribeToMultipleTeamsPendingMembers, updateUserProfile } from '../services/userService';
 import { uploadImage } from '../services/storageService';
 import { AppView } from '../types';
+import { subscribeToNotifications, markNotificationRead, Notification } from '../services/archiveService';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -18,6 +19,8 @@ export default function Layout({ children, currentView, onViewChange }: LayoutPr
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [isNotifOpen, setNotifOpen] = useState(false);
 
   const [isProfileModalOpen, setProfileModalOpen] = useState(false);
   const [editName, setEditName] = useState('');
@@ -84,6 +87,14 @@ export default function Layout({ children, currentView, onViewChange }: LayoutPr
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
+
+  useEffect(() => {
+    if (!profile) return;
+    return subscribeToNotifications(profile.uid, setNotifications);
+  }, [profile]);
+
+  const unreadNotifications = notifications.filter(n => !n.read);
+  const unreadCount = unreadNotifications.length;
 
   if (!profile) return null;
 
@@ -196,11 +207,81 @@ export default function Layout({ children, currentView, onViewChange }: LayoutPr
                 {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
              </span>
           </div>
-          <div className="flex items-center gap-4">
-             <button className="relative p-2 text-slate-400 hover:text-white transition-colors bg-white/5 rounded-xl border border-white/5">
+          <div className="flex items-center gap-4 relative">
+             <button 
+                onClick={() => setNotifOpen(!isNotifOpen)}
+                className={`relative p-2 transition-colors rounded-xl border ${
+                  isNotifOpen 
+                    ? 'text-primary bg-primary/10 border-primary/20' 
+                    : 'text-slate-400 hover:text-white bg-white/5 border-white/5'
+                }`}
+             >
                 <Bell size={20} />
-                <span className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full border-2 border-background animate-pulse" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[16px] h-4 flex items-center justify-center bg-error text-white text-[9px] font-black rounded-full px-1 border border-background">
+                    {unreadCount}
+                  </span>
+                )}
              </button>
+
+             {/* Notification Dropdown */}
+             <AnimatePresence>
+               {isNotifOpen && (
+                 <>
+                   <div className="fixed inset-0 z-40" onClick={() => setNotifOpen(false)} />
+                   <motion.div 
+                     initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                     animate={{ opacity: 1, y: 0, scale: 1 }}
+                     exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                     className="absolute right-0 top-12 w-80 bg-surface/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden"
+                   >
+                     <div className="p-4 border-b border-white/5 flex items-center justify-between">
+                       <span className="text-xs font-black uppercase tracking-wider text-slate-400">Notifications</span>
+                       {unreadCount > 0 && (
+                         <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold">
+                           {unreadCount} unread
+                         </span>
+                       )}
+                     </div>
+                     <div className="max-h-72 overflow-y-auto custom-scrollbar divide-y divide-white/5">
+                       {notifications.length === 0 ? (
+                         <div className="p-8 text-center text-xs text-slate-500 italic">
+                           No notifications yet
+                         </div>
+                       ) : (
+                         notifications.map((notif) => (
+                           <div 
+                             key={notif.id}
+                             onClick={async () => {
+                               if (!notif.read) {
+                                 await markNotificationRead(profile.uid, notif.id);
+                               }
+                               if (notif.link) {
+                                 onViewChange(notif.link as AppView);
+                               }
+                               setNotifOpen(false);
+                             }}
+                             className={`p-4 hover:bg-white/5 transition-colors cursor-pointer flex gap-3 text-left ${
+                               !notif.read ? 'bg-primary/5' : ''
+                             }`}
+                           >
+                             <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 flex-shrink-0" style={{ opacity: notif.read ? 0 : 1 }} />
+                             <div className="space-y-1">
+                               <p className={`text-xs font-bold ${!notif.read ? 'text-white' : 'text-slate-300'}`}>{notif.title}</p>
+                               <p className="text-[11px] text-slate-400 leading-normal">{notif.message}</p>
+                               <p className="text-[9px] text-slate-500 font-medium">
+                                 {new Date(notif.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {new Date(notif.timestamp).toLocaleDateString()}
+                               </p>
+                             </div>
+                           </div>
+                         ))
+                       )}
+                     </div>
+                   </motion.div>
+                 </>
+               )}
+             </AnimatePresence>
+
              <div className="h-8 w-[1px] bg-white/5" />
              <div className="flex items-center gap-2">
                 <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-slate-500'}`} />
