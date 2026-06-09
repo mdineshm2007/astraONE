@@ -81,6 +81,8 @@ function resolveRoleFromEmail(email: string): { role: string; teams: { teamId: s
     '727723eumt119@skcet.ac.in', // Sanjiv (4th Year Ex-Captain)
     '727723eumt129@skcet.ac.in', // Sri Prenesh (4th Year Ex-Captain)
     '727723eumt125@skcet.ac.in', // Shenbaga Raja (4th Year Ex-Captain)
+    '727723eumt092@skcet.ac.in', // Nitin (4th Year Ex-Captain)
+    '727723eumt094@skcet.ac.in', // Owshik Johnson (4th Year Ex-Captain)
   ];
 
   if (captains.includes(e)) {
