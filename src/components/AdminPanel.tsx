@@ -18,11 +18,6 @@ export default function AdminPanel() {
     const isTeamLead = profile?.role === 'TEAM_LEAD';
     const canAccess = isCaptainMode || isTeamLead;
 
-    const activeUsersList = allUsers.filter(u => {
-        if (u.role === 'CAPTAIN' || u.role === 'TEAM_LEAD') return true;
-        return u.approvedTeams && u.approvedTeams.length > 0;
-    });
-
     const refreshData = async () => {
         try {
             const teamIds = isCaptainMode ? ['all'] : (profile?.approvedTeams || []);
@@ -36,12 +31,9 @@ export default function AdminPanel() {
             
             const teamIdsList = profile?.approvedTeams || [];
             const approved = members.filter(u => {
+                if (isCaptainMode) return true;
                 if (u.uid === profile?.uid) return false;
-                if (u.role === 'CAPTAIN') return true;
-                if (u.role === 'TEAM_LEAD') return true;
-                if (isCaptainMode) {
-                    return u.approvedTeams && u.approvedTeams.length > 0;
-                }
+                if (u.role === 'CAPTAIN') return false;
                 return u.approvedTeams?.some(t => teamIdsList.includes(t));
             });
             setApprovedMembers(approved);
@@ -199,9 +191,9 @@ export default function AdminPanel() {
                         className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'users' ? 'bg-primary text-black' : 'text-slate-500 hover:text-white'}`}
                     >
                         App Users
-                        {activeUsersList.length > 0 && (
+                        {allUsers.length > 0 && (
                             <span className="ml-2 px-1.5 py-0.5 rounded-full bg-white/10 text-slate-400 text-[8px] font-black">
-                                {activeUsersList.length}
+                                {allUsers.length}
                             </span>
                         )}
                     </button>
@@ -409,12 +401,12 @@ export default function AdminPanel() {
                                 <Users size={24} />
                                 All Registered App Users
                                 <span className="ml-2 px-2 py-0.5 rounded-full bg-white/5 text-slate-400 text-xs font-black border border-white/10">
-                                    {activeUsersList.length} total
+                                    {allUsers.length} total
                                 </span>
                             </h3>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {activeUsersList.map(u => (
+                                {allUsers.map(u => (
                                     <div key={u.uid} className="bg-surface-elevated p-4 rounded-2xl border border-white/5 flex items-center gap-4">
                                         <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-bold">
                                             {(u.displayName || resolveNameFromEmail(u.email)).charAt(0).toUpperCase()}

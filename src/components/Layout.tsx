@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { LayoutDashboard, Users, Bell, Menu, Rocket, Notebook as NotebookIcon, ShieldAlert, Database, LogOut, Globe, HelpCircle, BarChart3, MessageSquare, X, ClipboardList } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -21,7 +21,6 @@ export default function Layout({ children, currentView, onViewChange }: LayoutPr
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isNotifOpen, setNotifOpen] = useState(false);
-  const [showNotificationPrompt, setShowNotificationPrompt] = useState(false);
 
   const [isProfileModalOpen, setProfileModalOpen] = useState(false);
   const [editName, setEditName] = useState('');
@@ -89,39 +88,37 @@ export default function Layout({ children, currentView, onViewChange }: LayoutPr
     };
   }, []);
 
-  useEffect(() => {
-    if ('Notification' in window && Notification.permission === 'default') {
-      setShowNotificationPrompt(true);
-    }
-  }, []);
-
-  const handleRequestPermission = async () => {
-    if (!('Notification' in window)) return;
-    const permission = await Notification.requestPermission();
-    if (permission === 'granted') {
-      new window.Notification("🔔 Notifications Active!", {
-        body: "ASTRA will now send you real-time task notifications."
-      });
-    }
-    setShowNotificationPrompt(false);
-  };
+  const isInitialMount = useRef(true);
+  const prevNotifications = useRef<Notification[]>([]);
 
   useEffect(() => {
     if (!profile) return;
+
+    // Request native permission for browser notifications (works on mobile and desktop)
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+
     return subscribeToNotifications(profile.uid, (newNotifs) => {
-      setNotifications(prev => {
-        const prevUnreadIds = new Set(prev.filter(n => !n.read).map(n => n.id));
-        const newlyReceived = newNotifs.filter(n => !n.read && !prevUnreadIds.has(n.id));
-        
-        if (newlyReceived.length > 0 && 'Notification' in window && Notification.permission === 'granted') {
-          newlyReceived.forEach(notif => {
-            new window.Notification(notif.title, {
+      // Trigger a native system notification for new unread notifications (except on initial load)
+      if (!isInitialMount.current && newNotifs.length > prevNotifications.current.length) {
+        const addedNotifs = newNotifs.filter(
+          n => !prevNotifications.current.some(old => old.id === n.id)
+        );
+
+        addedNotifs.forEach(notif => {
+          if (!notif.read && 'Notification' in window && Notification.permission === 'granted') {
+            new Notification(notif.title, {
               body: notif.message,
+              icon: '/favicon.ico'
             });
-          });
-        }
-        return newNotifs;
-      });
+          }
+        });
+      }
+
+      prevNotifications.current = newNotifs;
+      setNotifications(newNotifs);
+      isInitialMount.current = false;
     });
   }, [profile]);
 
@@ -233,32 +230,6 @@ export default function Layout({ children, currentView, onViewChange }: LayoutPr
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
-        {showNotificationPrompt && (
-          <div className="bg-primary/10 border-b border-primary/20 px-8 py-3 flex items-center justify-between gap-4 animate-in slide-in-from-top duration-300">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/20 text-primary rounded-xl flex-shrink-0 animate-pulse">
-                <Bell size={16} />
-              </div>
-              <p className="text-xs font-bold text-slate-300 uppercase tracking-wide">
-                Enable device notifications to receive task reminders at 4:30 PM & 9:00 PM daily.
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <button 
-                onClick={handleRequestPermission}
-                className="px-4 py-2 bg-primary text-black text-[10px] font-black uppercase rounded-lg hover:brightness-110 active:scale-95 transition-all shadow-lg shadow-primary/10"
-              >
-                Enable
-              </button>
-              <button 
-                onClick={() => setShowNotificationPrompt(false)}
-                className="px-3 py-2 bg-white/5 text-slate-400 hover:text-white text-[10px] font-black uppercase rounded-lg transition-all"
-              >
-                Later
-              </button>
-            </div>
-          </div>
-        )}
         <header className="h-16 border-b border-white/5 px-8 flex items-center justify-between bg-background/50 backdrop-blur-xl z-40 sticky top-0">
           <div className="flex items-center gap-4">
              <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest bg-white/5 px-3 py-1 rounded-full border border-white/5">
