@@ -132,7 +132,10 @@ export default function Layout({ children, currentView, onViewChange }: LayoutPr
             {allowedItems.map((item) => (
               <button
                 key={item.id}
-                onClick={() => onViewChange(item.id as AppView)}
+                onClick={() => {
+                  onViewChange(item.id as AppView);
+                  setSidebarOpen(false);
+                }}
                 className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all group relative ${
                   currentView === item.id 
                     ? 'bg-primary text-black font-bold shadow-lg shadow-primary/10' 
