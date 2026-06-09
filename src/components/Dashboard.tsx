@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import {
   Clock, AlertTriangle, TrendingUp, CheckCircle2,
   Zap, Activity, Shield, Target, Star, BarChart3, Cloud,
-  HardDrive, Database, Users, FileText, RefreshCw
+  HardDrive, Users, FileText, RefreshCw
 } from 'lucide-react';
 
 import AIIntelligencePanel from './AIIntelligencePanel';
@@ -78,10 +78,6 @@ function CloudUsagePanel() {
 
   const storagePercent = usage.storage.percentUsed;
   const bandwidthPercent = usage.bandwidth.percentUsed;
-
-  const collectionEntries = Object.entries(usage.collections || {}).sort(
-    (a: any, b: any) => b[1].sizeBytes - a[1].sizeBytes
-  );
 
   return (
     <section className="space-y-4">
@@ -164,23 +160,6 @@ function CloudUsagePanel() {
             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             <span className="text-emerald-400">{usage.users.activeNow} online now</span>
           </div>
-        </div>
-      </div>
-
-      {/* Collection Breakdown */}
-      <div className="glass-panel rounded-2xl p-5 border border-white/5">
-        <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-4 flex items-center gap-2">
-          <Database size={14} className="text-primary" />
-          Collection Breakdown
-        </h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-          {collectionEntries.map(([name, data]: any) => (
-            <div key={name} className="bg-white/5 rounded-xl p-3 hover:bg-white/10 transition-colors">
-              <div className="text-[10px] font-black text-slate-500 uppercase tracking-wider truncate">{name.replace('_', ' ')}</div>
-              <div className="text-sm font-black text-white mt-1">{data.count} <span className="text-[10px] text-slate-500 font-bold">docs</span></div>
-              <div className="text-[10px] text-primary font-bold">{formatBytes(data.sizeBytes)}</div>
-            </div>
-          ))}
         </div>
       </div>
     </section>
