@@ -172,10 +172,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               // Background sync logic (don't block UI)
               const existingApproved = existing.approvedTeams || [];
               const correctApproved = initialTeams.filter(t => t.status === 'APPROVED').map(t => t.teamId);
-              const isMissingTeams = correctApproved.some(id => !existingApproved.includes(id));
+              const emailMissing = !existing.email && email;
               
-              if (existing.role !== correctRole || isMissingTeams) {
-                console.log("[Auth] Auto-syncing profile permissions/roles");
+              if (existing.role !== correctRole || isMissingTeams || emailMissing) {
+                console.log("[Auth] Auto-syncing profile permissions/roles/email");
                 const mergedTeams = [...(existing.teams || [])];
                 initialTeams.forEach(it => {
                   if (!mergedTeams.some(et => et.teamId === it.teamId)) {
@@ -186,6 +186,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                   }
                 });
                 await update(userRef, {
+                  email: existing.email || email,
                   role: correctRole,
                   teams: mergedTeams,
                   approvedTeams: mergedTeams.filter(t => t.status === 'APPROVED').map(t => t.teamId),
