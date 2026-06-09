@@ -213,6 +213,36 @@ export default function BOMTable({ teamName, onClose }: BOMTableProps) {
 
   const dbPath = `finances/bom/${teamName}`;
 
+  useEffect(() => {
+    setLoading(true);
+    const bomRef = ref(rtdb, dbPath);
+    const unsubscribe = onValue(bomRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data && Object.keys(data).length > 0) {
+        const parsed: BOMRow[] = Object.entries(data).map(([id, val]: [string, any]) => ({
+          id,
+          sno: val.sno,
+          category: val.category,
+          partName: val.partName || '',
+          vendor: val.vendor || '',
+          type: val.type || 'Purchased',
+          totalMaterialCost: val.totalMaterialCost || 0,
+          remarks: val.remarks || '',
+          date: val.date || '',
+        }));
+        setRows(parsed);
+      } else {
+        setRows([]);
+      }
+      setLoading(false);
+    }, (error) => {
+      console.error("BOM RTDB listener error:", error);
+      setLoading(false);
+    });
+    return () => unsubscribe();
+  }, [dbPath]);
+
+  // Keep fetchBOM for error recovery only
   const fetchBOM = useCallback(async () => {
     try {
       const res = await fetch(`/api/bom/${teamName}?t=${Date.now()}`);
@@ -236,14 +266,10 @@ export default function BOMTable({ teamName, onClose }: BOMTableProps) {
       }
     } catch (error) {
       console.error("BOM data fetch error:", error);
-    } finally {
-      setLoading(false);
     }
   }, [teamName]);
 
-  useEffect(() => {
-    fetchBOM();
-  }, [fetchBOM]);
+
 
   const handleSaveRow = useCallback(async (id: string, updated: Omit<BOMRow, 'id'>) => {
     // Optimistically update local state immediately so that the total is updated instantly!
@@ -254,12 +280,14 @@ export default function BOMTable({ teamName, onClose }: BOMTableProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updated)
       });
-      fetchBOM();
+      // Don't call fetchBOM here — it causes race conditions where the server
+      // responds with old data while the user is still typing. Optimistic update is sufficient.
     } catch (error) {
       console.error("Failed to save row:", error);
-      fetchBOM(); // Revert on failure
+      fetchBOM(); // Only revert on failure
     }
   }, [teamName, fetchBOM]);
+
 
   const handleAddRow = async () => {
     try {
@@ -284,14 +312,7 @@ export default function BOMTable({ teamName, onClose }: BOMTableProps) {
         const errData = await res.json().catch(() => ({ error: 'Server error' }));
         throw new Error(errData.error || `HTTP ${res.status}`);
       }
-
-      const result = await res.json();
-      // Immediately add to local state — don't wait for fetchBOM (race condition)
-      if (result.id) {
-        setRows(prev => [...prev, { id: result.id, ...newItem }]);
-      }
-      // Background refresh to confirm sync
-      setTimeout(() => fetchBOM(), 1500);
+      // onValue listener will auto-update the rows list from Firebase
     } catch (error: any) {
       console.error("Failed to add item:", error);
       alert(`Failed to add item: ${error.message || "Network error"}`);
@@ -300,7 +321,7 @@ export default function BOMTable({ teamName, onClose }: BOMTableProps) {
 
   const handleDeleteRow = async (id: string) => {
     if (!window.confirm('Remove this item?')) return;
-    // Optimistically remove immediately
+    // Optimistically remove immediately for fast UX
     setRows(prev => prev.filter(r => r.id !== id));
     try {
       const res = await fetch(`/api/bom/${teamName}/${id}`, { method: 'DELETE' });
@@ -308,13 +329,14 @@ export default function BOMTable({ teamName, onClose }: BOMTableProps) {
         const errData = await res.json().catch(() => ({ error: 'Server error' }));
         throw new Error(errData.error || `HTTP ${res.status}`);
       }
-      setTimeout(() => fetchBOM(), 1500);
+      // onValue listener will confirm the deletion from Firebase
     } catch (error: any) {
       console.error("Failed to delete item:", error);
       // Restore the row if delete failed
       fetchBOM();
       alert(`Failed to delete item: ${error.message || "Network error"}`);
     }
+
   };
 
   const totalCost = rows.reduce((sum, r) => sum + (Number(r.totalMaterialCost) || 0), 0);

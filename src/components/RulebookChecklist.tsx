@@ -3,8 +3,10 @@ import { useAuth } from '../contexts/AuthContext';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   CheckSquare, Square, Plus, Trash2, ClipboardList,
-  Globe, Users, ChevronDown, Loader2, Lock, Wrench, Package
+  Globe, Users, ChevronDown, Loader2, Lock
 } from 'lucide-react';
+import { ref, onValue } from 'firebase/database';
+import { rtdb } from '../firebase';
 
 interface ChecklistItem {
   id: string;
@@ -23,7 +25,7 @@ interface ChecklistItem {
 const TEAMS = [
   'Steering', 'Suspension', 'Brakes', 'Transmission', 'Design',
   'Electricals', 'Innovation', 'Autonomous', 'Cost', 'PRO',
-  'Seat', 'Others', 'Safety_Equipments', 'Dashboard', 'Wheel_Tyre', 'Frame', 'Drive_Train'
+  'Seat', 'Driver_Requirement', 'Safety_Equipments', 'Dashboard', 'Wheel_Tyre', 'Frame', 'Drive_Train', 'Others'
 ];
 
 export default function RulebookChecklist() {
@@ -33,9 +35,17 @@ export default function RulebookChecklist() {
 
   const [viewMode, setViewMode] = useState<'team' | 'overall'>('team');
   const activeCategory = 'general';
-  const [selectedTeam, setSelectedTeam] = useState<string>(
-    profile?.approvedTeams?.[0] || 'Steering'
-  );
+
+  // Normalize the team from approvedTeams (lowercase) to match the TEAMS array (Title Case)
+  const getInitialTeam = () => {
+    const raw = profile?.approvedTeams?.[0];
+    if (!raw) return 'Steering';
+    // Find the matching TEAMS entry (case-insensitive)
+    const match = TEAMS.find(t => t.toLowerCase() === raw.toLowerCase());
+    return match || 'Steering';
+  };
+
+  const [selectedTeam, setSelectedTeam] = useState<string>(getInitialTeam);
   const [items, setItems] = useState<ChecklistItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
@@ -59,9 +69,46 @@ export default function RulebookChecklist() {
     }
   }, [activeCategory, viewMode, selectedTeam]);
 
+  // Use Firebase RTDB real-time listener for live sync
   useEffect(() => {
-    fetchItems();
-  }, [fetchItems]);
+    setLoading(true);
+
+    if (viewMode === 'overall') {
+      // Listen to entire general category
+      const rulebookRef = ref(rtdb, `rulebook/${activeCategory}`);
+      const unsubscribe = onValue(rulebookRef, (snapshot) => {
+        const data = snapshot.val();
+        if (!data) { setItems([]); setLoading(false); return; }
+        const allItems: ChecklistItem[] = [];
+        for (const [teamId, teamItems] of Object.entries(data as Record<string, any>)) {
+          if (teamItems && typeof teamItems === 'object') {
+            for (const [id, val] of Object.entries(teamItems as Record<string, any>)) {
+              allItems.push({ id, teamId, ...val } as ChecklistItem);
+            }
+          }
+        }
+        setItems(allItems);
+        setLoading(false);
+      }, () => { setLoading(false); });
+      return () => unsubscribe();
+    } else {
+      // Listen to specific team path
+      const rulebookRef = ref(rtdb, `rulebook/${activeCategory}/${selectedTeam}`);
+      const unsubscribe = onValue(rulebookRef, (snapshot) => {
+        const data = snapshot.val();
+        if (!data) { setItems([]); setLoading(false); return; }
+        const parsed: ChecklistItem[] = Object.entries(data).map(([id, val]: [string, any]) => ({
+          id,
+          ...val,
+        }));
+        setItems(parsed);
+        setLoading(false);
+      }, () => { setLoading(false); });
+      return () => unsubscribe();
+    }
+  }, [activeCategory, viewMode, selectedTeam]);
+
+
 
   const handleAddItem = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,19 +130,7 @@ export default function RulebookChecklist() {
         const err = await res.json().catch(() => ({ error: 'Server error' }));
         throw new Error(err.error);
       }
-      const result = await res.json();
-      // Optimistically add
-      setItems(prev => [{
-        id: result.id,
-        title: newTitle.trim(),
-        description: newDesc.trim(),
-        category: activeCategory,
-        teamId: viewMode === 'overall' ? 'all' : selectedTeam,
-        checked: false,
-        createdBy: profile?.uid || '',
-        createdByName: profile?.displayName || 'Unknown',
-        createdAt: new Date().toISOString(),
-      }, ...prev]);
+      // Don't do optimistic add — the RTDB onValue listener will auto-update
       setNewTitle('');
       setNewDesc('');
     } catch (err: any) {
@@ -104,6 +139,7 @@ export default function RulebookChecklist() {
       setIsAdding(false);
     }
   };
+
 
   const handleToggleCheck = async (item: ChecklistItem) => {
     if (!isPrivileged) return;
