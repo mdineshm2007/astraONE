@@ -6,7 +6,8 @@ import { Subsystem, Task, UserProfile } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Clock, AlertTriangle, TrendingUp, CheckCircle2,
-  Zap, Activity, Shield, Target, Star, BarChart3, Cloud
+  Zap, Activity, Shield, Target, Star, BarChart3, Cloud,
+  HardDrive, Database, Users, FileText, RefreshCw
 } from 'lucide-react';
 
 import AIIntelligencePanel from './AIIntelligencePanel';
@@ -15,6 +16,176 @@ import { subscribeToTaskUpdates, createTask } from '../services/taskService';
 import { TaskUpdate } from '../types';
 import { rtdb } from '../firebase';
 import { ref, onValue } from 'firebase/database';
+
+// ─── Cloud Usage Panel Sub-Component ──────────────────────────────────────────
+function CloudUsagePanel() {
+  const [usage, setUsage] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchUsage = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/cloud/usage');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (data.success) setUsage(data);
+      else throw new Error('Failed to load');
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchUsage(); }, []);
+
+  const formatBytes = (bytes: number) => {
+    if (bytes === 0) return '0 B';
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+  };
+
+  if (loading) {
+    return (
+      <div className="glass-panel rounded-2xl p-6 border border-white/5 animate-pulse">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2 bg-cyan-500/10 rounded-xl"><Cloud size={20} className="text-cyan-400" /></div>
+          <span className="text-sm font-bold text-slate-400">Loading Cloud Telemetry...</span>
+        </div>
+        <div className="grid grid-cols-4 gap-4">
+          {[1,2,3,4].map(i => <div key={i} className="h-20 bg-white/5 rounded-xl" />)}
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !usage) {
+    return (
+      <div className="glass-panel rounded-2xl p-6 border border-red-500/20">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-red-500/10 rounded-xl"><AlertTriangle size={20} className="text-red-400" /></div>
+          <span className="text-sm font-bold text-red-400">Cloud telemetry unavailable: {error}</span>
+          <button onClick={fetchUsage} className="ml-auto p-2 bg-white/5 rounded-xl hover:bg-white/10 transition">
+            <RefreshCw size={14} className="text-slate-400" />
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const storagePercent = usage.storage.percentUsed;
+  const bandwidthPercent = usage.bandwidth.percentUsed;
+
+  const collectionEntries = Object.entries(usage.collections || {}).sort(
+    (a: any, b: any) => b[1].sizeBytes - a[1].sizeBytes
+  );
+
+  return (
+    <section className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-bold flex items-center gap-2">
+          <Cloud size={20} className="text-cyan-400" />
+          Cloud Infrastructure
+        </h2>
+        <button onClick={fetchUsage} className="p-2 bg-white/5 rounded-xl hover:bg-white/10 transition-colors" title="Refresh">
+          <RefreshCw size={14} className="text-slate-400" />
+        </button>
+      </div>
+
+      {/* Top-level metrics */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Storage */}
+        <div className="glass-panel p-5 rounded-2xl border border-cyan-500/20">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Storage Used</span>
+            <div className="p-2 rounded-xl bg-cyan-500/10"><HardDrive size={16} className="text-cyan-400" /></div>
+          </div>
+          <div className="text-2xl font-black text-cyan-400">{usage.storage.usedMB} MB</div>
+          <div className="mt-2 space-y-1">
+            <div className="flex justify-between text-[10px] text-slate-500">
+              <span>of {usage.storage.limitGB} GB limit</span>
+              <span className="text-cyan-400 font-bold">{storagePercent}%</span>
+            </div>
+            <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }} animate={{ width: `${Math.min(storagePercent, 100)}%` }}
+                className={`h-full rounded-full ${storagePercent > 80 ? 'bg-red-500' : storagePercent > 50 ? 'bg-yellow-500' : 'bg-cyan-400'}`}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Bandwidth */}
+        <div className="glass-panel p-5 rounded-2xl border border-purple-500/20">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Monthly BW Est.</span>
+            <div className="p-2 rounded-xl bg-purple-500/10"><Activity size={16} className="text-purple-400" /></div>
+          </div>
+          <div className="text-2xl font-black text-purple-400">{usage.bandwidth.estimatedMonthlyGB} GB</div>
+          <div className="mt-2 space-y-1">
+            <div className="flex justify-between text-[10px] text-slate-500">
+              <span>of {usage.bandwidth.limitGB} GB/mo</span>
+              <span className="text-purple-400 font-bold">{bandwidthPercent}%</span>
+            </div>
+            <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }} animate={{ width: `${Math.min(bandwidthPercent, 100)}%` }}
+                className={`h-full rounded-full ${bandwidthPercent > 80 ? 'bg-red-500' : bandwidthPercent > 50 ? 'bg-yellow-500' : 'bg-purple-400'}`}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Documents */}
+        <div className="glass-panel p-5 rounded-2xl border border-emerald-500/20">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Total Documents</span>
+            <div className="p-2 rounded-xl bg-emerald-500/10"><FileText size={16} className="text-emerald-400" /></div>
+          </div>
+          <div className="text-2xl font-black text-emerald-400">{usage.documents.total}</div>
+          <div className="mt-2 flex gap-3 text-[10px] text-slate-500 font-bold">
+            <span className="text-emerald-400">{usage.documents.active} active</span>
+            <span>•</span>
+            <span className="text-slate-400">{usage.documents.archived} archived</span>
+          </div>
+        </div>
+
+        {/* Users */}
+        <div className="glass-panel p-5 rounded-2xl border border-amber-500/20">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Team Members</span>
+            <div className="p-2 rounded-xl bg-amber-500/10"><Users size={16} className="text-amber-400" /></div>
+          </div>
+          <div className="text-2xl font-black text-amber-400">{usage.users.total}</div>
+          <div className="mt-2 flex items-center gap-2 text-[10px] text-slate-500 font-bold">
+            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-emerald-400">{usage.users.activeNow} online now</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Collection Breakdown */}
+      <div className="glass-panel rounded-2xl p-5 border border-white/5">
+        <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-4 flex items-center gap-2">
+          <Database size={14} className="text-primary" />
+          Collection Breakdown
+        </h3>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+          {collectionEntries.map(([name, data]: any) => (
+            <div key={name} className="bg-white/5 rounded-xl p-3 hover:bg-white/10 transition-colors">
+              <div className="text-[10px] font-black text-slate-500 uppercase tracking-wider truncate">{name.replace('_', ' ')}</div>
+              <div className="text-sm font-black text-white mt-1">{data.count} <span className="text-[10px] text-slate-500 font-bold">docs</span></div>
+              <div className="text-[10px] text-primary font-bold">{formatBytes(data.sizeBytes)}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
 
 export default function Dashboard() {
   const { profile } = useAuth();
@@ -194,6 +365,9 @@ export default function Dashboard() {
           </motion.div>
         ))}
       </div>
+
+      {/* Cloud Infrastructure Usage — Captain Only */}
+      {profile.role === 'CAPTAIN' && <CloudUsagePanel />}
 
       <div className="grid grid-cols-1 gap-8">
         {/* Subsystem Progress */}

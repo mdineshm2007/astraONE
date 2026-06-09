@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Bot, X, Send, Mic, MicOff, Sparkles, MessageCircle, Volume2 } from 'lucide-react';
 import { chatAssistant, transcribeVoice } from '../geminiService';
 import { AppView } from '../types';
+import { useAuth } from '../contexts/AuthContext';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -14,6 +15,7 @@ interface AIAssistantProps {
 }
 
 export default function AIAssistant({ onViewChange }: AIAssistantProps) {
+  const { profile } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     { role: 'assistant', content: "A.S.T.R.A. System Online. How can I assist with your engineering mission today?" }
@@ -53,7 +55,7 @@ export default function AIAssistant({ onViewChange }: AIAssistantProps) {
     setInput('');
     setIsTyping(true);
 
-    const assistantResponse = await chatAssistant([...messages, userMessage]);
+    const assistantResponse = await chatAssistant([...messages, userMessage], profile);
     setMessages(prev => [...prev, { role: 'assistant', content: assistantResponse }]);
     setIsTyping(false);
   };

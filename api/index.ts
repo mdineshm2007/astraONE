@@ -124,9 +124,11 @@ if (!admin.apps.length) {
 // --- Groq Initialization ---
 let groq: Groq | null = null;
 try {
-    const apiKey = (process.env.GROQ_API_KEY || "").trim();
+    // Env vars take priority, hardcoded fallback ensures Vercel works without manual setup
+    const apiKey = (process.env.GROQ_API_KEY || "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").trim();
     if (apiKey) {
       groq = new Groq({ apiKey });
+      console.log("[Groq] SDK Initialized Successfully");
     }
 } catch (e: any) {
   console.error("[Groq] Initialization failed:", e.message);
@@ -237,7 +239,11 @@ function resolveRoleFromEmail(email: string): { role: string; teams: { teamId: s
     '727725eumc604@skcet.ac.in',
     '727724eumc044@skcet.ac.in',
     '25mz122@skcet.ac.in',
-    '727725eumc608@skcet.ac.in'
+    '727725eumc608@skcet.ac.in',
+    // 4th Year Ex-Captains
+    '727723eumt119@skcet.ac.in', // Sanjiv
+    '727723eumt129@skcet.ac.in', // Sri Prenesh
+    '727723eumt125@skcet.ac.in', // Shenbaga Raja
   ];
 
   if (captains.includes(e)) {
@@ -600,19 +606,22 @@ app.post("/api/drive/upload", upload.single("file"), async (req, res) => {
 app.post("/api/chat", async (req, res) => {
   try {
     const { messages } = req.body;
-    if (!groq) throw new Error("AI Assistant offline");
-    const completion = await groq.chat.completions.create({ messages, model: "llama-3.1-8b-instant" });
+    if (!groq) throw new Error("AI Assistant offline (Missing API Key)");
+
+    // Pass all messages as-is (system prompt with live data is injected by the frontend)
+    const completion = await groq.chat.completions.create({
+      messages,
+      model: "llama-3.1-8b-instant",
+      temperature: 0.7,
+      max_tokens: 1024,
+    });
+
     res.json({ message: completion.choices[0]?.message?.content });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to communicate with AI" });
+  } catch (error: any) {
+    console.error("Chat API Error:", error?.message || error);
+    res.status(500).json({ error: error?.message || "Failed to communicate with AI" });
   }
 });
-
-if (process.env.NODE_ENV === "production") {
-  const distPath = path.join(process.cwd(), "dist");
-  app.use(express.static(distPath));
-  app.get("*", (req, res) => res.sendFile(path.join(distPath, "index.html")));
-}
 
 if (process.env.NODE_ENV !== "production") {
   app.listen(PORT, "0.0.0.0", () => console.log(`Server running on http://localhost:${PORT}`));
@@ -763,8 +772,13 @@ app.get("/api/ai/test-key", async (req, res) => {
 /** Administrative Telemetry Bridge - Used by TaskTable CSV Export */
 app.get("/api/admin/telemetry/updates", async (req, res) => {
   try {
-    const snapshot = await admin.database().ref('task_updates').once("value");
-    const data = snapshot.val() || {};
+    let data;
+    if (admin.apps.length > 0) {
+      const snapshot = await admin.database().ref('task_updates').once("value");
+      data = snapshot.val() || {};
+    } else {
+      data = await firebaseRest.get('task_updates') || {};
+    }
     const updates = Object.entries(data).map(([id, val]: [string, any]) => ({ id, ...val }));
     res.json(updates);
   } catch (error: any) {
@@ -940,5 +954,112 @@ app.delete("/api/rulebook/:category/:id", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+// --- Cloud Usage & Analytics Endpoint ---
+app.get("/api/cloud/usage", async (req, res) => {
+  try {
+    // Fetch all major data collections to calculate size
+    const [tasks, users, subsystems, finances, posts, queries, taskUpdates, rulebook, archives, driveFolders] = await Promise.all([
+      firebaseRest.get('tasks'),
+      firebaseRest.get('users'),
+      firebaseRest.get('subsystems'),
+      firebaseRest.get('finances'),
+      firebaseRest.get('posts'),
+      firebaseRest.get('queries'),
+      firebaseRest.get('task_updates'),
+      firebaseRest.get('rulebook'),
+      firebaseRest.get('archives'),
+      firebaseRest.get('drive_folders'),
+    ]);
+
+    const calcSize = (data: any): number => {
+      if (!data) return 0;
+      return new TextEncoder().encode(JSON.stringify(data)).length;
+    };
+
+    const calcCount = (data: any): number => {
+      if (!data || typeof data !== 'object') return 0;
+      return Object.keys(data).length;
+    };
+
+    // Deep count for nested structures like rulebook
+    const calcDeepCount = (data: any): number => {
+      if (!data || typeof data !== 'object') return 0;
+      let count = 0;
+      for (const val of Object.values(data)) {
+        if (val && typeof val === 'object') {
+          count += Object.keys(val as object).length;
+        } else {
+          count++;
+        }
+      }
+      return count;
+    };
+
+    const collections = {
+      tasks: { count: calcCount(tasks), sizeBytes: calcSize(tasks) },
+      users: { count: calcCount(users), sizeBytes: calcSize(users) },
+      subsystems: { count: calcCount(subsystems), sizeBytes: calcSize(subsystems) },
+      finances: { count: calcCount(finances), sizeBytes: calcSize(finances) },
+      posts: { count: calcCount(posts), sizeBytes: calcSize(posts) },
+      queries: { count: calcCount(queries), sizeBytes: calcSize(queries) },
+      task_updates: { count: calcCount(taskUpdates), sizeBytes: calcSize(taskUpdates) },
+      rulebook: { count: calcDeepCount(rulebook), sizeBytes: calcSize(rulebook) },
+      archives: { count: calcDeepCount(archives), sizeBytes: calcSize(archives) },
+      drive_folders: { count: calcCount(driveFolders), sizeBytes: calcSize(driveFolders) },
+    };
+
+    const totalSizeBytes = Object.values(collections).reduce((sum, c) => sum + c.sizeBytes, 0);
+    const totalDocuments = Object.values(collections).reduce((sum, c) => sum + c.count, 0);
+
+    // Firebase Spark plan limits
+    const rtdbLimitBytes = 1 * 1024 * 1024 * 1024; // 1 GB
+    const monthlyDownloadLimitBytes = 10 * 1024 * 1024 * 1024; // 10 GB/month (Spark plan)
+
+    // Count active/online users
+    const activeUsers = users ? Object.values(users).filter((u: any) => u.isOnline === true).length : 0;
+    const totalUsers = calcCount(users);
+
+    // Estimate monthly access (reads per collection * avg doc size)
+    // For real usage, Firebase provides this in the console. We estimate based on data volume.
+    const estimatedDailyReads = totalDocuments * 15; // ~15 reads per doc per day avg
+    const estimatedMonthlyReadsGB = (estimatedDailyReads * 30 * (totalSizeBytes / Math.max(totalDocuments, 1))) / (1024 * 1024 * 1024);
+
+    res.json({
+      success: true,
+      timestamp: new Date().toISOString(),
+      storage: {
+        usedBytes: totalSizeBytes,
+        usedMB: +(totalSizeBytes / (1024 * 1024)).toFixed(3),
+        limitGB: 1,
+        percentUsed: +((totalSizeBytes / rtdbLimitBytes) * 100).toFixed(4),
+      },
+      bandwidth: {
+        estimatedMonthlyGB: +estimatedMonthlyReadsGB.toFixed(3),
+        limitGB: 10,
+        percentUsed: +((estimatedMonthlyReadsGB / 10) * 100).toFixed(2),
+      },
+      documents: {
+        total: totalDocuments,
+        active: totalDocuments - calcDeepCount(archives),
+        archived: calcDeepCount(archives),
+      },
+      users: {
+        total: totalUsers,
+        activeNow: activeUsers,
+      },
+      collections,
+    });
+  } catch (error: any) {
+    console.error("[Cloud Usage] Error:", error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+if (process.env.NODE_ENV === "production") {
+  const distPath = path.join(process.cwd(), "dist");
+  app.use(express.static(distPath));
+  app.get("*", (req, res) => res.sendFile(path.join(distPath, "index.html")));
+}
 
 export default app;

@@ -30,7 +30,11 @@ function resolveRoleFromEmail(email: string): { role: UserRole; teams: { teamId:
     '727725eumc604@skcet.ac.in', // Harish (Dynamic Captain)
     '727724eumc044@skcet.ac.in', // Janani (Manager, Cost & Steering Lead)
     '25mz122@skcet.ac.in',       // Dinesh (App Technician, Innovation Lead)
-    '727725eumc608@skcet.ac.in'  // Nitheesh (PRO)
+    '727725eumc608@skcet.ac.in', // Nitheesh (PRO)
+    // 4th Year Ex-Captains
+    '727723eumt119@skcet.ac.in', // Sanjiv (4th Year Ex-Captain)
+    '727723eumt129@skcet.ac.in', // Sri Prenesh (4th Year Ex-Captain)
+    '727723eumt125@skcet.ac.in', // Shenbaga Raja (4th Year Ex-Captain)
   ];
 
   if (captains.includes(e)) {

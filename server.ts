@@ -76,7 +76,11 @@ function resolveRoleFromEmail(email: string): { role: string; teams: { teamId: s
     '727725eumc604@skcet.ac.in', // Harish (Dynamic Captain)
     '727724eumc044@skcet.ac.in', // Janani (Manager, Cost & Steering Lead)
     '25mz122@skcet.ac.in',       // Dinesh (App Technician, Innovation Lead)
-    '727725eumc608@skcet.ac.in'  // Nitheesh (PRO)
+    '727725eumc608@skcet.ac.in', // Nitheesh (PRO)
+    // 4th Year Ex-Captains
+    '727723eumt119@skcet.ac.in', // Sanjiv (4th Year Ex-Captain)
+    '727723eumt129@skcet.ac.in', // Sri Prenesh (4th Year Ex-Captain)
+    '727723eumt125@skcet.ac.in', // Shenbaga Raja (4th Year Ex-Captain)
   ];
 
   if (captains.includes(e)) {
@@ -582,16 +586,22 @@ app.get("/api/drive/folders", async (req, res) => {
     try {
       const { messages } = req.body;
       if (!groq) throw new Error("AI Assistant offline (Missing API Key)");
+
+      // Pass all messages as-is (system prompt is injected by the frontend with live data)
       const completion = await groq.chat.completions.create({
         messages,
         model: "llama-3.1-8b-instant",
+        temperature: 0.7,
+        max_tokens: 1024,
       });
+
       res.json({ message: completion.choices[0]?.message?.content });
-    } catch (error) {
-      console.error("Chat API Error:", error);
-      res.status(500).json({ error: "Failed to communicate with AI" });
+    } catch (error: any) {
+      console.error("Chat API Error:", error?.message || error);
+      res.status(500).json({ error: error?.message || "Failed to communicate with AI" });
     }
   });
+
 
   // Automated Intelligence Analysis (Llama 3.3 70B)
 
@@ -735,15 +745,7 @@ ${teamId ? `Focus Team: ${teamId}` : 'All teams'}`;
     }
   });
 
-  // In development, Vite runs independently on port 3000
-  // In production, serve dist folder
-  if (process.env.NODE_ENV === "production") {
-    const distPath = path.join(process.cwd(), "dist");
-    app.use(express.static(distPath));
-    app.get("*", (req, res) => {
-      res.sendFile(path.join(distPath, "index.html"));
-    });
-  }
+
 
   // Data Retention Sweep (60 days)
   async function performDataSweep() {
@@ -1008,13 +1010,26 @@ app.get("/api/ai/test-key", async (req, res) => {
 /** Administrative Telemetry Bridge - Used by TaskTable CSV Export */
 app.get("/api/admin/telemetry/updates", async (req, res) => {
   try {
-    const snapshot = await admin.database().ref('task_updates').once("value");
-    const data = snapshot.val() || {};
+    let data;
+    if (admin.apps.length > 0) {
+      const snapshot = await admin.database().ref('task_updates').once("value");
+      data = snapshot.val() || {};
+    } else {
+      data = await firebaseRest.get('task_updates') || {};
+    }
     const updates = Object.entries(data).map(([id, val]: [string, any]) => ({ id, ...val }));
     res.json(updates);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });
+
+if (process.env.NODE_ENV === "production") {
+  const distPath = path.join(process.cwd(), "dist");
+  app.use(express.static(distPath));
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(distPath, "index.html"));
+  });
+}
 
 export default app;
