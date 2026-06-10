@@ -1,12 +1,14 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { LayoutDashboard, Users, Bell, Menu, Rocket, Notebook as NotebookIcon, ShieldAlert, Database, LogOut, Globe, HelpCircle, BarChart3, MessageSquare, X, ClipboardList } from 'lucide-react';
+import { LayoutDashboard, Users, Bell, Menu, Rocket, Notebook as NotebookIcon, ShieldAlert, Database, LogOut, Globe, HelpCircle, BarChart3, MessageSquare, X, ClipboardList, Megaphone, Radio, Send, Loader2, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import AIAssistant from './AIAssistant';
-import { subscribeToMultipleTeamsPendingMembers, updateUserProfile } from '../services/userService';
+import { subscribeToMultipleTeamsPendingMembers, updateUserProfile, subscribeToUsers } from '../services/userService';
 import { uploadImage } from '../services/storageService';
-import { AppView } from '../types';
+import { AppView, UserProfile } from '../types';
 import { subscribeToNotifications, markNotificationRead, type Notification } from '../services/archiveService';
+import { rtdb } from '../firebase';
+
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -27,6 +29,130 @@ export default function Layout({ children, currentView, onViewChange }: LayoutPr
   const [editPhoto, setEditPhoto] = useState('');
   const [editYear, setEditYear] = useState('');
   const [isUploading, setIsUploading] = useState(false);
+
+  // Broadcast Modal State
+  const [isBroadcastOpen, setBroadcastOpen] = useState(false);
+  const [broadcastTitle, setBroadcastTitle] = useState('');
+  const [broadcastMessage, setBroadcastMessage] = useState('');
+  const [broadcastTargetType, setBroadcastTargetType] = useState<'all' | 'team' | 'user'>('all');
+  const [broadcastTargetId, setBroadcastTargetId] = useState('');
+  const [isBroadcasting, setIsBroadcasting] = useState(false);
+  const [isTriggeringReminders, setIsTriggeringReminders] = useState(false);
+  const [allUsersList, setAllUsersList] = useState<UserProfile[]>([]);
+
+  // Subsystem options
+  const broadcastSubsystems = [
+    { id: 'steering', name: 'Steering' },
+    { id: 'suspension', name: 'Suspension' },
+    { id: 'brakes', name: 'Brakes' },
+    { id: 'transmission', name: 'Transmission' },
+    { id: 'design', name: 'Design' },
+    { id: 'electrical', name: 'Electricals' },
+    { id: 'innovation', name: 'Innovation' },
+    { id: 'autonomous', name: 'Autonomous' },
+    { id: 'cost', name: 'Cost' },
+    { id: 'pro', name: 'PRO' },
+  ];
+
+  useEffect(() => {
+    if (!profile) return;
+    const isCaptain = profile.role === 'CAPTAIN';
+    const isLead = profile.role === 'TEAM_LEAD';
+    if (!isCaptain && !isLead) return;
+
+    return subscribeToUsers((users) => {
+      if (isCaptain) {
+        setAllUsersList(users);
+      } else {
+        const approvedTeams = profile.approvedTeams || [];
+        setAllUsersList(users.filter(u => u.approvedTeams?.some(t => approvedTeams.includes(t))));
+      }
+    });
+  }, [profile]);
+
+  const handleSendBroadcast = async () => {
+    if (!broadcastTitle.trim() || !broadcastMessage.trim()) {
+      alert("Title and Message are required.");
+      return;
+    }
+    if (broadcastTargetType !== 'all' && !broadcastTargetId) {
+      alert("Please select a target.");
+      return;
+    }
+
+    setIsBroadcasting(true);
+    try {
+      const notifId = `custom_${Date.now()}`;
+      const notification = {
+        title: broadcastTitle,
+        message: broadcastMessage,
+        type: 'ANNOUNCEMENT',
+        timestamp: new Date().toISOString(),
+        read: false,
+        link: 'teams'
+      };
+
+      let targets: UserProfile[] = [];
+      if (broadcastTargetType === 'all') {
+        targets = allUsersList;
+      } else if (broadcastTargetType === 'user') {
+        const matched = allUsersList.find(u => u.uid === broadcastTargetId);
+        if (matched) targets = [matched];
+      } else if (broadcastTargetType === 'team') {
+        const teamId = broadcastTargetId.toLowerCase().trim();
+        targets = allUsersList.filter(u => {
+          const approved = u.approvedTeams || [];
+          const tms = u.teams || [];
+          return approved.includes(teamId) || tms.some((t: any) => t.teamId === teamId && t.status === 'APPROVED');
+        });
+      }
+
+      if (targets.length === 0) {
+        throw new Error("No target users found.");
+      }
+
+      const firebaseDatabase = (await import('firebase/database'));
+      const writes = targets.map(u => 
+        firebaseDatabase.set(firebaseDatabase.ref(rtdb, `notifications/${u.uid}/${notifId}`), notification)
+      );
+      await Promise.all(writes);
+
+      fetch('/api/notifications/send-custom', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          targetType: broadcastTargetType,
+          targetId: broadcastTargetId,
+          title: broadcastTitle,
+          message: broadcastMessage
+        })
+      }).catch(e => console.warn('[FCM] Push trigger failed:', e.message));
+
+      alert(`✅ Broadcast sent to ${targets.length} users successfully!`);
+      setBroadcastTitle('');
+      setBroadcastMessage('');
+      setBroadcastOpen(false);
+    } catch (err: any) {
+      alert(`❌ Failed to send broadcast: ${err.message}`);
+    } finally {
+      setIsBroadcasting(false);
+    }
+  };
+
+  const handleTriggerReminders = async () => {
+    setIsTriggeringReminders(true);
+    try {
+      const res = await fetch('/api/cron/notifications');
+      if (!res.ok) throw new Error('Failed to run notification cron on backend');
+      const data = await res.json();
+      alert(`⏰ Success: ${data.message || 'Reminders triggered successfully!'}`);
+    } catch (err: any) {
+      alert(`❌ Failed: ${err.message}`);
+    } finally {
+      setIsTriggeringReminders(false);
+    }
+  };
+
 
   useEffect(() => {
     if (profile) {
@@ -266,44 +392,67 @@ export default function Layout({ children, currentView, onViewChange }: LayoutPr
              </span>
           </div>
           <div className="flex items-center gap-4 relative">
-             {'Notification' in window && Notification.permission !== 'granted' && (
-               <button
-                 id="enable-chrome-alerts-btn"
-                 onClick={async () => {
-                   if (Notification.permission === 'denied') {
-                     alert('🔕 Notifications are BLOCKED in your browser.\n\nTo fix this:\n1. Click the 🔒 lock icon in your address bar\n2. Set "Notifications" to "Allow"\n3. Refresh the page');
-                     return;
-                   }
-                   const perm = await Notification.requestPermission();
-                   if (perm === 'granted') {
-                     // Show a test notification immediately to confirm it works
-                     if ('serviceWorker' in navigator) {
-                       navigator.serviceWorker.ready.then(reg => {
-                         reg.showNotification('🔔 ASTRA Alerts Active!', {
-                           body: 'You will now receive team notifications from ASTRA.',
-                           icon: '/favicon.ico',
-                           badge: '/favicon.ico',
-                           vibrate: [200, 100, 200]
-                         } as any);
-                       });
-                     } else {
-                       new Notification('🔔 ASTRA Alerts Active!', {
-                         body: 'You will now receive team notifications from ASTRA.',
-                         icon: '/favicon.ico'
-                       });
-                     }
-                   } else {
-                     alert('Notification permission denied. Enable them in browser settings to receive team alerts.');
-                   }
-                 }}
-                 className="px-3 py-1.5 bg-yellow-500/15 hover:bg-yellow-500/25 text-yellow-400 text-[10px] font-black rounded-xl border border-yellow-500/30 transition-all flex items-center gap-1.5 cursor-pointer"
-                 style={{ animation: 'pulse 2s infinite' }}
-                 title={Notification.permission === 'denied' ? 'Notifications blocked - click for help' : 'Click to enable Chrome push notifications'}
+             {(!window.isSecureContext || !('Notification' in window)) ? (
+               <div 
+                 onClick={() => alert("🚨 HTTP Connection Detected!\n\nChrome restricts notifications and service workers to secure connections (HTTPS) or localhost.\n\nTo test notifications on your Android phone:\n1. Open Chrome on your phone and go to: chrome://flags/#unsafely-treat-insecure-origin-as-secure\n2. Enable the flag and add your computer's IP address (e.g., http://192.168.x.x:3000)\n3. Relaunch Chrome and you will be able to enable alerts!")}
+                 className="px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-[10px] font-black rounded-xl border border-red-500/20 transition-all flex items-center gap-1.5 cursor-help"
+                 title="Chrome blocks notifications on HTTP. Click for override guide."
                >
-                 <Bell size={12} />
-                 {Notification.permission === 'denied' ? '🚫 Notifications Blocked' : '🔔 Enable Chrome Alerts'}
+                 <AlertTriangle size={12} className="animate-pulse" />
+                 HTTP Connection: No Push
+               </div>
+             ) : (
+               'Notification' in window && Notification.permission !== 'granted' && (
+                 <button
+                   id="enable-chrome-alerts-btn"
+                   onClick={async () => {
+                     if (Notification.permission === 'denied') {
+                       alert('🔕 Notifications are BLOCKED in your browser.\n\nTo fix this:\n1. Click the 🔒 lock icon in your address bar\n2. Set "Notifications" to "Allow"\n3. Refresh the page');
+                       return;
+                     }
+                     const perm = await Notification.requestPermission();
+                     if (perm === 'granted') {
+                       // Show a test notification immediately to confirm it works
+                       if ('serviceWorker' in navigator) {
+                         navigator.serviceWorker.ready.then(reg => {
+                           reg.showNotification('🔔 ASTRA Alerts Active!', {
+                             body: 'You will now receive team notifications from ASTRA.',
+                             icon: '/favicon.ico',
+                             badge: '/favicon.ico',
+                             vibrate: [200, 100, 200]
+                           } as any);
+                         });
+                       } else {
+                         new Notification('🔔 ASTRA Alerts Active!', {
+                           body: 'You will now receive team notifications from ASTRA.',
+                           icon: '/favicon.ico'
+                         });
+                       }
+                     } else {
+                       alert('Notification permission denied. Enable them in browser settings to receive team alerts.');
+                     }
+                   }}
+                   className="px-3 py-1.5 bg-yellow-500/15 hover:bg-yellow-500/25 text-yellow-400 text-[10px] font-black rounded-xl border border-yellow-500/30 transition-all flex items-center gap-1.5 cursor-pointer"
+                   style={{ animation: 'pulse 2s infinite' }}
+                   title={Notification.permission === 'denied' ? 'Notifications blocked - click for help' : 'Click to enable Chrome push notifications'}
+                 >
+                   <Bell size={12} />
+                   {Notification.permission === 'denied' ? '🚫 Notifications Blocked' : '🔔 Enable Chrome Alerts'}
+                 </button>
+               )
+             )}
+
+             {profile && (profile.role === 'CAPTAIN' || profile.role === 'TEAM_LEAD') && (
+               <button
+                 onClick={() => setBroadcastOpen(true)}
+                 className="px-3 py-1.5 bg-orange-500/15 hover:bg-orange-500/25 text-orange-400 text-[10px] font-black rounded-xl border border-orange-500/30 transition-all flex items-center gap-1.5 cursor-pointer"
+                 title="Send Broadcast / Custom Notification"
+               >
+                 <Megaphone size={12} />
+                 📢 Broadcast
                </button>
              )}
+
 
              <button 
                 onClick={() => setNotifOpen(!isNotifOpen)}
@@ -507,7 +656,165 @@ export default function Layout({ children, currentView, onViewChange }: LayoutPr
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Broadcast Modal */}
+        <AnimatePresence>
+          {isBroadcastOpen && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
+              onClick={() => setBroadcastOpen(false)}
+            >
+              <motion.div 
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                onClick={(e) => e.stopPropagation()}
+                className="bg-surface border border-white/10 p-6 rounded-2xl w-full max-w-lg shadow-2xl relative border-t-4 border-t-orange-500"
+              >
+                <button 
+                  onClick={() => setBroadcastOpen(false)}
+                  className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors animate-pulse"
+                >
+                  <X size={20} />
+                </button>
+                
+                <h2 className="text-xl font-bold mb-2 flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-orange-500/20 text-orange-400 flex items-center justify-center">
+                    <Megaphone size={16} />
+                  </div>
+                  Captain & Lead Broadcast
+                </h2>
+                <p className="text-xs text-slate-400 mb-6">Send real-time alerts to the team directly to their browser/phone notifications.</p>
+
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Target Audience</label>
+                      <select
+                        value={broadcastTargetType}
+                        onChange={(e) => {
+                          setBroadcastTargetType(e.target.value as any);
+                          setBroadcastTargetId('');
+                        }}
+                        className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500 transition-colors"
+                      >
+                        <option value="all" className="bg-slate-900 text-slate-200">Everyone (All Users)</option>
+                        <option value="team" className="bg-slate-900 text-slate-200">Specific Subsystem Team</option>
+                        <option value="user" className="bg-slate-900 text-slate-200">Specific User</option>
+                      </select>
+                    </div>
+
+                    {broadcastTargetType === 'team' && (
+                      <div>
+                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Select Subsystem</label>
+                        <select
+                          value={broadcastTargetId}
+                          onChange={(e) => setBroadcastTargetId(e.target.value)}
+                          className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500 transition-colors"
+                        >
+                          <option value="" className="bg-slate-900 text-slate-200">-- Choose Subsystem --</option>
+                          {broadcastSubsystems
+                            .filter(sub => profile.role === 'CAPTAIN' || profile.approvedTeams?.includes(sub.id))
+                            .map(sub => (
+                              <option key={sub.id} value={sub.id} className="bg-slate-900 text-slate-200">{sub.name}</option>
+                            ))}
+                        </select>
+                      </div>
+                    )}
+
+                    {broadcastTargetType === 'user' && (
+                      <div>
+                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Select User</label>
+                        <select
+                          value={broadcastTargetId}
+                          onChange={(e) => setBroadcastTargetId(e.target.value)}
+                          className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500 transition-colors"
+                        >
+                          <option value="" className="bg-slate-900 text-slate-200">-- Choose User --</option>
+                          {allUsersList.map(usr => (
+                            <option key={usr.uid} value={usr.uid} className="bg-slate-900 text-slate-200">
+                              {usr.displayName || usr.email} ({usr.role})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Notification Title</label>
+                    <input 
+                      type="text" 
+                      value={broadcastTitle}
+                      onChange={(e) => setBroadcastTitle(e.target.value)}
+                      className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500 transition-colors"
+                      placeholder="e.g. 📢 Everyone Assemble!"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Message Body</label>
+                    <textarea 
+                      value={broadcastMessage}
+                      onChange={(e) => setBroadcastMessage(e.target.value)}
+                      className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500 transition-colors resize-none"
+                      placeholder="e.g. Everyone assemble at drone lab at 3pm for today's brakes class."
+                      rows={4}
+                      required
+                    />
+                  </div>
+
+                  <div className="pt-2 flex flex-col gap-2">
+                    <div className="flex gap-3">
+                      <button 
+                        type="button"
+                        onClick={() => setBroadcastOpen(false)}
+                        className="flex-1 px-4 py-3 rounded-xl font-bold border border-white/10 text-white hover:bg-white/5 transition-colors cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                      <button 
+                        type="button"
+                        onClick={handleSendBroadcast}
+                        disabled={isBroadcasting || !broadcastTitle.trim() || !broadcastMessage.trim()}
+                        className={`flex-1 px-4 py-3 rounded-xl font-bold bg-orange-500 text-white transition-colors shadow-[0_0_20px_rgba(249,115,22,0.3)] flex items-center justify-center gap-1.5 cursor-pointer ${
+                          isBroadcasting ? 'opacity-50 cursor-not-allowed' : 'hover:bg-orange-600'
+                        }`}
+                      >
+                        {isBroadcasting ? (
+                          <><Loader2 size={16} className="animate-spin" /> Sending...</>
+                        ) : (
+                          <><Send size={16} /> Send Broadcast</>
+                        )}
+                      </button>
+                    </div>
+
+                    <div className="h-[1px] bg-white/5 my-2" />
+
+                    <button 
+                      type="button"
+                      onClick={handleTriggerReminders}
+                      disabled={isTriggeringReminders}
+                      className="w-full px-4 py-2.5 rounded-xl text-xs font-bold border border-orange-500/20 text-orange-400 bg-orange-500/5 hover:bg-orange-500/10 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      {isTriggeringReminders ? (
+                        <><Loader2 size={12} className="animate-spin" /> Triggering Reminders...</>
+                      ) : (
+                        <><Radio size={12} className="animate-pulse" /> ⏰ Trigger Automated Task Reminders Now</>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
     </div>
   );
 }
+

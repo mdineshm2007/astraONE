@@ -40,9 +40,18 @@ export default function AdminPanel() {
             
             const allUsersData = usersSnap.val() as Record<string, any>;
             let targets: [string, any][] = [];
+            const allowedTeams = profile?.approvedTeams || [];
 
             if (customNotif.targetType === 'all') {
-                targets = Object.entries(allUsersData);
+                if (isCaptainMode) {
+                    targets = Object.entries(allUsersData);
+                } else {
+                    targets = Object.entries(allUsersData).filter(([uid, u]: [string, any]) => {
+                        if (uid === profile?.uid) return false;
+                        const userTeams = u.approvedTeams || [];
+                        return userTeams.some((t: string) => allowedTeams.includes(t));
+                    });
+                }
             } else if (customNotif.targetType === 'user') {
                 if (allUsersData[customNotif.targetId]) {
                     targets = [[customNotif.targetId, allUsersData[customNotif.targetId]]];
@@ -286,7 +295,7 @@ export default function AdminPanel() {
                             </span>
                         )}
                     </button>
-                    {isCaptainMode && (
+                    {canAccess && (
                         <button
                             onClick={() => setActiveTab('broadcast')}
                             className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-1.5 ${
@@ -496,7 +505,7 @@ export default function AdminPanel() {
                         </div>
                     </motion.div>
                 )}
-                {activeTab === 'broadcast' && isCaptainMode && (
+                {activeTab === 'broadcast' && canAccess && (
                     <motion.div key="broadcast" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }}>
                         <div className="glass-panel p-8 rounded-3xl border-t-2 border-t-orange-500/40">
                             <div className="flex items-center gap-3 mb-6">
@@ -504,8 +513,8 @@ export default function AdminPanel() {
                                     <Megaphone size={24} className="text-orange-400" />
                                 </div>
                                 <div>
-                                    <h3 className="text-xl font-bold text-white">Captain Broadcast</h3>
-                                    <p className="text-xs text-slate-400 mt-0.5">Send Chrome notifications to any team member or the entire team instantly.</p>
+                                    <h3 className="text-xl font-bold text-white">{isCaptainMode ? 'Captain Broadcast' : 'Team Lead Broadcast'}</h3>
+                                    <p className="text-xs text-slate-400 mt-0.5">Send Chrome notifications to your team members instantly.</p>
                                 </div>
                             </div>
 
@@ -518,7 +527,7 @@ export default function AdminPanel() {
                                             onChange={e => setCustomNotif({...customNotif, targetType: e.target.value as any, targetId: ''})}
                                             className="bg-black/30 border border-white/10 text-slate-200 text-sm rounded-xl p-3 outline-none focus:border-orange-500 transition-all"
                                         >
-                                            <option value="all" className="bg-slate-900">🌐 Everyone (All Users)</option>
+                                            <option value="all" className="bg-slate-900">{isCaptainMode ? '🌐 Everyone (All Users)' : '🌐 Subsystem Members'}</option>
                                             <option value="team" className="bg-slate-900">👥 Specific Subsystem Team</option>
                                             <option value="user" className="bg-slate-900">👤 Specific User</option>
                                         </select>
@@ -533,16 +542,20 @@ export default function AdminPanel() {
                                                 className="bg-black/30 border border-white/10 text-slate-200 text-sm rounded-xl p-3 outline-none focus:border-orange-500 transition-all"
                                             >
                                                 <option value="" className="bg-slate-900">-- Choose Subsystem --</option>
-                                                <option value="steering" className="bg-slate-900">Steering</option>
-                                                <option value="suspension" className="bg-slate-900">Suspension</option>
-                                                <option value="brakes" className="bg-slate-900">Brakes</option>
-                                                <option value="transmission" className="bg-slate-900">Transmission</option>
-                                                <option value="design" className="bg-slate-900">Design</option>
-                                                <option value="electrical" className="bg-slate-900">Electricals</option>
-                                                <option value="innovation" className="bg-slate-900">Innovation</option>
-                                                <option value="autonomous" className="bg-slate-900">Autonomous</option>
-                                                <option value="cost" className="bg-slate-900">Cost</option>
-                                                <option value="pro" className="bg-slate-900">PRO</option>
+                                                {[
+                                                    { id: 'steering', name: 'Steering' },
+                                                    { id: 'suspension', name: 'Suspension' },
+                                                    { id: 'brakes', name: 'Brakes' },
+                                                    { id: 'transmission', name: 'Transmission' },
+                                                    { id: 'design', name: 'Design' },
+                                                    { id: 'electrical', name: 'Electricals' },
+                                                    { id: 'innovation', name: 'Innovation' },
+                                                    { id: 'autonomous', name: 'Autonomous' },
+                                                    { id: 'cost', name: 'Cost' },
+                                                    { id: 'pro', name: 'PRO' },
+                                                ].filter(sub => isCaptainMode || profile?.approvedTeams?.includes(sub.id)).map(sub => (
+                                                    <option key={sub.id} value={sub.id} className="bg-slate-900">{sub.name}</option>
+                                                ))}
                                             </select>
                                         </div>
                                     )}
@@ -556,7 +569,7 @@ export default function AdminPanel() {
                                                 className="bg-black/30 border border-white/10 text-slate-200 text-sm rounded-xl p-3 outline-none focus:border-orange-500 transition-all"
                                             >
                                                 <option value="" className="bg-slate-900">-- Choose User --</option>
-                                                {allUsers.map(usr => (
+                                                {(isCaptainMode ? allUsers : approvedMembers).map(usr => (
                                                     <option key={usr.uid} value={usr.uid} className="bg-slate-900">
                                                         {usr.displayName || usr.email} ({usr.role})
                                                     </option>

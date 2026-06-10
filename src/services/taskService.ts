@@ -136,10 +136,27 @@ export async function updateTask(taskId: string, updates: Partial<Task>, oldTask
 }
 
 export async function deleteTask(taskId: string, subsystemId: string) {
+  // 1. Try to delete via backend API (which has admin privileges and cleans up everything)
+  try {
+    const response = await fetch(`/api/tasks/${taskId}?subsystemId=${subsystemId || ''}`, {
+      method: 'DELETE',
+    });
+    
+    if (response.ok) {
+      console.log(`[deleteTask] Successfully deleted task ${taskId} via backend API`);
+      return;
+    }
+    
+    console.warn(`[deleteTask] Backend delete returned non-OK status:`, response.status);
+  } catch (apiErr: any) {
+    console.warn(`[deleteTask] Backend API call failed. Falling back to client-side SDK.`, apiErr.message);
+  }
+
+  // 2. Client-side SDK Fallback
   try {
     const db = rtdb;
     
-    // 1. Get the task first so we know its actual subsystem
+    // Get the task first to check its actual subsystem and status
     const taskRef = ref(db, `tasks/${taskId}`);
     const taskSnap = await get(taskRef);
     if (!taskSnap.exists()) {
@@ -149,25 +166,41 @@ export async function deleteTask(taskId: string, subsystemId: string) {
     const actualSubsystem = task.subsystem || subsystemId;
     const wasCompleted = task.status === 'COMPLETED';
     
-    // 2. Delete all associated task_updates for this task
+    // Delete associated task_updates using a query
     const updatesRef = ref(db, 'task_updates');
-    const updatesSnap = await get(updatesRef);
+    const q = query(updatesRef, orderByChild('taskId'), equalTo(taskId));
+    const updatesSnap = await get(q);
     if (updatesSnap.exists()) {
-      const allUpdates = updatesSnap.val();
-      const deletePromises: Promise<void>[] = [];
-      for (const [updateKey, updateVal] of Object.entries(allUpdates)) {
-        if ((updateVal as any).taskId === taskId) {
-          deletePromises.push(remove(ref(db, `task_updates/${updateKey}`)));
+      const updates = updatesSnap.val();
+      const deletePromises = Object.keys(updates).map(updateKey => 
+        remove(ref(db, `task_updates/${updateKey}`))
+      );
+      await Promise.all(deletePromises);
+    }
+
+    // Delete associated notifications
+    const notificationsRef = ref(db, 'notifications');
+    const notifsSnap = await get(notificationsRef);
+    if (notifsSnap.exists()) {
+      const allNotifs = notifsSnap.val();
+      const notifPromises: Promise<void>[] = [];
+      for (const [userId, userNotifs] of Object.entries(allNotifs)) {
+        if (userNotifs && typeof userNotifs === 'object') {
+          for (const [notifId] of Object.entries(userNotifs)) {
+            if (notifId.startsWith(`task_assign_${taskId}`) || notifId.startsWith(`task_rem_${taskId}`)) {
+              notifPromises.push(remove(ref(db, `notifications/${userId}/${notifId}`)));
+            }
+          }
         }
       }
-      if (deletePromises.length > 0) await Promise.all(deletePromises);
+      if (notifPromises.length > 0) await Promise.all(notifPromises);
     }
     
-    // 3. Delete the task itself
+    // Delete the task itself
     await remove(taskRef);
     
-    // 4. Decrement pending task count only if the task wasn't already completed
-    if (!wasCompleted) {
+    // Decrement pending task count only if the task wasn't already completed and has a valid subsystem path
+    if (!wasCompleted && actualSubsystem && actualSubsystem.trim() !== '') {
       const subsRef = ref(db, `subsystems/${actualSubsystem}/pendingTasks`);
       await runTransaction(subsRef, (current) => {
         if (current === null) return 0;
@@ -175,12 +208,13 @@ export async function deleteTask(taskId: string, subsystemId: string) {
       });
     }
     
-    console.log(`[deleteTask] Successfully deleted task ${taskId}`);
-  } catch (err) {
+    console.log(`[deleteTask] Successfully deleted task ${taskId} via client fallback`);
+  } catch (err: any) {
     console.error('deleteTask error:', err);
     throw err;
   }
 }
+
 
 export async function saveTaskUpdate(updateData: Omit<TaskUpdate, 'id'>) {
   try {

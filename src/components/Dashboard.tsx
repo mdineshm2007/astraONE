@@ -10,7 +10,6 @@ import {
   HardDrive, Users, FileText, RefreshCw
 } from 'lucide-react';
 
-import AIIntelligencePanel from './AIIntelligencePanel';
 import TaskHeatmap from './TaskHeatmap';
 import { subscribeToTaskUpdates, createTask } from '../services/taskService';
 import { TaskUpdate } from '../types';
@@ -304,14 +303,6 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
-
-
-      <AIIntelligencePanel 
-        type="DASHBOARD" 
-        data={{ readinessPct, subsystems: visibleSubsystems.length, tasks: teamTasks, updates: validUpdates }} 
-        context={profile.role} 
-      />
-
       {/* Contribution Heatmap */}
       <section className="space-y-4">
         <h2 className="text-lg font-bold flex items-center gap-2">
