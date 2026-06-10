@@ -249,12 +249,17 @@ export default function Teams() {
                 progressPercent: task.progressPercent || 0
               });
             }}
-            onDeleteTask={(taskId) => {
+            onDeleteTask={async (taskId) => {
               if (window.confirm('Delete this task?')) {
-                deleteTask(taskId, selectedSubsystem);
+                try {
+                  await deleteTask(taskId, selectedSubsystem);
+                } catch (error: any) {
+                  alert(error.message || "Failed to delete task");
+                }
               }
             }}
             canManage={canManage}
+            currentUserId={profile?.uid}
           />
         ) : (
           filteredTasks.length === 0 ? (
@@ -325,8 +330,16 @@ export default function Teams() {
                       className="flex-1 py-2 bg-primary/10 hover:bg-primary/20 text-primary text-xs font-bold rounded-xl transition-all">
                       Update Progress
                     </button>
-                    {canManage && (
-                      <button onClick={() => window.confirm('Delete this task?') && deleteTask(task.id, selectedSubsystem)}
+                    {(canManage || task.createdBy === profile?.uid || task.assignedToId === profile?.uid) && (
+                      <button onClick={async () => {
+                        if (window.confirm('Delete this task?')) {
+                          try {
+                            await deleteTask(task.id, selectedSubsystem);
+                          } catch (error: any) {
+                            alert(error.message || "Failed to delete task");
+                          }
+                        }
+                      }}
                         className="p-2 text-slate-600 hover:text-red-400 transition-colors bg-white/5 rounded-xl">
                         <Trash2 size={14} />
                       </button>

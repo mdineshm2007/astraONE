@@ -108,7 +108,7 @@ export default function DriveWorkspace() {
       if (lines.length === 0) {
         setCostAnalysis('No bill items found. Add parts in the BOM table first.');
       } else {
-        setCostAnalysis(lines.join('\n') + `\n\nTotal: ₹${total.toLocaleString('en-IN')}`);
+        setCostAnalysis(lines.join('\n') + `\n\nTotal: ₹${(total as any).toLocaleString('en-IN')}`);
       }
     } finally {
       setIsAnalyzing(false);
@@ -307,7 +307,7 @@ export default function DriveWorkspace() {
             <div>
               <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-1">Total Project Expenditure</p>
               <h2 className="text-4xl font-black text-white tracking-tighter">
-                ₹{(Object.values(finances?.teams || {}).reduce((sum: number, v: any) => sum + (Number(v) || 0), 0)).toLocaleString('en-IN')}
+                ₹{((Object.values(finances?.teams || {}).reduce((sum: number, v: any) => sum + (Number(v) || 0), 0)) as any).toLocaleString('en-IN')}
               </h2>
             </div>
           </div>

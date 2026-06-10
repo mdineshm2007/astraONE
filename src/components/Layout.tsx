@@ -6,7 +6,7 @@ import AIAssistant from './AIAssistant';
 import { subscribeToMultipleTeamsPendingMembers, updateUserProfile } from '../services/userService';
 import { uploadImage } from '../services/storageService';
 import { AppView } from '../types';
-import { subscribeToNotifications, markNotificationRead, Notification } from '../services/archiveService';
+import { subscribeToNotifications, markNotificationRead, type Notification } from '../services/archiveService';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -90,35 +90,64 @@ export default function Layout({ children, currentView, onViewChange }: LayoutPr
 
   const isInitialMount = useRef(true);
   const prevNotifications = useRef<Notification[]>([]);
+  const notifiedIds = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     if (!profile) return;
 
-    // Request native permission for browser notifications (works on mobile and desktop)
-    if ('Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission();
+    // Register service worker for push and background notification support on mobile Android Chrome
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js')
+        .then(reg => console.log('[ServiceWorker] Registered successfully:', reg.scope))
+        .catch(err => console.warn('[ServiceWorker] Registration failed:', err));
     }
 
-    return subscribeToNotifications(profile.uid, (newNotifs) => {
-      // Trigger a native system notification for new unread notifications (except on initial load)
-      if (!isInitialMount.current && newNotifs.length > prevNotifications.current.length) {
-        const addedNotifs = newNotifs.filter(
-          n => !prevNotifications.current.some(old => old.id === n.id)
-        );
+    // Request native permission for browser notifications (works on mobile and desktop)
+    // NOTE: We do NOT auto-request here anymore - Chrome blocks silent requestPermission calls.
+    // Instead we show a banner button for the user to click.
 
-        addedNotifs.forEach(notif => {
-          if (!notif.read && 'Notification' in window && Notification.permission === 'granted') {
-            new Notification(notif.title, {
-              body: notif.message,
-              icon: '/favicon.ico'
-            });
+    return subscribeToNotifications(profile.uid, (newNotifs) => {
+      // On initial mount, register all existing unread notification IDs to avoid spamming them
+      if (isInitialMount.current) {
+        newNotifs.forEach(n => {
+          if (!n.read) {
+            notifiedIds.current.add(n.id);
+          }
+        });
+        isInitialMount.current = false;
+      } else {
+        // Trigger Chrome notification for any new unread notification we haven't seen in this session
+        newNotifs.forEach(notif => {
+          if (!notif.read && !notifiedIds.current.has(notif.id)) {
+            notifiedIds.current.add(notif.id);
+
+            if ('Notification' in window && Notification.permission === 'granted') {
+              const title = notif.title;
+              const options = {
+                body: notif.message,
+                icon: '/favicon.ico',
+                badge: '/favicon.ico',
+                vibrate: [100, 50, 100],
+                tag: notif.id,
+                renotify: true
+              };
+
+              if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.ready.then(registration => {
+                  registration.showNotification(title, options);
+                }).catch(() => {
+                  new Notification(title, options);
+                });
+              } else {
+                new Notification(title, options);
+              }
+            }
           }
         });
       }
 
       prevNotifications.current = newNotifs;
       setNotifications(newNotifs);
-      isInitialMount.current = false;
     });
   }, [profile]);
 
@@ -237,6 +266,45 @@ export default function Layout({ children, currentView, onViewChange }: LayoutPr
              </span>
           </div>
           <div className="flex items-center gap-4 relative">
+             {'Notification' in window && Notification.permission !== 'granted' && (
+               <button
+                 id="enable-chrome-alerts-btn"
+                 onClick={async () => {
+                   if (Notification.permission === 'denied') {
+                     alert('🔕 Notifications are BLOCKED in your browser.\n\nTo fix this:\n1. Click the 🔒 lock icon in your address bar\n2. Set "Notifications" to "Allow"\n3. Refresh the page');
+                     return;
+                   }
+                   const perm = await Notification.requestPermission();
+                   if (perm === 'granted') {
+                     // Show a test notification immediately to confirm it works
+                     if ('serviceWorker' in navigator) {
+                       navigator.serviceWorker.ready.then(reg => {
+                         reg.showNotification('🔔 ASTRA Alerts Active!', {
+                           body: 'You will now receive team notifications from ASTRA.',
+                           icon: '/favicon.ico',
+                           badge: '/favicon.ico',
+                           vibrate: [200, 100, 200]
+                         } as any);
+                       });
+                     } else {
+                       new Notification('🔔 ASTRA Alerts Active!', {
+                         body: 'You will now receive team notifications from ASTRA.',
+                         icon: '/favicon.ico'
+                       });
+                     }
+                   } else {
+                     alert('Notification permission denied. Enable them in browser settings to receive team alerts.');
+                   }
+                 }}
+                 className="px-3 py-1.5 bg-yellow-500/15 hover:bg-yellow-500/25 text-yellow-400 text-[10px] font-black rounded-xl border border-yellow-500/30 transition-all flex items-center gap-1.5 cursor-pointer"
+                 style={{ animation: 'pulse 2s infinite' }}
+                 title={Notification.permission === 'denied' ? 'Notifications blocked - click for help' : 'Click to enable Chrome push notifications'}
+               >
+                 <Bell size={12} />
+                 {Notification.permission === 'denied' ? '🚫 Notifications Blocked' : '🔔 Enable Chrome Alerts'}
+               </button>
+             )}
+
              <button 
                 onClick={() => setNotifOpen(!isNotifOpen)}
                 className={`relative p-2 transition-colors rounded-xl border ${

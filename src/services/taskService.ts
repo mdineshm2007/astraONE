@@ -78,6 +78,19 @@ export async function createTask(task: Omit<Task, 'id'>) {
     // Update subsystem pending count
     const subsRef = ref(rtdb, `subsystems/${task.subsystem}/pendingTasks`);
     await runTransaction(subsRef, (current) => (current || 0) + 1);
+
+    if (cleanTask.assignedToId) {
+      fetch('/api/tasks/notify-assign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          taskId: newTaskRef.key,
+          assignedToId: cleanTask.assignedToId,
+          title: "📌 New Task Assigned",
+          message: `You have been assigned the task: "${cleanTask.title}"`
+        })
+      }).catch(e => console.warn('[Notification] Failed to send assignment notification:', e.message));
+    }
     
     return newTaskRef.key;
   } catch (err) {
@@ -101,6 +114,21 @@ export async function updateTask(taskId: string, updates: Partial<Task>, oldTask
     } else {
       await update(taskRef, finalUpdates);
     }
+
+    const newAssignee = updates.assignedToId;
+    const oldAssignee = oldTask?.assignedToId;
+    if (newAssignee && newAssignee !== oldAssignee) {
+      fetch('/api/tasks/notify-assign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          taskId,
+          assignedToId: newAssignee,
+          title: "📌 New Task Assigned",
+          message: `You have been assigned the task: "${updates.title || oldTask?.title || 'Task'}"`
+        })
+      }).catch(e => console.warn('[Notification] Failed to send assignment notification:', e.message));
+    }
   } catch (err) {
     console.error('updateTask error:', err);
     throw err;
@@ -109,25 +137,45 @@ export async function updateTask(taskId: string, updates: Partial<Task>, oldTask
 
 export async function deleteTask(taskId: string, subsystemId: string) {
   try {
-    // 1. Delete all associated task updates
-    const updatesRef = ref(rtdb, 'task_updates');
-    const updatesQuery = query(updatesRef, orderByChild('taskId'), equalTo(taskId));
-    const snapshot = await get(updatesQuery);
+    const db = rtdb;
     
-    if (snapshot.exists()) {
-      const updates = snapshot.val();
-      const deletePromises = Object.keys(updates).map(updateId => 
-        remove(ref(rtdb, `task_updates/${updateId}`))
-      );
-      await Promise.all(deletePromises);
+    // 1. Get the task first so we know its actual subsystem
+    const taskRef = ref(db, `tasks/${taskId}`);
+    const taskSnap = await get(taskRef);
+    if (!taskSnap.exists()) {
+      throw new Error("Task not found");
     }
-
-    // 2. Delete the task itself
-    await remove(ref(rtdb, `tasks/${taskId}`));
+    const task = taskSnap.val();
+    const actualSubsystem = task.subsystem || subsystemId;
+    const wasCompleted = task.status === 'COMPLETED';
     
-    // 3. Update the pending task count for the subsystem
-    const subsRef = ref(rtdb, `subsystems/${subsystemId}/pendingTasks`);
-    await runTransaction(subsRef, (current) => (current || 0) - 1);
+    // 2. Delete all associated task_updates for this task
+    const updatesRef = ref(db, 'task_updates');
+    const updatesSnap = await get(updatesRef);
+    if (updatesSnap.exists()) {
+      const allUpdates = updatesSnap.val();
+      const deletePromises: Promise<void>[] = [];
+      for (const [updateKey, updateVal] of Object.entries(allUpdates)) {
+        if ((updateVal as any).taskId === taskId) {
+          deletePromises.push(remove(ref(db, `task_updates/${updateKey}`)));
+        }
+      }
+      if (deletePromises.length > 0) await Promise.all(deletePromises);
+    }
+    
+    // 3. Delete the task itself
+    await remove(taskRef);
+    
+    // 4. Decrement pending task count only if the task wasn't already completed
+    if (!wasCompleted) {
+      const subsRef = ref(db, `subsystems/${actualSubsystem}/pendingTasks`);
+      await runTransaction(subsRef, (current) => {
+        if (current === null) return 0;
+        return Math.max(0, current - 1);
+      });
+    }
+    
+    console.log(`[deleteTask] Successfully deleted task ${taskId}`);
   } catch (err) {
     console.error('deleteTask error:', err);
     throw err;

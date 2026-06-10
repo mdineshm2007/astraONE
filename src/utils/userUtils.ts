@@ -11,7 +11,13 @@ const EMAIL_NAME_MAP: Record<string, string> = {
   '727724eumc093@skcet.ac.in': 'Sanjay',
   '25mz122@skcet.ac.in': 'Dinesh',
   '727724eumc026@skcet.ac.in': 'Dheeshith',
-  '727725eumc608@skcet.ac.in': 'Nitheesh'
+  '727725eumc608@skcet.ac.in': 'Nitheesh',
+  // 4th Year Ex-Captains
+  '727723eumt119@skcet.ac.in': 'Sanjiv',
+  '727723eumt129@skcet.ac.in': 'Sri Prenesh',
+  '727723eumt125@skcet.ac.in': 'Shenbaga Raja',
+  '727723eumt092@skcet.ac.in': 'Nitin Sundaresan',
+  '727723eumt094@skcet.ac.in': 'Owshik Johnson'
 };
 
 export function resolveNameFromEmail(email: string): string {

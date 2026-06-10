@@ -294,8 +294,11 @@ app.get("/api/admin/members", async (req, res) => {
 app.post("/api/admin/users/delete", async (req, res) => {
   try {
     const { uid } = req.body;
-    if (!uid) return res.status(400).json({ error: "UID required" });
-    
+    if (!uid) {
+      return res.status(400).json({ error: "uid is required" });
+    }
+
+    // Safety check: Don't delete captains via this endpoint 
     const snapshot = await admin.database().ref(`users/${uid}`).once("value");
     if (snapshot.exists()) {
       const profile = snapshot.val();
@@ -304,8 +307,227 @@ app.post("/api/admin/users/delete", async (req, res) => {
       }
     }
 
+    // 1. Delete user from Firebase Authentication
+    try {
+      await admin.auth().deleteUser(uid);
+      console.log(`[Firebase Auth] Successfully deleted user ${uid}`);
+    } catch (authError: any) {
+      console.warn(`[Firebase Auth] Delete failed or user not in Auth: ${authError.message}`);
+    }
+
+    // 2. Remove user profile
     await admin.database().ref(`users/${uid}`).remove();
+
+    // 3. Remove user notifications to save storage
+    await admin.database().ref(`notifications/${uid}`).remove();
+
+    // 4. Remove all task updates created by this user to save storage
+    const updatesRef = admin.database().ref('task_updates');
+    const updatesSnapshot = await updatesRef.orderByChild('userId').equalTo(uid).once('value');
+    if (updatesSnapshot.exists()) {
+      const updates = updatesSnapshot.val();
+      const deletePromises = Object.keys(updates).map(updateId => 
+        admin.database().ref(`task_updates/${updateId}`).remove()
+      );
+      await Promise.all(deletePromises);
+      console.log(`[CleanUp] Removed ${deletePromises.length} task updates for user ${uid}`);
+    }
+
     res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
+app.delete("/api/tasks/:taskId", async (req, res) => {
+  try {
+    const { taskId } = req.params;
+    const { subsystemId } = req.query;
+
+    if (!taskId) {
+      return res.status(400).json({ error: "taskId is required" });
+    }
+    if (!subsystemId) {
+      return res.status(400).json({ error: "subsystemId is required" });
+    }
+
+    const db = admin.database();
+
+    // Fetch task first to check status
+    const taskSnapshot = await db.ref(`tasks/${taskId}`).once('value');
+    if (!taskSnapshot.exists()) {
+      return res.status(404).json({ error: "Task not found" });
+    }
+    const task = taskSnapshot.val();
+
+    // 1. Delete all associated task updates
+    const updatesRef = db.ref('task_updates');
+    const snapshot = await updatesRef.orderByChild('taskId').equalTo(taskId).once('value');
+    if (snapshot.exists()) {
+      const updates = snapshot.val();
+      const deletePromises = Object.keys(updates).map(updateId => 
+        db.ref(`task_updates/${updateId}`).remove()
+      );
+      await Promise.all(deletePromises);
+    }
+
+    // 2. Delete all associated task notifications across all users
+    const notificationsRef = db.ref('notifications');
+    const notifSnapshot = await notificationsRef.once('value');
+    if (notifSnapshot.exists()) {
+      const allNotifications = notifSnapshot.val();
+      const notifPromises: Promise<void>[] = [];
+      for (const [userId, userNotifs] of Object.entries(allNotifications)) {
+        if (userNotifs && typeof userNotifs === 'object') {
+          for (const [notifId, notifData] of Object.entries(userNotifs)) {
+            if (notifId.startsWith(`task_assign_${taskId}`) || notifId.startsWith(`task_rem_${taskId}`)) {
+              notifPromises.push(db.ref(`notifications/${userId}/${notifId}`).remove());
+            }
+          }
+        }
+      }
+      if (notifPromises.length > 0) {
+        await Promise.all(notifPromises);
+        console.log(`[CleanUp] Removed ${notifPromises.length} notifications associated with task ${taskId}`);
+      }
+    }
+
+    // 3. Delete the task itself
+    await db.ref(`tasks/${taskId}`).remove();
+
+    // 4. Update the pending task count for the subsystem if the deleted task was not completed
+    if (task.status !== 'COMPLETED') {
+      const subsRef = db.ref(`subsystems/${subsystemId}/pendingTasks`);
+      await subsRef.transaction((current) => {
+        if (current === null) return 0;
+        return Math.max(0, current - 1);
+      });
+    }
+
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post("/api/tasks/notify-assign", async (req, res) => {
+  try {
+    const { taskId, assignedToId, title, message } = req.body;
+    if (!assignedToId) return res.status(400).json({ error: "assignedToId is required" });
+
+    const snapshot = await admin.database().ref(`users/${assignedToId}`).once("value");
+    if (!snapshot.exists()) {
+      return res.status(404).json({ error: "User profile not found" });
+    }
+    const user = snapshot.val();
+
+    const notifId = `task_assign_${taskId || Date.now()}`;
+    const notification = {
+      title: title || "New Task Assigned 📌",
+      message: message || "You have been assigned a task.",
+      type: 'INFO',
+      timestamp: new Date().toISOString(),
+      read: false,
+      link: 'teams'
+    };
+    await admin.database().ref(`notifications/${assignedToId}/${notifId}`).set(notification);
+
+    if (user.pushToken) {
+      try {
+        await admin.messaging().send({
+          token: user.pushToken,
+          notification: {
+            title: notification.title,
+            body: notification.message
+          },
+          data: {
+            link: 'teams',
+            type: 'INFO'
+          }
+        });
+        console.log(`[FCM] Sent immediate assignment push to ${user.displayName || user.email}`);
+      } catch (fcmError: any) {
+        console.error(`[FCM] Immediate assignment push failed:`, fcmError.message);
+      }
+    }
+
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post("/api/notifications/send-custom", async (req, res) => {
+  try {
+    const { targetType, targetId, title, message } = req.body;
+    if (!targetType) return res.status(400).json({ error: "targetType is required" });
+    if (!title || !message) return res.status(400).json({ error: "title and message are required" });
+
+    const db = admin.database();
+    const usersSnapshot = await db.ref('users').once("value");
+    const users = usersSnapshot.val() || {};
+
+    let targets: [string, any][] = [];
+
+    if (targetType === 'all') {
+      targets = Object.entries(users);
+    } else if (targetType === 'user') {
+      if (!targetId) return res.status(400).json({ error: "targetId is required for user target" });
+      if (users[targetId]) {
+        targets = [[targetId, users[targetId]]];
+      } else {
+        return res.status(404).json({ error: "User not found" });
+      }
+    } else if (targetType === 'team') {
+      if (!targetId) return res.status(400).json({ error: "targetId is required for team target" });
+      const teamId = targetId.toLowerCase().trim();
+      targets = Object.entries(users).filter(([uid, u]: [string, any]) => {
+        const approvedTeams = u.approvedTeams || [];
+        const teams = u.teams || [];
+        return approvedTeams.includes(teamId) || teams.some((t: any) => t.teamId === teamId && t.status === 'APPROVED');
+      });
+    }
+
+    if (targets.length === 0) {
+      return res.status(400).json({ error: "No target users found for selection" });
+    }
+
+    const notifId = `custom_${Date.now()}`;
+    const notification = {
+      title,
+      message,
+      type: 'ANNOUNCEMENT',
+      timestamp: new Date().toISOString(),
+      read: false,
+      link: 'teams'
+    };
+
+    let pushCount = 0;
+    for (const [uid, u] of targets) {
+      await db.ref(`notifications/${uid}/${notifId}`).set(notification);
+      
+      if (u.pushToken) {
+        try {
+          await admin.messaging().send({
+            token: u.pushToken,
+            notification: {
+              title,
+              body: message
+            },
+            data: {
+              link: 'teams',
+              type: 'ANNOUNCEMENT'
+            }
+          });
+          pushCount++;
+        } catch (fcmError: any) {
+          console.error(`[FCM Custom] Failed to send push to ${uid}:`, fcmError.message);
+        }
+      }
+    }
+
+    res.json({ success: true, usersNotified: targets.length, pushDelivered: pushCount });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -1092,6 +1314,26 @@ async function triggerDailyTaskNotifications() {
         
         await setDbData(`notifications/${targetUserId}/${notifId}`, notification);
         console.log(`[Notifications] Sent reminder to ${userName} (${userEmail}) for task "${task.title}"`);
+
+        // Send background push notification if FCM pushToken exists
+        if (targetUser.pushToken) {
+          try {
+            await admin.messaging().send({
+              token: targetUser.pushToken,
+              notification: {
+                title: "📌 Daily Task Reminder",
+                body: `Task "${task.title}" is in progress. Deadline: ${task.deadline}.`
+              },
+              data: {
+                link: 'teams',
+                type: 'INFO'
+              }
+            });
+            console.log(`[FCM] Sent background push notification to ${userName} (${userEmail})`);
+          } catch (fcmError: any) {
+            console.error(`[FCM] Failed to send push to user ${targetUserId}:`, fcmError.message);
+          }
+        }
       }
     }
   } catch (err: any) {

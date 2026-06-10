@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldAlert, Users, CheckCircle2, X, Clock, AlertCircle, UserX } from 'lucide-react';
+import { ShieldAlert, Users, CheckCircle2, X, Clock, AlertCircle, UserX, Loader2, Send, Bell, Radio, Megaphone } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { subscribeToMultipleTeamsPendingMembers, approveMember, rejectMember, subscribeToUsers, updateUserProfile, fetchPendingMembers, fetchAllUsers, deleteUser } from '../services/userService';
 import { UserProfile } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { resolveNameFromEmail } from '../utils/userUtils';
+import { ref, set, get } from 'firebase/database';
+import { rtdb } from '../firebase';
 
 export default function AdminPanel() {
     const { profile } = useAuth();
@@ -12,7 +14,86 @@ export default function AdminPanel() {
     const [approvedMembers, setApprovedMembers] = useState<UserProfile[]>([]);
     const [actionLoading, setActionLoading] = useState<string | null>(null);
     const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
-    const [activeTab, setActiveTab] = useState<'pending' | 'members' | 'users'>('pending');
+    const [activeTab, setActiveTab] = useState<'pending' | 'members' | 'users' | 'broadcast'>('pending');
+    const [customNotif, setCustomNotif] = useState({
+        targetType: 'all' as 'all' | 'user' | 'team',
+        targetId: '',
+        title: '',
+        message: ''
+    });
+
+    const handleSendCustomNotification = async () => {
+        if (!customNotif.title.trim() || !customNotif.message.trim()) {
+            alert("Title and Message are required.");
+            return;
+        }
+        if (customNotif.targetType !== 'all' && !customNotif.targetId) {
+            alert("Please select a target.");
+            return;
+        }
+
+        setActionLoading('sendingNotif');
+        try {
+            // Get all users from RTDB directly - no backend needed
+            const usersSnap = await get(ref(rtdb, 'users'));
+            if (!usersSnap.exists()) throw new Error("No users found in database.");
+            
+            const allUsersData = usersSnap.val() as Record<string, any>;
+            let targets: [string, any][] = [];
+
+            if (customNotif.targetType === 'all') {
+                targets = Object.entries(allUsersData);
+            } else if (customNotif.targetType === 'user') {
+                if (allUsersData[customNotif.targetId]) {
+                    targets = [[customNotif.targetId, allUsersData[customNotif.targetId]]];
+                } else {
+                    throw new Error("Selected user not found.");
+                }
+            } else if (customNotif.targetType === 'team') {
+                const teamId = customNotif.targetId.toLowerCase().trim();
+                targets = Object.entries(allUsersData).filter(([, u]) => {
+                    const approvedTeams = u.approvedTeams || [];
+                    const teams = u.teams || [];
+                    return approvedTeams.includes(teamId) ||
+                        teams.some((t: any) => t.teamId === teamId && t.status === 'APPROVED');
+                });
+            }
+
+            if (targets.length === 0) {
+                throw new Error("No users found matching that target.");
+            }
+
+            const notifId = `custom_${Date.now()}`;
+            const notification = {
+                title: customNotif.title,
+                message: customNotif.message,
+                type: 'ANNOUNCEMENT',
+                timestamp: new Date().toISOString(),
+                read: false,
+                link: 'teams'
+            };
+
+            // Write notification to each target user's notifications path
+            const writes: Promise<void>[] = targets.map(([uid]) =>
+                set(ref(rtdb, `notifications/${uid}/${notifId}`), notification)
+            );
+            await Promise.all(writes);
+
+            // Also try the backend for FCM push (optional, won't fail if offline)
+            fetch('/api/notifications/send-custom', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(customNotif)
+            }).catch(() => { /* FCM push is best-effort */ });
+
+            alert(`✅ Notification sent to ${targets.length} users successfully!`);
+            setCustomNotif({ targetType: 'all', targetId: '', title: '', message: '' });
+        } catch (error: any) {
+            alert(`❌ Failed: ${error.message}`);
+        } finally {
+            setActionLoading(null);
+        }
+    };
 
     const isCaptainMode = profile?.role === 'CAPTAIN';
     const isTeamLead = profile?.role === 'TEAM_LEAD';
@@ -89,11 +170,17 @@ export default function AdminPanel() {
         // Filter out the target team from the member's teams array
         const updatedTeams = (member.teams || []).filter(t => t.teamId !== teamId);
         const updatedApprovedTeams = updatedTeams.filter(t => t.status === 'APPROVED').map(t => t.teamId);
-        await updateUserProfile(member.uid, {
-            teams: updatedTeams,
-            approvedTeams: updatedApprovedTeams,
-        });
-        setActionLoading(null);
+        try {
+            await updateUserProfile(member.uid, {
+                teams: updatedTeams,
+                approvedTeams: updatedApprovedTeams,
+            });
+            await refreshData();
+        } catch (error: any) {
+            alert(error.message || "Failed to remove member.");
+        } finally {
+            setActionLoading(null);
+        }
     };
 
     const handleDeleteUser = async (member: UserProfile) => {
@@ -106,6 +193,7 @@ export default function AdminPanel() {
         setActionLoading(member.uid + 'delete');
         try {
             await deleteUser(member.uid);
+            await refreshData();
         } catch (error: any) {
             alert(error.message);
         } finally {
@@ -139,6 +227,7 @@ export default function AdminPanel() {
             }
         }
         alert(`Cleanup complete. Removed ${successCount} idle users.`);
+        await refreshData();
         setActionLoading(null);
     };
 
@@ -168,10 +257,10 @@ export default function AdminPanel() {
 
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
                 {/* Tab Switcher */}
-                <div className="flex gap-2 p-1 bg-white/5 rounded-2xl w-fit border border-white/5">
+                <div className="flex flex-wrap gap-2 p-1 bg-white/5 rounded-2xl w-fit border border-white/5">
                     <button
                         onClick={() => setActiveTab('pending')}
-                        className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'pending' ? 'bg-primary text-black' : 'text-slate-500 hover:text-white'}`}
+                        className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'pending' ? 'bg-primary text-black' : 'text-slate-500 hover:text-white'}`}
                     >
                         Pending Requests
                         {pendingRequests.length > 0 && (
@@ -182,13 +271,13 @@ export default function AdminPanel() {
                     </button>
                     <button
                         onClick={() => setActiveTab('members')}
-                        className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'members' ? 'bg-primary text-black' : 'text-slate-500 hover:text-white'}`}
+                        className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'members' ? 'bg-primary text-black' : 'text-slate-500 hover:text-white'}`}
                     >
                         Approved Members
                     </button>
                     <button
                         onClick={() => setActiveTab('users')}
-                        className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'users' ? 'bg-primary text-black' : 'text-slate-500 hover:text-white'}`}
+                        className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'users' ? 'bg-primary text-black' : 'text-slate-500 hover:text-white'}`}
                     >
                         App Users
                         {allUsers.length > 0 && (
@@ -197,6 +286,19 @@ export default function AdminPanel() {
                             </span>
                         )}
                     </button>
+                    {isCaptainMode && (
+                        <button
+                            onClick={() => setActiveTab('broadcast')}
+                            className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-1.5 ${
+                                activeTab === 'broadcast'
+                                    ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/30'
+                                    : 'text-orange-400 hover:text-orange-300 hover:bg-orange-500/10 border border-orange-500/20'
+                            }`}
+                        >
+                            <Megaphone size={12} />
+                            📢 Broadcast
+                        </button>
+                    )}
                 </div>
 
                 {isCaptainMode && (
@@ -394,6 +496,120 @@ export default function AdminPanel() {
                         </div>
                     </motion.div>
                 )}
+                {activeTab === 'broadcast' && isCaptainMode && (
+                    <motion.div key="broadcast" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }}>
+                        <div className="glass-panel p-8 rounded-3xl border-t-2 border-t-orange-500/40">
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="w-12 h-12 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center">
+                                    <Megaphone size={24} className="text-orange-400" />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-bold text-white">Captain Broadcast</h3>
+                                    <p className="text-xs text-slate-400 mt-0.5">Send Chrome notifications to any team member or the entire team instantly.</p>
+                                </div>
+                            </div>
+
+                            <div className="space-y-5">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div className="flex flex-col gap-1.5">
+                                        <label className="text-[10px] uppercase font-bold text-slate-400">Target Audience</label>
+                                        <select
+                                            value={customNotif.targetType}
+                                            onChange={e => setCustomNotif({...customNotif, targetType: e.target.value as any, targetId: ''})}
+                                            className="bg-black/30 border border-white/10 text-slate-200 text-sm rounded-xl p-3 outline-none focus:border-orange-500 transition-all"
+                                        >
+                                            <option value="all" className="bg-slate-900">🌐 Everyone (All Users)</option>
+                                            <option value="team" className="bg-slate-900">👥 Specific Subsystem Team</option>
+                                            <option value="user" className="bg-slate-900">👤 Specific User</option>
+                                        </select>
+                                    </div>
+
+                                    {customNotif.targetType === 'team' && (
+                                        <div className="flex flex-col gap-1.5">
+                                            <label className="text-[10px] uppercase font-bold text-slate-400">Select Subsystem</label>
+                                            <select
+                                                value={customNotif.targetId}
+                                                onChange={e => setCustomNotif({...customNotif, targetId: e.target.value})}
+                                                className="bg-black/30 border border-white/10 text-slate-200 text-sm rounded-xl p-3 outline-none focus:border-orange-500 transition-all"
+                                            >
+                                                <option value="" className="bg-slate-900">-- Choose Subsystem --</option>
+                                                <option value="steering" className="bg-slate-900">Steering</option>
+                                                <option value="suspension" className="bg-slate-900">Suspension</option>
+                                                <option value="brakes" className="bg-slate-900">Brakes</option>
+                                                <option value="transmission" className="bg-slate-900">Transmission</option>
+                                                <option value="design" className="bg-slate-900">Design</option>
+                                                <option value="electrical" className="bg-slate-900">Electricals</option>
+                                                <option value="innovation" className="bg-slate-900">Innovation</option>
+                                                <option value="autonomous" className="bg-slate-900">Autonomous</option>
+                                                <option value="cost" className="bg-slate-900">Cost</option>
+                                                <option value="pro" className="bg-slate-900">PRO</option>
+                                            </select>
+                                        </div>
+                                    )}
+
+                                    {customNotif.targetType === 'user' && (
+                                        <div className="flex flex-col gap-1.5">
+                                            <label className="text-[10px] uppercase font-bold text-slate-400">Select User</label>
+                                            <select
+                                                value={customNotif.targetId}
+                                                onChange={e => setCustomNotif({...customNotif, targetId: e.target.value})}
+                                                className="bg-black/30 border border-white/10 text-slate-200 text-sm rounded-xl p-3 outline-none focus:border-orange-500 transition-all"
+                                            >
+                                                <option value="" className="bg-slate-900">-- Choose User --</option>
+                                                {allUsers.map(usr => (
+                                                    <option key={usr.uid} value={usr.uid} className="bg-slate-900">
+                                                        {usr.displayName || usr.email} ({usr.role})
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    )}
+
+                                    <div className="flex flex-col gap-1.5">
+                                        <label className="text-[10px] uppercase font-bold text-slate-400">Notification Title</label>
+                                        <input
+                                            type="text"
+                                            value={customNotif.title}
+                                            onChange={e => setCustomNotif({...customNotif, title: e.target.value})}
+                                            placeholder="e.g. 📢 Everyone Assemble!"
+                                            className="bg-black/30 border border-white/10 text-slate-200 text-sm rounded-xl p-3 outline-none focus:border-orange-500 transition-all placeholder:text-slate-600"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="flex flex-col gap-1.5">
+                                    <label className="text-[10px] uppercase font-bold text-slate-400">Message Body</label>
+                                    <textarea
+                                        value={customNotif.message}
+                                        onChange={e => setCustomNotif({...customNotif, message: e.target.value})}
+                                        placeholder="e.g. Everyone assemble at drone lab at 3pm for today's brakes class."
+                                        rows={4}
+                                        className="bg-black/30 border border-white/10 text-slate-200 text-sm rounded-xl p-3 outline-none focus:border-orange-500 transition-all placeholder:text-slate-600 resize-none"
+                                    />
+                                </div>
+
+                                <div className="flex items-center gap-4 p-4 bg-orange-500/5 border border-orange-500/20 rounded-2xl">
+                                    <Radio size={20} className="text-orange-400 flex-shrink-0" />
+                                    <p className="text-xs text-slate-400 leading-relaxed">
+                                        This notification will appear in the <strong className="text-white">in-app notification bell</strong> AND as a <strong className="text-orange-300">Chrome/Android browser notification</strong> for users who have enabled alerts.
+                                    </p>
+                                </div>
+
+                                <button
+                                    onClick={handleSendCustomNotification}
+                                    disabled={actionLoading === 'sendingNotif' || !customNotif.title.trim() || !customNotif.message.trim()}
+                                    className="w-full sm:w-auto px-8 py-3.5 bg-orange-500 hover:bg-orange-400 disabled:bg-orange-500/30 text-white font-bold rounded-2xl text-sm uppercase tracking-wider transition-all shadow-lg shadow-orange-500/20 flex items-center justify-center gap-2 cursor-pointer"
+                                >
+                                    {actionLoading === 'sendingNotif'
+                                        ? <><Loader2 size={16} className="animate-spin" /> Sending...</>
+                                        : <><Send size={16} /> Send Broadcast Notification</>
+                                    }
+                                </button>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+
                 {activeTab === 'users' && (
                     <motion.div key="users" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }}>
                         <div className="glass-panel p-8 rounded-3xl border-t-2 border-t-primary/30">
@@ -404,6 +620,102 @@ export default function AdminPanel() {
                                     {allUsers.length} total
                                 </span>
                             </h3>
+
+                            {false && isCaptainMode && (
+                                <div className="mb-8 p-6 bg-white/[0.02] border border-primary/20 rounded-2xl space-y-4">
+                                    <h4 className="font-bold text-primary text-sm uppercase tracking-wider flex items-center gap-2">
+                                        <Bell size={16} />
+                                        Broadcast / Send Custom Notification
+                                    </h4>
+                                    
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div className="flex flex-col gap-1.5">
+                                            <label className="text-[10px] uppercase font-bold text-slate-400">Target Audience</label>
+                                            <select 
+                                                value={customNotif.targetType} 
+                                                onChange={e => setCustomNotif({...customNotif, targetType: e.target.value as any, targetId: ''})}
+                                                className="bg-black/30 border border-white/10 text-slate-200 text-xs rounded-xl p-2.5 outline-none focus:border-primary transition-all"
+                                            >
+                                                <option value="all" className="bg-slate-900 text-slate-200">Everyone (Broadcast)</option>
+                                                <option value="team" className="bg-slate-900 text-slate-200">Specific Subsystem Team</option>
+                                                <option value="user" className="bg-slate-900 text-slate-200">Specific Registered User</option>
+                                            </select>
+                                        </div>
+
+                                        {customNotif.targetType === 'team' && (
+                                            <div className="flex flex-col gap-1.5">
+                                                <label className="text-[10px] uppercase font-bold text-slate-400">Select Subsystem</label>
+                                                <select 
+                                                    value={customNotif.targetId} 
+                                                    onChange={e => setCustomNotif({...customNotif, targetId: e.target.value})}
+                                                    className="bg-black/30 border border-white/10 text-slate-200 text-xs rounded-xl p-2.5 outline-none focus:border-primary transition-all"
+                                                >
+                                                    <option value="" className="bg-slate-900 text-slate-200">-- Choose Subsystem --</option>
+                                                    <option value="steering" className="bg-slate-900 text-slate-200">Steering</option>
+                                                    <option value="suspension" className="bg-slate-900 text-slate-200">Suspension</option>
+                                                    <option value="brakes" className="bg-slate-900 text-slate-200">Brakes</option>
+                                                    <option value="transmission" className="bg-slate-900 text-slate-200">Transmission</option>
+                                                    <option value="design" className="bg-slate-900 text-slate-200">Design</option>
+                                                    <option value="electrical" className="bg-slate-900 text-slate-200">Electricals</option>
+                                                    <option value="innovation" className="bg-slate-900 text-slate-200">Innovation</option>
+                                                    <option value="autonomous" className="bg-slate-900 text-slate-200">Autonomous</option>
+                                                    <option value="cost" className="bg-slate-900 text-slate-200">Cost</option>
+                                                    <option value="pro" className="bg-slate-900 text-slate-200">PRO</option>
+                                                </select>
+                                            </div>
+                                        )}
+
+                                        {customNotif.targetType === 'user' && (
+                                            <div className="flex flex-col gap-1.5">
+                                                <label className="text-[10px] uppercase font-bold text-slate-400">Select User</label>
+                                                <select 
+                                                    value={customNotif.targetId} 
+                                                    onChange={e => setCustomNotif({...customNotif, targetId: e.target.value})}
+                                                    className="bg-black/30 border border-white/10 text-slate-200 text-xs rounded-xl p-2.5 outline-none focus:border-primary transition-all"
+                                                >
+                                                    <option value="" className="bg-slate-900 text-slate-200">-- Choose User --</option>
+                                                    {allUsers.map(usr => (
+                                                        <option key={usr.uid} value={usr.uid} className="bg-slate-900 text-slate-200">
+                                                            {usr.displayName || usr.email} ({usr.role})
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        )}
+
+                                        <div className="flex flex-col gap-1.5">
+                                            <label className="text-[10px] uppercase font-bold text-slate-400">Message Title</label>
+                                            <input 
+                                                type="text" 
+                                                value={customNotif.title}
+                                                onChange={e => setCustomNotif({...customNotif, title: e.target.value})}
+                                                placeholder="e.g. 📢 Urgent Announcement"
+                                                className="bg-black/30 border border-white/10 text-slate-200 text-xs rounded-xl p-2.5 outline-none focus:border-primary transition-all placeholder:text-slate-650"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="flex flex-col gap-1.5">
+                                        <label className="text-[10px] uppercase font-bold text-slate-400">Message Body</label>
+                                        <textarea 
+                                            value={customNotif.message}
+                                            onChange={e => setCustomNotif({...customNotif, message: e.target.value})}
+                                            placeholder="Write announcement details here..."
+                                            rows={3}
+                                            className="bg-black/30 border border-white/10 text-slate-200 text-xs rounded-xl p-2.5 outline-none focus:border-primary transition-all placeholder:text-slate-650 resize-none"
+                                        />
+                                    </div>
+
+                                    <button 
+                                        onClick={handleSendCustomNotification}
+                                        disabled={actionLoading === 'sendingNotif'}
+                                        className="px-6 py-2.5 bg-primary text-black font-bold rounded-xl text-xs uppercase hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                                    >
+                                        {actionLoading === 'sendingNotif' ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+                                        Send Notification
+                                    </button>
+                                </div>
+                            )}
 
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {allUsers.map(u => (

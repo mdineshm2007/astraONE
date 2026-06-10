@@ -5,6 +5,7 @@ import { ref, get, set, update, onValue, onDisconnect } from 'firebase/database'
 import { auth, rtdb } from '../firebase';
 import { UserProfile, UserRole } from '../types';
 import { resolveNameFromEmail } from '../utils/userUtils';
+import { setupPushNotifications } from '../services/pushNotificationService';
 
 interface AuthContextType {
   user: User | null;
@@ -244,7 +245,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         update(userRef, { isOnline: true }).catch(e => console.warn("[Auth] Presence update failed:", e.message));
         onDisconnect(statusRef).set(false);
         onDisconnect(lastActiveRef).set(new Date().toISOString());
-
       } catch (err) {
         console.error("[Auth] Setup error:", err);
         clearTimeout(softTimeoutId);
@@ -257,11 +257,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       unsubAuth();
       if (unsubProfile) unsubProfile();
     };
-  }, [fetchProfileFallback]); // Added dependency to be correct
+  }, [fetchProfileFallback]);
+
+  useEffect(() => {
+    if (profile?.uid) {
+      setupPushNotifications(profile.uid).catch(err => {
+        console.error("[Auth] setupPushNotifications error:", err);
+      });
+    }
+  }, [profile?.uid]);
 
   const signIn = async () => {
     try {
-      // Capacitor check: Use native Google Auth if available
       if ((window as any).Capacitor?.isNativePlatform()) {
         console.log("Using native Capacitor Google Auth");
         const result = await FirebaseAuthentication.signInWithGoogle();

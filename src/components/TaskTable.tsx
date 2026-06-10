@@ -26,9 +26,10 @@ interface TaskTableProps {
   onUpdateProgress: (task: Task) => void;
   onDeleteTask?: (taskId: string) => void;
   canManage: boolean;
+  currentUserId?: string;
 }
 
-export default function TaskTable({ tasks, onUpdateProgress, onDeleteTask, canManage }: TaskTableProps) {
+export default function TaskTable({ tasks, onUpdateProgress, onDeleteTask, canManage, currentUserId }: TaskTableProps) {
   
   const exportToCSV = async () => {
     try {
@@ -236,7 +237,7 @@ export default function TaskTable({ tasks, onUpdateProgress, onDeleteTask, canMa
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                    <div className="flex items-center gap-2 transition-all">
                       <button 
                         onClick={() => onUpdateProgress(task)}
                         className="p-2 text-primary hover:bg-primary/10 rounded-xl transition-all"
@@ -244,7 +245,7 @@ export default function TaskTable({ tasks, onUpdateProgress, onDeleteTask, canMa
                       >
                         <Edit3 size={16} />
                       </button>
-                      {canManage && onDeleteTask && (
+                      {(canManage || (currentUserId && (task.createdBy === currentUserId || task.assignedToId === currentUserId))) && onDeleteTask && (
                         <button 
                           onClick={() => onDeleteTask(task.id)}
                           className="p-2 text-slate-500 hover:text-error hover:bg-error/10 rounded-xl transition-all"

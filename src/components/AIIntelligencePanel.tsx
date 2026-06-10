@@ -28,7 +28,7 @@ interface AIIntelligencePanelProps {
 
 export default function AIIntelligencePanel({ type, data, context, subsystem, members = [] }: AIIntelligencePanelProps) {
   const { profile } = useAuth();
-  const [analysis, setAnalysis] = useState<string | TeamAnalysis | null>(null);
+  const [analysis, setAnalysis] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isVsExpanded, setIsVsExpanded] = useState(false);
