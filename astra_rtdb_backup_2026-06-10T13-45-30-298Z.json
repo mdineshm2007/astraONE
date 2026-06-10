@@ -1,0 +1,3235 @@
+{
+  "drive_config": {
+    "root": {
+      "id": "1_zERPYRqi74NG4utlTrxhHFvLelZV48u",
+      "name": "ASTRA_SOLAR_CAR_2026",
+      "webViewLink": "https://drive.google.com/drive/folders/1_zERPYRqi74NG4utlTrxhHFvLelZV48u"
+    },
+    "status": {
+      "connected": true,
+      "timestamp": 1777730041406
+    },
+    "tokens": {
+      "access_token": "ya29.a0AQvPyIOORFSiT5yRNGaXXfeUl4YkPtM1vVbt0Wck2qsn1V7qKZ0uOrpu2OJB3qOabglWyJ-lZEWlpEmBF234oU-5eN67eTP94QDLxL6pyVqibHLyhTUgLPgFBOaaZiqGylW7MUhF_f8kkTPUa1PTCmgUXkCVFsmPGdL1J-ugDTPIXWLqymTqXV_zX0FpKM4pXuiYoS3FCwaCgYKAW4SARESFQHGX2Mi6zpLF4oM7qHCOtPF-t2twA0209",
+      "expiry_date": 1780164144105,
+      "refresh_token": "1//0gcD8NF1LJkPoCgYIARAAGBASNgF-L9IrcJwHSyGtt80jqc8D8_7HIitYZkyul72IKYv2jMNFAe4h-VcQ3Eo6NcUUYd18L2n3Yw",
+      "scope": "https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/drive.file",
+      "token_type": "Bearer"
+    }
+  },
+  "drive_folders": {
+    "bills": {
+      "Autonomous": {
+        "id": "12BNP1u3UrTmiCEyFCb_lZJ03CLuvWpkE",
+        "name": "Autonomous_Bills",
+        "webViewLink": "https://drive.google.com/drive/folders/12BNP1u3UrTmiCEyFCb_lZJ03CLuvWpkE"
+      },
+      "Brakes": {
+        "id": "1CxPJdLu8ZWXHHMjNr9ArfV2GtnOIYicr",
+        "name": "Brakes_Bills",
+        "webViewLink": "https://drive.google.com/drive/folders/1CxPJdLu8ZWXHHMjNr9ArfV2GtnOIYicr"
+      },
+      "Cost": {
+        "id": "1UYIIJxi5LNDjkJHuv8ScfdyJBdalWkw1",
+        "name": "Cost_Bills",
+        "webViewLink": "https://drive.google.com/drive/folders/1UYIIJxi5LNDjkJHuv8ScfdyJBdalWkw1"
+      },
+      "Dashboard": {
+        "id": "1vy7yuRc0J9vavXDFd7O70tGCTtT7eN4D",
+        "name": "Dashboard_Bills",
+        "webViewLink": "https://drive.google.com/drive/folders/1vy7yuRc0J9vavXDFd7O70tGCTtT7eN4D"
+      },
+      "Design": {
+        "id": "1tZaLE11W8BaenN6SREeQaeCF_cTkAHUA",
+        "name": "Design_Bills",
+        "webViewLink": "https://drive.google.com/drive/folders/1tZaLE11W8BaenN6SREeQaeCF_cTkAHUA"
+      },
+      "Drive_Train": {
+        "id": "1poE1i_lblQWjf_9VMMKjEICuSwMygMuD",
+        "name": "Drive_Train_Bills",
+        "webViewLink": "https://drive.google.com/drive/folders/1poE1i_lblQWjf_9VMMKjEICuSwMygMuD"
+      },
+      "Electricals": {
+        "id": "1bUE2WfU6c8FRtuYp-EinZPpj4l4Ku5mu",
+        "name": "Electricals_Bills",
+        "webViewLink": "https://drive.google.com/drive/folders/1bUE2WfU6c8FRtuYp-EinZPpj4l4Ku5mu"
+      },
+      "Frame": {
+        "id": "1doqI675TB5DutZTMTo25Nj_4WA7cELcu",
+        "name": "Frame_Bills",
+        "webViewLink": "https://drive.google.com/drive/folders/1doqI675TB5DutZTMTo25Nj_4WA7cELcu"
+      },
+      "Innovation": {
+        "id": "1ed8qA1tawraiDEVmZzoUyNYUlf77Ql_O",
+        "name": "Innovation_Bills",
+        "webViewLink": "https://drive.google.com/drive/folders/1ed8qA1tawraiDEVmZzoUyNYUlf77Ql_O"
+      },
+      "Media-Sponsorship": {
+        "id": "1p4YQhdWxs2FPQ-XMs_jVOvCujZ6w1WIH",
+        "name": "Media-Sponsorship_Bills",
+        "webViewLink": "https://drive.google.com/drive/folders/1p4YQhdWxs2FPQ-XMs_jVOvCujZ6w1WIH"
+      },
+      "Others": {
+        "id": "1l9LtLh29Blu6HCDTYzpv0HmUWutiQakh",
+        "name": "Others_Bills",
+        "webViewLink": "https://drive.google.com/drive/folders/1l9LtLh29Blu6HCDTYzpv0HmUWutiQakh"
+      },
+      "PRO": {
+        "id": "18StqgSdeFDhQBgUyUqOtaMh8Mf5vW099",
+        "name": "PRO_Bills",
+        "webViewLink": "https://drive.google.com/drive/folders/18StqgSdeFDhQBgUyUqOtaMh8Mf5vW099"
+      },
+      "Safety_Equipments": {
+        "id": "1eAwEeBi8gbSSmz-TfRS2PhHjXf-otfAe",
+        "name": "Safety_Equipments_Bills",
+        "webViewLink": "https://drive.google.com/drive/folders/1eAwEeBi8gbSSmz-TfRS2PhHjXf-otfAe"
+      },
+      "Seat": {
+        "id": "1iOoEwlsgsyCY2qekFLDVYJXbfvUuBasz",
+        "name": "Seat_Bills",
+        "webViewLink": "https://drive.google.com/drive/folders/1iOoEwlsgsyCY2qekFLDVYJXbfvUuBasz"
+      },
+      "Steering": {
+        "id": "1fLT1Gf2PuQf4rFaZFZ9KtWqDR1VHWWkF",
+        "name": "Steering_Bills",
+        "webViewLink": "https://drive.google.com/drive/folders/1fLT1Gf2PuQf4rFaZFZ9KtWqDR1VHWWkF"
+      },
+      "Suspension": {
+        "id": "1cDh_Hvm0_DhAHEhwCtecD5wBx6JObfR-",
+        "name": "Suspension_Bills",
+        "webViewLink": "https://drive.google.com/drive/folders/1cDh_Hvm0_DhAHEhwCtecD5wBx6JObfR-"
+      },
+      "Transmission": {
+        "id": "14seefG18FLr7pKAAn0c71sV_ZQPd_-i7",
+        "name": "Transmission_Bills",
+        "webViewLink": "https://drive.google.com/drive/folders/14seefG18FLr7pKAAn0c71sV_ZQPd_-i7"
+      },
+      "Wheel_Tyre": {
+        "id": "1vTVl7FOI_kpz063KD8b17wKwm9KdR8X0",
+        "name": "Wheel_Tyre_Bills",
+        "webViewLink": "https://drive.google.com/drive/folders/1vTVl7FOI_kpz063KD8b17wKwm9KdR8X0"
+      }
+    },
+    "progress": {
+      "Autonomous": {
+        "id": "1PodYGvLMu2JsweEvEpzuQpmWivqivZCS",
+        "name": "Autonomous_Progress",
+        "webViewLink": "https://drive.google.com/drive/folders/1PodYGvLMu2JsweEvEpzuQpmWivqivZCS"
+      },
+      "Brakes": {
+        "id": "1jmcbZZWNFfLIH9thONrkkdB56RIpfWu0",
+        "name": "Brakes_Progress",
+        "webViewLink": "https://drive.google.com/drive/folders/1jmcbZZWNFfLIH9thONrkkdB56RIpfWu0"
+      },
+      "Cost": {
+        "id": "1NnUzEs4KCx9Qsj3M2LUSvgYVdRIg53pf",
+        "name": "Cost_Progress",
+        "webViewLink": "https://drive.google.com/drive/folders/1NnUzEs4KCx9Qsj3M2LUSvgYVdRIg53pf"
+      },
+      "Design": {
+        "id": "1U2yytC5uJ64Pp-bi1FZWouEDgXbprXf1",
+        "name": "Design_Progress",
+        "webViewLink": "https://drive.google.com/drive/folders/1U2yytC5uJ64Pp-bi1FZWouEDgXbprXf1"
+      },
+      "Electricals": {
+        "id": "1M7U6KgMP60v6hlVS2438taqRxXZxaS6M",
+        "name": "Electricals_Progress",
+        "webViewLink": "https://drive.google.com/drive/folders/1M7U6KgMP60v6hlVS2438taqRxXZxaS6M"
+      },
+      "Innovation": {
+        "id": "1b9NOPOn069kEMytJENpV25bNLpFX82V4",
+        "name": "Innovation_Progress",
+        "webViewLink": "https://drive.google.com/drive/folders/1b9NOPOn069kEMytJENpV25bNLpFX82V4"
+      },
+      "Media-Sponsorship": {
+        "id": "1cP81Ydo03rTW6BwY0OdldansdptmBOHX",
+        "name": "Media-Sponsorship_Progress",
+        "webViewLink": "https://drive.google.com/drive/folders/1cP81Ydo03rTW6BwY0OdldansdptmBOHX"
+      },
+      "PRO": {
+        "id": "1jNmUVp21b7pBykJCO6LqX1gyyZg7mSRO",
+        "name": "PRO_Progress",
+        "webViewLink": "https://drive.google.com/drive/folders/1jNmUVp21b7pBykJCO6LqX1gyyZg7mSRO"
+      },
+      "Steering": {
+        "id": "1ii9aaVSxFoFW5K3_H57CWeWgNepzQM6J",
+        "name": "Steering_Progress",
+        "webViewLink": "https://drive.google.com/drive/folders/1ii9aaVSxFoFW5K3_H57CWeWgNepzQM6J"
+      },
+      "Suspension": {
+        "id": "143omDRir-1TSWwPx21K1GBnIWWOwXioe",
+        "name": "Suspension_Progress",
+        "webViewLink": "https://drive.google.com/drive/folders/143omDRir-1TSWwPx21K1GBnIWWOwXioe"
+      },
+      "Transmission": {
+        "id": "1NSUGaI_lVp_NZeirPExbh_yD2yZ5-IPH",
+        "name": "Transmission_Progress",
+        "webViewLink": "https://drive.google.com/drive/folders/1NSUGaI_lVp_NZeirPExbh_yD2yZ5-IPH"
+      }
+    }
+  },
+  "finances": {
+    "bom": {
+      "Innovation": {
+        "-OrEjNAO4cmnjfx2Zcf3": {
+          "category": "Innovation",
+          "date": "27/04/26",
+          "partName": "esp32",
+          "remarks": "+15% gst",
+          "sno": "1",
+          "totalMaterialCost": 400,
+          "type": "Purchased",
+          "vendor": "sabarish tronics"
+        },
+        "-OtinQ075yeabrQJG1ux": {
+          "category": "Innovation",
+          "date": "28/05/26",
+          "partName": "gsm sim 808",
+          "remarks": "+18% GST",
+          "sno": "2",
+          "totalMaterialCost": 1688,
+          "type": "Purchased",
+          "vendor": "robo.in"
+        },
+        "-OufYWA9490ZqiI9tIrM": {
+          "category": "Innovation",
+          "date": "09/06/26",
+          "partName": "pi 5",
+          "remarks": "",
+          "sno": "3",
+          "totalMaterialCost": 20000,
+          "type": "Purchased",
+          "vendor": "robu.in"
+        }
+      },
+      "Steering": {
+        "-OrBdQCuyAP7Xv3cDrbx": {
+          "category": "Steering",
+          "date": "30/04/26",
+          "partName": "5421",
+          "remarks": "15000",
+          "sno": "1",
+          "totalMaterialCost": 200,
+          "type": "Purchased"
+        }
+      },
+      "Suspension": {
+        "-OuMI6-BRupEZsJ1x673": {
+          "category": "Suspension",
+          "date": "05/06/26",
+          "partName": "",
+          "remarks": "",
+          "sno": "1",
+          "totalMaterialCost": 0,
+          "type": "Purchased",
+          "vendor": ""
+        }
+      }
+    },
+    "teams": {
+      "Innovation": 22088,
+      "Steering": 200,
+      "Suspension": 0
+    }
+  },
+  "logs": {
+    "Nr5e3Au63BTYb94HQxT1Kux6OOh1": {
+      "-Or3r_2kbZbJoIzqQPqB": {
+        "action": "CREATE_TASK",
+        "details": {
+          "subsystem": "innovation",
+          "title": "dashboard"
+        },
+        "timestamp": "2026-04-25T13:39:57.509Z"
+      },
+      "-Or3seUH2jxxih1zN40e": {
+        "action": "UPDATE_PROGRESS",
+        "details": {
+          "progress": 25,
+          "remarks": "",
+          "taskId": "-Or3rZuiVpKME47KZReg"
+        },
+        "timestamp": "2026-04-25T13:44:41.895Z"
+      },
+      "-Or3skez2jQKA6MSSTt9": {
+        "action": "UPDATE_PROGRESS",
+        "details": {
+          "progress": 25,
+          "remarks": "",
+          "taskId": "-Or3rZuiVpKME47KZReg"
+        },
+        "timestamp": "2026-04-25T13:45:07.238Z"
+      },
+      "-Or3wfV0Bx3k3zdu0DuT": {
+        "action": "UPDATE_PROGRESS",
+        "details": {
+          "progress": 100,
+          "remarks": "",
+          "taskId": "-Or3rZuiVpKME47KZReg"
+        },
+        "timestamp": "2026-04-25T14:02:14.599Z"
+      },
+      "-Or3wjqqVF9zRBBGY4cJ": {
+        "action": "UPDATE_PROGRESS",
+        "details": {
+          "progress": 50,
+          "remarks": "",
+          "taskId": "-Or3rZuiVpKME47KZReg"
+        },
+        "timestamp": "2026-04-25T14:02:32.444Z"
+      },
+      "-Or4Kq1WO4P57KJXEPzD": {
+        "action": "UPDATE_PROGRESS",
+        "details": {
+          "progress": 100,
+          "remarks": "",
+          "taskId": "-Or3rZuiVpKME47KZReg"
+        },
+        "timestamp": "2026-04-25T15:52:11.510Z"
+      },
+      "-Or4c0HTpa99h02HwNlz": {
+        "action": "UPDATE_PROGRESS",
+        "details": {
+          "progress": 55,
+          "remarks": "",
+          "taskId": "-Or3rZuiVpKME47KZReg"
+        },
+        "timestamp": "2026-04-25T17:11:36.152Z"
+      },
+      "-Or4cQgn9mNJXnNRP2Ks": {
+        "action": "UPDATE_PROGRESS",
+        "details": {
+          "progress": 20,
+          "remarks": "",
+          "taskId": "-Or3rZuiVpKME47KZReg"
+        },
+        "timestamp": "2026-04-25T17:13:24.333Z"
+      },
+      "-Or4cVc2Lg8DawOr8S2G": {
+        "action": "UPDATE_PROGRESS",
+        "details": {
+          "progress": 85,
+          "remarks": "",
+          "taskId": "-Or3rZuiVpKME47KZReg"
+        },
+        "timestamp": "2026-04-25T17:13:44.510Z"
+      },
+      "-Or4jN_6iHaJ1kEuxtWP": {
+        "action": "UPDATE_PROGRESS",
+        "details": {
+          "progress": 50,
+          "taskId": "-Or3rZuiVpKME47KZReg"
+        },
+        "timestamp": "2026-04-25T17:43:46.559Z"
+      },
+      "-Or76yyuexjfnOgSdg-y": {
+        "action": "CREATE_TASK",
+        "details": {
+          "subsystem": "innovation",
+          "title": "dashboard"
+        },
+        "timestamp": "2026-04-26T04:50:30.498Z"
+      },
+      "-Or7jCR-64f2X4Vt_GAL": {
+        "action": "UPDATE_PROGRESS",
+        "details": {
+          "progress": 25,
+          "taskId": "-Or76ypaLwnd1U5MnPOE"
+        },
+        "timestamp": "2026-04-26T07:41:52.792Z"
+      },
+      "-Or7rnZ9etOi-EulHmsO": {
+        "action": "UPDATE_PROGRESS",
+        "details": {
+          "progress": 25,
+          "taskId": "-Or76ypaLwnd1U5MnPOE"
+        },
+        "timestamp": "2026-04-26T08:19:26.030Z"
+      },
+      "-Or7yHbVVPaK5Pnm34FP": {
+        "action": "UPDATE_PROGRESS",
+        "details": {
+          "progress": 25,
+          "taskId": "-Or76ypaLwnd1U5MnPOE"
+        },
+        "timestamp": "2026-04-26T08:47:46.138Z"
+      },
+      "-Or96Q-BDhc6rMNCLQv2": {
+        "action": "UPDATE_PROGRESS",
+        "details": {
+          "progress": 50,
+          "taskId": "-Or76ypaLwnd1U5MnPOE"
+        },
+        "timestamp": "2026-04-26T14:07:15.672Z"
+      },
+      "-OrC6R6C_rvwl3Zh_Uig": {
+        "action": "UPDATE_PROGRESS",
+        "details": {
+          "progress": 55,
+          "taskId": "-Or76ypaLwnd1U5MnPOE"
+        },
+        "timestamp": "2026-04-27T04:06:12.128Z"
+      },
+      "-OujejQAufiMumCwuoHI": {
+        "action": "CREATE_TASK",
+        "details": {
+          "subsystem": "steering",
+          "title": "Injury mapping accident alert"
+        },
+        "timestamp": "2026-06-10T03:54:37.007Z"
+      },
+      "-Oujf835dTJkMkbEU4vJ": {
+        "action": "UPDATE_PROGRESS",
+        "details": {
+          "progress": 25,
+          "taskId": "-OujejFaPLECADEjfQp7"
+        },
+        "timestamp": "2026-06-10T03:56:22.026Z"
+      }
+    },
+    "g7fTr9a3TxO6Mb3QEBGid8yydKj2": {
+      "-Or4kE2v0qd80z0B8onx": {
+        "action": "UPDATE_PROGRESS",
+        "details": {
+          "progress": 50,
+          "taskId": "-Or3rZuiVpKME47KZReg"
+        },
+        "timestamp": "2026-04-25T17:47:29.737Z"
+      },
+      "-Or4kFU89WtN9x4wtv7q": {
+        "action": "UPDATE_PROGRESS",
+        "details": {
+          "progress": 75,
+          "taskId": "-Or3rZuiVpKME47KZReg"
+        },
+        "timestamp": "2026-04-25T17:47:35.575Z"
+      },
+      "-Or7j0I0ylH7XUlr3viu": {
+        "action": "UPDATE_PROGRESS",
+        "details": {
+          "progress": 0,
+          "taskId": "-Or76ypaLwnd1U5MnPOE"
+        },
+        "timestamp": "2026-04-26T07:41:03.132Z"
+      }
+    },
+    "undefined": {
+      "-Or3jDpSMWqbIw607M6R": {
+        "action": "CREATE_NOTE",
+        "details": {
+          "title": "dashboard of vehicle",
+          "type": "GENERAL"
+        },
+        "timestamp": "2026-04-25T13:03:29.189Z"
+      },
+      "-Or3ouBJzph2s7UIrrLU": {
+        "action": "CREATE_NOTE",
+        "details": {
+          "title": "Test Note",
+          "type": "GENERAL"
+        },
+        "timestamp": "2026-04-25T13:28:17.599Z"
+      }
+    }
+  },
+  "notifications": {
+    "3zOk2HDdgIhsAAt4ldwwfzLVupH3": {
+      "broadcast_1781080522509": {
+        "link": "teams",
+        "message": "Everyone Assemble at drone lab at 3pm for todays brakes class",
+        "read": false,
+        "timestamp": "2026-06-10T08:35:22.513Z",
+        "title": "📢 Urgent Announcement",
+        "type": "INFO"
+      },
+      "custom_1781083033959": {
+        "link": "dashboard",
+        "message": "Everyone Assemble at drone lab at 3pm for todays brakes class",
+        "read": false,
+        "timestamp": "2026-06-10T09:17:13.959Z",
+        "title": "📢 Urgent Announcement",
+        "type": "INFO"
+      }
+    },
+    "4iZ64ijOXlbaBH4TvwhazHz91y02": {
+      "broadcast_1781080522509": {
+        "link": "teams",
+        "message": "Everyone Assemble at drone lab at 3pm for todays brakes class",
+        "read": false,
+        "timestamp": "2026-06-10T08:35:22.513Z",
+        "title": "📢 Urgent Announcement",
+        "type": "INFO"
+      },
+      "custom_1781083033959": {
+        "link": "dashboard",
+        "message": "Everyone Assemble at drone lab at 3pm for todays brakes class",
+        "read": false,
+        "timestamp": "2026-06-10T09:17:13.959Z",
+        "title": "📢 Urgent Announcement",
+        "type": "INFO"
+      }
+    },
+    "6uVzVcDinLSB14Ndo8AGHFCisWv2": {
+      "broadcast_1781080522509": {
+        "link": "teams",
+        "message": "Everyone Assemble at drone lab at 3pm for todays brakes class",
+        "read": false,
+        "timestamp": "2026-06-10T08:35:22.513Z",
+        "title": "📢 Urgent Announcement",
+        "type": "INFO"
+      },
+      "custom_1781083033959": {
+        "link": "dashboard",
+        "message": "Everyone Assemble at drone lab at 3pm for todays brakes class",
+        "read": false,
+        "timestamp": "2026-06-10T09:17:13.959Z",
+        "title": "📢 Urgent Announcement",
+        "type": "INFO"
+      }
+    },
+    "BE9ErnAPdkeM8fC4zIJCmWn8eC02": {
+      "broadcast_1781080522509": {
+        "link": "teams",
+        "message": "Everyone Assemble at drone lab at 3pm for todays brakes class",
+        "read": false,
+        "timestamp": "2026-06-10T08:35:22.513Z",
+        "title": "📢 Urgent Announcement",
+        "type": "INFO"
+      },
+      "custom_1781083033959": {
+        "link": "dashboard",
+        "message": "Everyone Assemble at drone lab at 3pm for todays brakes class",
+        "read": false,
+        "timestamp": "2026-06-10T09:17:13.959Z",
+        "title": "📢 Urgent Announcement",
+        "type": "INFO"
+      }
+    },
+    "BvXwGrZF4dPSANgTPXThTKBpe3j2": {
+      "broadcast_1781080522509": {
+        "link": "teams",
+        "message": "Everyone Assemble at drone lab at 3pm for todays brakes class",
+        "read": false,
+        "timestamp": "2026-06-10T08:35:22.513Z",
+        "title": "📢 Urgent Announcement",
+        "type": "INFO"
+      },
+      "custom_1781083033959": {
+        "link": "dashboard",
+        "message": "Everyone Assemble at drone lab at 3pm for todays brakes class",
+        "read": false,
+        "timestamp": "2026-06-10T09:17:13.959Z",
+        "title": "📢 Urgent Announcement",
+        "type": "INFO"
+      }
+    },
+    "EW1LAu9Ey5QVZwBy8Juj21V2fat2": {
+      "broadcast_1781080522509": {
+        "link": "teams",
+        "message": "Everyone Assemble at drone lab at 3pm for todays brakes class",
+        "read": false,
+        "timestamp": "2026-06-10T08:35:22.513Z",
+        "title": "📢 Urgent Announcement",
+        "type": "INFO"
+      },
+      "custom_1781083033959": {
+        "link": "dashboard",
+        "message": "Everyone Assemble at drone lab at 3pm for todays brakes class",
+        "read": false,
+        "timestamp": "2026-06-10T09:17:13.959Z",
+        "title": "📢 Urgent Announcement",
+        "type": "INFO"
+      }
+    },
+    "FA4d5uqovwfn9KPnwmUlE9SopYI3": {
+      "broadcast_1781080522509": {
+        "link": "teams",
+        "message": "Everyone Assemble at drone lab at 3pm for todays brakes class",
+        "read": false,
+        "timestamp": "2026-06-10T08:35:22.513Z",
+        "title": "📢 Urgent Announcement",
+        "type": "INFO"
+      },
+      "custom_1781083033959": {
+        "link": "dashboard",
+        "message": "Everyone Assemble at drone lab at 3pm for todays brakes class",
+        "read": false,
+        "timestamp": "2026-06-10T09:17:13.959Z",
+        "title": "📢 Urgent Announcement",
+        "type": "INFO"
+      }
+    },
+    "KrS6JwW0MmObRaODxRuV8T51z8R2": {
+      "broadcast_1781080522509": {
+        "link": "teams",
+        "message": "Everyone Assemble at drone lab at 3pm for todays brakes class",
+        "read": false,
+        "timestamp": "2026-06-10T08:35:22.513Z",
+        "title": "📢 Urgent Announcement",
+        "type": "INFO"
+      },
+      "custom_1781083033959": {
+        "link": "dashboard",
+        "message": "Everyone Assemble at drone lab at 3pm for todays brakes class",
+        "read": false,
+        "timestamp": "2026-06-10T09:17:13.959Z",
+        "title": "📢 Urgent Announcement",
+        "type": "INFO"
+      }
+    },
+    "M6Posdb5lNSXpcvNBztEG9aoVRj2": {
+      "broadcast_1781080522509": {
+        "link": "teams",
+        "message": "Everyone Assemble at drone lab at 3pm for todays brakes class",
+        "read": false,
+        "timestamp": "2026-06-10T08:35:22.513Z",
+        "title": "📢 Urgent Announcement",
+        "type": "INFO"
+      },
+      "custom_1781083033959": {
+        "link": "dashboard",
+        "message": "Everyone Assemble at drone lab at 3pm for todays brakes class",
+        "read": false,
+        "timestamp": "2026-06-10T09:17:13.959Z",
+        "title": "📢 Urgent Announcement",
+        "type": "INFO"
+      }
+    },
+    "Nr5e3Au63BTYb94HQxT1Kux6OOh1": {
+      "broadcast_1781080522509": {
+        "link": "teams",
+        "message": "Everyone Assemble at drone lab at 3pm for todays brakes class",
+        "read": true,
+        "timestamp": "2026-06-10T08:35:22.513Z",
+        "title": "📢 Urgent Announcement",
+        "type": "INFO"
+      },
+      "custom_1781083033959": {
+        "link": "dashboard",
+        "message": "Everyone Assemble at drone lab at 3pm for todays brakes class",
+        "read": true,
+        "timestamp": "2026-06-10T09:17:13.959Z",
+        "title": "📢 Urgent Announcement",
+        "type": "INFO"
+      },
+      "task_rem_-OujejFaPLECADEjfQp7_2026-06-10": {
+        "link": "teams",
+        "message": "Task \"Injury mapping accident alert\" is in progress. Deadline: 2026-07-01. Assigned to: DINESH M 25MZ122 (25mz122@skcet.ac.in)",
+        "read": true,
+        "timestamp": "2026-06-10T11:59:42.456Z",
+        "title": "📌 Daily Task Reminder",
+        "type": "INFO"
+      }
+    },
+    "PrB1w6cd80Wf5yOzrh9ojHmo61y1": {
+      "broadcast_1781080522509": {
+        "link": "teams",
+        "message": "Everyone Assemble at drone lab at 3pm for todays brakes class",
+        "read": false,
+        "timestamp": "2026-06-10T08:35:22.513Z",
+        "title": "📢 Urgent Announcement",
+        "type": "INFO"
+      },
+      "custom_1781083033959": {
+        "link": "dashboard",
+        "message": "Everyone Assemble at drone lab at 3pm for todays brakes class",
+        "read": false,
+        "timestamp": "2026-06-10T09:17:13.959Z",
+        "title": "📢 Urgent Announcement",
+        "type": "INFO"
+      }
+    },
+    "ayZ3Ik7NzJcPK5UjD4CdQ9P7Igv1": {
+      "broadcast_1781080522509": {
+        "link": "teams",
+        "message": "Everyone Assemble at drone lab at 3pm for todays brakes class",
+        "read": false,
+        "timestamp": "2026-06-10T08:35:22.513Z",
+        "title": "📢 Urgent Announcement",
+        "type": "INFO"
+      },
+      "custom_1781083033959": {
+        "link": "dashboard",
+        "message": "Everyone Assemble at drone lab at 3pm for todays brakes class",
+        "read": false,
+        "timestamp": "2026-06-10T09:17:13.959Z",
+        "title": "📢 Urgent Announcement",
+        "type": "INFO"
+      }
+    },
+    "d4Z8Q8x6FbSan4TJRijXRyDclkd2": {
+      "broadcast_1781080522509": {
+        "link": "teams",
+        "message": "Everyone Assemble at drone lab at 3pm for todays brakes class",
+        "read": false,
+        "timestamp": "2026-06-10T08:35:22.513Z",
+        "title": "📢 Urgent Announcement",
+        "type": "INFO"
+      },
+      "custom_1781083033959": {
+        "link": "dashboard",
+        "message": "Everyone Assemble at drone lab at 3pm for todays brakes class",
+        "read": false,
+        "timestamp": "2026-06-10T09:17:13.959Z",
+        "title": "📢 Urgent Announcement",
+        "type": "INFO"
+      }
+    },
+    "dr1yZHzSrXYI0HZETIBZj0oEspp2": {
+      "broadcast_1781080522509": {
+        "link": "teams",
+        "message": "Everyone Assemble at drone lab at 3pm for todays brakes class",
+        "read": false,
+        "timestamp": "2026-06-10T08:35:22.513Z",
+        "title": "📢 Urgent Announcement",
+        "type": "INFO"
+      },
+      "custom_1781083033959": {
+        "link": "dashboard",
+        "message": "Everyone Assemble at drone lab at 3pm for todays brakes class",
+        "read": false,
+        "timestamp": "2026-06-10T09:17:13.959Z",
+        "title": "📢 Urgent Announcement",
+        "type": "INFO"
+      }
+    },
+    "e2W4KYQeLxgk5xb4F4MjIYfpUYL2": {
+      "broadcast_1781080522509": {
+        "link": "teams",
+        "message": "Everyone Assemble at drone lab at 3pm for todays brakes class",
+        "read": false,
+        "timestamp": "2026-06-10T08:35:22.513Z",
+        "title": "📢 Urgent Announcement",
+        "type": "INFO"
+      },
+      "custom_1781083033959": {
+        "link": "dashboard",
+        "message": "Everyone Assemble at drone lab at 3pm for todays brakes class",
+        "read": false,
+        "timestamp": "2026-06-10T09:17:13.959Z",
+        "title": "📢 Urgent Announcement",
+        "type": "INFO"
+      }
+    },
+    "ekFXBogb3lOJdqFZ20LHUcGKDdD2": {
+      "broadcast_1781080522509": {
+        "link": "teams",
+        "message": "Everyone Assemble at drone lab at 3pm for todays brakes class",
+        "read": false,
+        "timestamp": "2026-06-10T08:35:22.513Z",
+        "title": "📢 Urgent Announcement",
+        "type": "INFO"
+      },
+      "custom_1781083033959": {
+        "link": "dashboard",
+        "message": "Everyone Assemble at drone lab at 3pm for todays brakes class",
+        "read": false,
+        "timestamp": "2026-06-10T09:17:13.959Z",
+        "title": "📢 Urgent Announcement",
+        "type": "INFO"
+      }
+    },
+    "gQajS9hNjbTmvFgDBMz7FZh2nBt2": {
+      "broadcast_1781080522509": {
+        "link": "teams",
+        "message": "Everyone Assemble at drone lab at 3pm for todays brakes class",
+        "read": false,
+        "timestamp": "2026-06-10T08:35:22.513Z",
+        "title": "📢 Urgent Announcement",
+        "type": "INFO"
+      },
+      "custom_1781083033959": {
+        "link": "dashboard",
+        "message": "Everyone Assemble at drone lab at 3pm for todays brakes class",
+        "read": false,
+        "timestamp": "2026-06-10T09:17:13.959Z",
+        "title": "📢 Urgent Announcement",
+        "type": "INFO"
+      }
+    },
+    "kNWvIKzFDwdGLrmgXBg4Gg7LWb72": {
+      "broadcast_1781080522509": {
+        "link": "teams",
+        "message": "Everyone Assemble at drone lab at 3pm for todays brakes class",
+        "read": false,
+        "timestamp": "2026-06-10T08:35:22.513Z",
+        "title": "📢 Urgent Announcement",
+        "type": "INFO"
+      },
+      "custom_1781083033959": {
+        "link": "dashboard",
+        "message": "Everyone Assemble at drone lab at 3pm for todays brakes class",
+        "read": false,
+        "timestamp": "2026-06-10T09:17:13.959Z",
+        "title": "📢 Urgent Announcement",
+        "type": "INFO"
+      }
+    }
+  },
+  "performance_metrics": {
+    "innovation_2026-04-25": {
+      "date": "2026-04-25",
+      "efficiency": 75,
+      "riskScore": 10,
+      "subsystemId": "innovation",
+      "timestamp": "2026-04-25T17:47:35.370Z"
+    },
+    "innovation_2026-04-26": {
+      "date": "2026-04-26",
+      "efficiency": 50,
+      "riskScore": 10,
+      "subsystemId": "innovation",
+      "timestamp": "2026-04-26T14:07:15.424Z"
+    },
+    "innovation_2026-04-27": {
+      "date": "2026-04-27",
+      "efficiency": 55,
+      "riskScore": 10,
+      "subsystemId": "innovation",
+      "timestamp": "2026-04-27T04:06:11.984Z"
+    },
+    "steering_2026-06-10": {
+      "date": "2026-06-10",
+      "efficiency": 25,
+      "riskScore": 30,
+      "subsystemId": "steering",
+      "timestamp": "2026-06-10T03:56:21.845Z"
+    }
+  },
+  "rulebook": {
+    "assembly": {
+      "Innovation": {
+        "-OtjLIaooGz85JwwS7Ss": {
+          "category": "assembly",
+          "checked": false,
+          "createdAt": "2026-05-28T16:09:38.996Z",
+          "createdBy": "Nr5e3Au63BTYb94HQxT1Kux6OOh1",
+          "createdByName": "DINESH M 25MZ122",
+          "description": "",
+          "teamId": "Innovation",
+          "title": "report"
+        }
+      }
+    },
+    "general": {
+      "Brakes": {
+        "-OuYRQHiW1thzfGU2nGe": {
+          "category": "general",
+          "checked": false,
+          "checkedAt": "2026-06-07T19:03:04.523Z",
+          "checkedBy": "Siddarthan.S ",
+          "createdAt": "2026-06-07T18:56:38.574Z",
+          "createdBy": "dr1yZHzSrXYI0HZETIBZj0oEspp2",
+          "createdByName": "Siddarthan.S ",
+          "description": "",
+          "teamId": "Brakes",
+          "title": "Brake System"
+        },
+        "-OuYRWBlF8ytbCmo7eAr": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:57:02.769Z",
+          "createdBy": "dr1yZHzSrXYI0HZETIBZj0oEspp2",
+          "createdByName": "Siddarthan.S ",
+          "description": "",
+          "teamId": "Brakes",
+          "title": "Hydraulic brakes on all wheels"
+        },
+        "-OuYRXqUfQACK-unViDJ": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:57:09.535Z",
+          "createdBy": "dr1yZHzSrXYI0HZETIBZj0oEspp2",
+          "createdByName": "Siddarthan.S ",
+          "description": "",
+          "teamId": "Brakes",
+          "title": "Single brake pedal operation"
+        },
+        "-OuYRYy-vtvOsSt6ETJY": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:57:14.112Z",
+          "createdBy": "dr1yZHzSrXYI0HZETIBZj0oEspp2",
+          "createdByName": "Siddarthan.S ",
+          "description": "",
+          "teamId": "Brakes",
+          "title": "two independent hydraulic circuits,Separate reservoir for each circuit"
+        },
+        "-OuYRaENVC7FTT__OzEb": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:57:23.416Z",
+          "createdBy": "dr1yZHzSrXYI0HZETIBZj0oEspp2",
+          "createdByName": "Siddarthan.S ",
+          "description": "",
+          "teamId": "Brakes",
+          "title": "Reservoirs inside roll cage"
+        },
+        "-OuYRbBXLiajiqk4OedG": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:57:27.330Z",
+          "createdBy": "dr1yZHzSrXYI0HZETIBZj0oEspp2",
+          "createdByName": "Siddarthan.S ",
+          "description": "",
+          "teamId": "Brakes",
+          "title": "No brake-by-wire system"
+        },
+        "-OuYRcGlfW_pcCUlPAZB": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:57:31.761Z",
+          "createdBy": "dr1yZHzSrXYI0HZETIBZj0oEspp2",
+          "createdByName": "Siddarthan.S ",
+          "description": "",
+          "teamId": "Brakes",
+          "title": "Brake Pedal should be properly mounted according to the pedal ratio."
+        },
+        "-OuYRg63q6LAN3bjbwS-": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:57:47.460Z",
+          "createdBy": "dr1yZHzSrXYI0HZETIBZj0oEspp2",
+          "createdByName": "Siddarthan.S ",
+          "description": "",
+          "teamId": "Brakes",
+          "title": "Brake Pedal"
+        },
+        "-OuYRiJOkt5iVIh2K521": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:57:56.505Z",
+          "createdBy": "dr1yZHzSrXYI0HZETIBZj0oEspp2",
+          "createdByName": "Siddarthan.S ",
+          "description": "",
+          "teamId": "Brakes",
+          "title": "No wobbling or free play in pedal assembly"
+        },
+        "-OuYRjWkXA2GI892X-KI": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:58:01.456Z",
+          "createdBy": "dr1yZHzSrXYI0HZETIBZj0oEspp2",
+          "createdByName": "Siddarthan.S ",
+          "description": "",
+          "teamId": "Brakes",
+          "title": "No pads, blocks, or extensions attached to pedal"
+        },
+        "-OuYRkaALxHC17t_fSJP": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:58:05.835Z",
+          "createdBy": "dr1yZHzSrXYI0HZETIBZj0oEspp2",
+          "createdByName": "Siddarthan.S ",
+          "description": "",
+          "teamId": "Brakes",
+          "title": "Pedal returns automatically to idle position"
+        },
+        "-OuYRltsbTHGM-YD06wo": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:58:11.192Z",
+          "createdBy": "dr1yZHzSrXYI0HZETIBZj0oEspp2",
+          "createdByName": "Siddarthan.S ",
+          "description": "",
+          "teamId": "Brakes",
+          "title": "Return spring is properly installed and working"
+        },
+        "-OuYRmuKb2soFEs411-H": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:58:15.317Z",
+          "createdBy": "dr1yZHzSrXYI0HZETIBZj0oEspp2",
+          "createdByName": "Siddarthan.S ",
+          "description": "",
+          "teamId": "Brakes",
+          "title": "Minimum 3 inches (76.2 mm) clearance from chassis member"
+        },
+        "-OuYRp4DcUVcdH2b1dWZ": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:58:24.206Z",
+          "createdBy": "dr1yZHzSrXYI0HZETIBZj0oEspp2",
+          "createdByName": "Siddarthan.S ",
+          "description": "",
+          "teamId": "Brakes",
+          "title": "Brake Oil"
+        },
+        "-OuYRq9DUn-ivetGeume": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:58:28.622Z",
+          "createdBy": "dr1yZHzSrXYI0HZETIBZj0oEspp2",
+          "createdByName": "Siddarthan.S ",
+          "description": "",
+          "teamId": "Brakes",
+          "title": "use DOT 4 oil"
+        },
+        "-OuYRr0_jbqXbaTdQSbZ": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:58:32.165Z",
+          "createdBy": "dr1yZHzSrXYI0HZETIBZj0oEspp2",
+          "createdByName": "Siddarthan.S ",
+          "description": "",
+          "teamId": "Brakes",
+          "title": "No brake fluid leakage"
+        },
+        "-OuYRrlRb5d7oOSzG3Et": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:58:35.228Z",
+          "createdBy": "dr1yZHzSrXYI0HZETIBZj0oEspp2",
+          "createdByName": "Siddarthan.S ",
+          "description": "",
+          "teamId": "Brakes",
+          "title": "No Teflon tape used on master cylinder or caliper fittings"
+        },
+        "-OuYRs_c0mAMjIOnLwCx": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:58:38.568Z",
+          "createdBy": "dr1yZHzSrXYI0HZETIBZj0oEspp2",
+          "createdByName": "Siddarthan.S ",
+          "description": "",
+          "teamId": "Brakes",
+          "title": "Flexible brake lines secured using metal tags/clamps"
+        },
+        "-OuYRwW8kPdNDTO9PgHf": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:58:54.665Z",
+          "createdBy": "dr1yZHzSrXYI0HZETIBZj0oEspp2",
+          "createdByName": "Siddarthan.S ",
+          "description": "",
+          "teamId": "Brakes",
+          "title": "Brake Liner"
+        },
+        "-OuYRxk3lakmH0OSw_3x": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:58:59.716Z",
+          "createdBy": "dr1yZHzSrXYI0HZETIBZj0oEspp2",
+          "createdByName": "Siddarthan.S ",
+          "description": "",
+          "teamId": "Brakes",
+          "title": "Brake lines are firmly attached below the frame and not to the suspension components"
+        },
+        "-OuYRyhwxiJHW8DBWcux": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:59:03.676Z",
+          "createdBy": "dr1yZHzSrXYI0HZETIBZj0oEspp2",
+          "createdByName": "Siddarthan.S ",
+          "description": "",
+          "teamId": "Brakes",
+          "title": "Brake lines do not project outside the frame"
+        },
+        "-OuYRzSoPShKq9eRKaUL": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:59:06.740Z",
+          "createdBy": "dr1yZHzSrXYI0HZETIBZj0oEspp2",
+          "createdByName": "Siddarthan.S ",
+          "description": "",
+          "teamId": "Brakes",
+          "title": "Brake lines are compatible with the brake fluid used"
+        },
+        "-OuYS-GoupxkVWsneufk": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:59:10.068Z",
+          "createdBy": "dr1yZHzSrXYI0HZETIBZj0oEspp2",
+          "createdByName": "Siddarthan.S ",
+          "description": "",
+          "teamId": "Brakes",
+          "title": "Brake lines are not pinched by steering,suspension  components"
+        },
+        "-OuYS6QGRwJrmd-SD--b": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:59:39.345Z",
+          "createdBy": "dr1yZHzSrXYI0HZETIBZj0oEspp2",
+          "createdByName": "Siddarthan.S ",
+          "description": "",
+          "teamId": "Brakes",
+          "title": "Brake Over-Travel (BOT) Switch"
+        },
+        "-OuYS7Ind_hoAypMwZe5": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:59:42.963Z",
+          "createdBy": "dr1yZHzSrXYI0HZETIBZj0oEspp2",
+          "createdByName": "Siddarthan.S ",
+          "description": "",
+          "teamId": "Brakes",
+          "title": "BOT switch activates when brake over-travel occurs"
+        },
+        "-OuYS8PjORfgFLL8PSj3": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:59:47.503Z",
+          "createdBy": "dr1yZHzSrXYI0HZETIBZj0oEspp2",
+          "createdByName": "Siddarthan.S ",
+          "description": "",
+          "teamId": "Brakes",
+          "title": "SLI power remains active after BOT activation"
+        },
+        "-OuYS9IU28kZKdFlcNCb": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:59:51.135Z",
+          "createdBy": "dr1yZHzSrXYI0HZETIBZj0oEspp2",
+          "createdByName": "Siddarthan.S ",
+          "description": "",
+          "teamId": "Brakes",
+          "title": "BOT switch mounting is welded directly to the chassis"
+        },
+        "-OuYSAG7GJtGKuEky6Cr": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:59:55.080Z",
+          "createdBy": "dr1yZHzSrXYI0HZETIBZj0oEspp2",
+          "createdByName": "Siddarthan.S ",
+          "description": "",
+          "teamId": "Brakes",
+          "title": "Small hinge welded to rear side of brake pedal"
+        },
+        "-OuYSBC6x1op4dq7TlSp": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:59:58.919Z",
+          "createdBy": "dr1yZHzSrXYI0HZETIBZj0oEspp2",
+          "createdByName": "Siddarthan.S ",
+          "description": "",
+          "teamId": "Brakes",
+          "title": "Hinge is parallel to the brake pedal pad"
+        },
+        "-OuYSC5mvRzgnPq7fxMx": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T19:00:02.610Z",
+          "createdBy": "dr1yZHzSrXYI0HZETIBZj0oEspp2",
+          "createdByName": "Siddarthan.S ",
+          "description": "",
+          "teamId": "Brakes",
+          "title": "No extension pipes used for BOT actuation"
+        },
+        "-OuYSCpdRyfmn610S_x4": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T19:00:05.609Z",
+          "createdBy": "dr1yZHzSrXYI0HZETIBZj0oEspp2",
+          "createdByName": "Siddarthan.S ",
+          "description": "",
+          "teamId": "Brakes",
+          "title": "Driver cannot manually reset the BOT switch"
+        },
+        "-OuYSDj2PsTphTdjByHM": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T19:00:09.283Z",
+          "createdBy": "dr1yZHzSrXYI0HZETIBZj0oEspp2",
+          "createdByName": "Siddarthan.S ",
+          "description": "",
+          "teamId": "Brakes",
+          "title": "Brake over-travel switch must be a single point, single throw."
+        },
+        "-OuYSFd6cJqMz_WR21t_": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T19:00:17.095Z",
+          "createdBy": "dr1yZHzSrXYI0HZETIBZj0oEspp2",
+          "createdByName": "Siddarthan.S ",
+          "description": "",
+          "teamId": "Brakes",
+          "title": "Brake Light"
+        },
+        "-OuYSGXv4NHs5qmSZPk5": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T19:00:20.795Z",
+          "createdBy": "dr1yZHzSrXYI0HZETIBZj0oEspp2",
+          "createdByName": "Siddarthan.S ",
+          "description": "",
+          "teamId": "Brakes",
+          "title": "Brake light is red in color"
+        },
+        "-OuYSHLPnCvtwOvp7vmz": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T19:00:24.090Z",
+          "createdBy": "dr1yZHzSrXYI0HZETIBZj0oEspp2",
+          "createdByName": "Siddarthan.S ",
+          "description": "",
+          "teamId": "Brakes",
+          "title": "Brake light mounted at least 350 mm above ground"
+        },
+        "-OuYSI1TzMTOZMSs1xAf": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T19:00:26.910Z",
+          "createdBy": "dr1yZHzSrXYI0HZETIBZj0oEspp2",
+          "createdByName": "Siddarthan.S ",
+          "description": "",
+          "teamId": "Brakes",
+          "title": "Brake light clearly visible from the rear  and visible in sunlight"
+        },
+        "-OuYSIu3OOI96s0SDBo9": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T19:00:30.468Z",
+          "createdBy": "dr1yZHzSrXYI0HZETIBZj0oEspp2",
+          "createdByName": "Siddarthan.S ",
+          "description": "",
+          "teamId": "Brakes",
+          "title": "Brake light should be mounted using hinges and not bumper"
+        },
+        "-OuYSK6N91Km4q69Y-mf": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T19:00:35.416Z",
+          "createdBy": "dr1yZHzSrXYI0HZETIBZj0oEspp2",
+          "createdByName": "Siddarthan.S ",
+          "description": "",
+          "teamId": "Brakes",
+          "title": "OEM brake light used"
+        }
+      },
+      "Design": {
+        "-OuXg3Vk8A6uLTM4OCUD": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T15:25:22.352Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "The vehicle must be capable of carrying 1 person of 190cm in height & weighing 110 kg"
+        },
+        "-OuXgbH2xHtI3k7xr-Cb": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T15:27:44.771Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "Vehicle width and height must not exceed 68 inches (1727.2mm) and 60 inches (1524mm)"
+        },
+        "-OuXgqrT2XoMgPgxPrJL": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T15:28:48.606Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "The length of the vehicle - 140 inches (3556mm)"
+        },
+        "-OuXhA-hOg4y5kqCPwvD": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T15:30:11.117Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "Maintain the percentile length of 36 inches from the lower torso point to the frontmost part of the pedals"
+        },
+        "-OuXhQkxQHansBFfK43D": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T15:31:19.741Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "The vehicle's weight should not exceed 250kg, With driver, it must not exceed 350 kg"
+        },
+        "-OuXh_vrRTXesBRanTj5": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T15:32:01.399Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "The Maximum Wheelbase and Trackwidth - 1885mm and 1180mm"
+        },
+        "-OuXhhkyjVMo0LKNs5vc": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T15:32:33.470Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "The Vehicle's smaller track (front or rear) must not be less than 75% of the Wheelbase"
+        },
+        "-OuXhwKg8PHD5mi3cnhK": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T15:33:33.164Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "It is recommended to get the Wheelbase to track width ratio near to golden ratio=1.75"
+        },
+        "-OuXios8luIJbNqZVwsz": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T15:37:24.745Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "The ground clearance with the driver onboard must be a minimum of 88.9 mm (3.5 inches) of static ground clearance measured from the lowest point (except wheel assembly) of the vehicle, under complete laden condition"
+        },
+        "-OuXkiNXuPR3T_wbWYTv": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T15:45:42.434Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "Use only seamless tubes for primary frame members, it should be circular cross-section of outer diameter - 1 to 2 inches"
+        },
+        "-OuXlwU0AgM_zgdV4TNJ": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T15:51:02.337Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "Can use a minimum of ¾ inches outer diameter for Secondary members but must be easily weldable with primary members"
+        },
+        "-OuXmKEJ3L8oyaMGLaHx": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T15:52:43.732Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "The thickness of the tube should be a minimum of 1 mm (Thickness of 1.6mm is recommended in order to meet the bending stiffness)"
+        },
+        "-OuXmQuRfPNRMCZIrc-4": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T15:53:11.068Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "Teams satisfying the minimum bending stiffness will be considered for The Lightest Vehicle Evaluation"
+        },
+        "-OuXmj-7wxKGEFUiTqWr": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T15:54:29.256Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "In the case of steel alloys, the carbon percentage should be a minimum of 0.1%"
+        },
+        "-OuXnEyYY5zJfb9f82_P": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T15:56:44.323Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "Must give proper explanation and justification for the thickness they have considered for primary member"
+        },
+        "-OuXnfX9MTirm4ve9dbM": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T15:58:37.194Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "Titanium or magnesium on which welding has been utilized may not be used for any part of the Primary Structure which includes the attachment of brackets to the tubing or the attachment of tubing to other components"
+        },
+        "-OuXnpxDOuIHRZScgFfp": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T15:59:19.886Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "Must have at least one open-end tube in the frame (this end must be capped)"
+        },
+        "-OuXoGCBxP4K80MKyyde": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T16:01:11.500Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "can use any grade of steel, Aluminum, Glass fiber, or Carbon fiber for chassis (If team's using any other materials, they must get permission and approval from the SEVC organizing committee)"
+        },
+        "-OuXoOWFyaQKHOaNsLzR": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T16:01:45.552Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "The frame should be rigid, protective, and ergonomically designed"
+        },
+        "-OuXoSrl-2pQ8sVJ88AH": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T16:02:03.377Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "Any type of holes, cracks dents, etc., in frame members are forbidden"
+        },
+        "-OuXok2x6bZ5G9iZU9t8": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T16:03:17.885Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "Teams must bring 1m length of their primary frame member to the event spot"
+        },
+        "-OuXowXQOojR1xqXeuu2": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T16:04:08.987Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "Material testing report must contain a composition of the material, yield strength, and ultimate tensile strength for all materials used in the vehicle frame"
+        },
+        "-OuXqNtV6y1DYaMp7aVa": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T16:10:27.297Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "Must take the material testing report in the authorized testing laboratory or institute’s own facility"
+        },
+        "-OuXqXFk2TRhIUjcgULC": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T16:11:05.648Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "Certificates provided by the material dealers will not be accepted"
+        },
+        "-OuXrBy9ZZShAFS0Quhe": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T16:14:00.586Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "Once the material is purchased, take a sample out of the bought material and tested in the laboratory. Must produce the report. Predefined report by the material dealers is not acceptable"
+        },
+        "-OuXsO2HTTE6aH9X0Svu": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T16:19:12.210Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "The main roll hoop should be a continuous member. No weld joints allowed in the Roll Hoop"
+        },
+        "-OuXsUVoSZ-ZpeRsMP-N": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T16:19:38.676Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "Provide a roll hoop behind the driver. Separating the driver compartment from the rear of the vehicle"
+        },
+        "-OuXsgREDLJXaDhQZ1Ic": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T16:20:31.631Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "Must have a front roll hoop such that the driver hands must not contact the ground in any rollover scenario"
+        },
+        "-OuXt4b3TvEccaTvkRvI": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T16:22:14.724Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "A mandatory gap of driver helmet top point to Roll hoop top point should be at least 6 inches"
+        },
+        "-OuXtRhWPccCLudpLL1L": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T16:23:49.345Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "Side Protection Member must offer complete protection to the driver during the side impact by other vehicles"
+        },
+        "-OuXtaCA9s7-NZArk6bT": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T16:24:28.235Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "SPM height must be maintained with a minimum of 12 inches from the driver’s lower torso point in a seating condition"
+        },
+        "-OuXtkG8Ufd97uPM7O7t": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T16:25:09.449Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "The door of the vehicle must have the SPM"
+        },
+        "-OuXv04sqjw3F4qwaQz2": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T16:30:40.504Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "The arrangement of frame members must be properly triangulated such that when a co- planar load applied in any direction, at any node, results in only tensile or compressive forces in the frame members"
+        },
+        "-OuXv5agcKJ_jj4FAkXb": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T16:31:03.084Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "Frames should be properly triangulated at all nodes"
+        },
+        "-OuXv9MJc1cMVhMqNyyV": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T16:31:18.484Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "A node can contain a maximum of four primary members"
+        },
+        "-OuXvIwUn9GaFXT7DAwE": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T16:31:57.727Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "It is mandatory to follow the proper triangulation. May be subjected to disqualification if they fail to adhere this rule"
+        },
+        "-OuXvOq0cmDS5rj1_YF8": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T16:32:21.889Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "It is recommended to keep the center of gravity of the vehicle in the center of the structure most preferably right beneath the driver’s seat"
+        },
+        "-OuXvsL3oQnVVe7vSeq_": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T16:34:26.820Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "A sticker showing the expected position of the center of gravity must be pasted in the outer body cover of the vehicle on both sides"
+        },
+        "-OuXw6WeZbTIxslqtBLo": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T16:35:29.002Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "The vehicle must have 2 jacking points one at the rear and the other at the front ,capable of supporting the vehicle's weight and engaging the organizers to quickly jack"
+        },
+        "-OuXw9y1M6_VXnCxoXQl": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T16:35:43.106Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "Both jack points must be orange in color"
+        },
+        "-OuXwKmK7ng-LCtT2CDC": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T16:36:27.413Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "The jack point must be oriented horizontally and perpendicular to the centerline of the car"
+        },
+        "-OuXwPoUk8J114w_gzzs": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T16:36:48.031Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "Jack point must be weld only on the chassis member, not on the bumper"
+        },
+        "-OuXwUwVuIbNQUAik7KI": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T16:37:09.024Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "Every vehicle must have a hitch point at both the front and the rear end. Hitch point will be used to attach pushrod"
+        },
+        "-OuXwdtsLHlTozSEBF2A": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T16:37:49.816Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "Every team will have to fabricate a detachable push rod to push and pull"
+        },
+        "-OuXwx324qOuAMNU1qZH": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T16:39:08.291Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "Hitch point should only be mounted onto the frame and NOT on the bumper. It should be welded and projected from the appropriate chassis member"
+        },
+        "-OuXxA7QGtKLYJ8VKaR1": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T16:40:05.915Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "The rear hitch point to be positioned in center exactly at a height of 14 inches mm from the ground"
+        },
+        "-OuXxhRhzPGRPZQxQknD": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T16:42:26.477Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "There should be an impact bumper on the front and rear of the vehicle. It should be rigid and strong. Without a bumper, team cannot participate in the dynamic event"
+        },
+        "-OuXz6BsT5n0ikYzZLBC": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T16:48:34.104Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "The Bumper should be point to point of the tires and not exceed the dimensional restrictions of the vehicle"
+        },
+        "-OuXz7L31T-wL1dys2vQ": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T16:48:38.788Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "Short bumpers are not allowed"
+        },
+        "-OuXzvDPzAovXyV84_Oe": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T16:52:07.194Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "The bumper should also be able to bear front impact load, as well as vertical load up to 100kg"
+        },
+        "-OuY-3gIG7idnhSN6OON": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T16:52:45.971Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "It is mandatory to paste reflective stickers onto the end of bumpers to ensure visibility during Night time"
+        },
+        "-OuY-COQZ8XPThEK_4ii": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T16:53:21.627Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "Side bumper is mandatory for all the team, such that the extension length of the side bumper will cover the vehicle width"
+        },
+        "-OuY00j0G6cN1_17Oak1": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T16:56:56.001Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "Side bumper is mandatory for all the team, such that the extension length of the side bumper will cover the vehicle width"
+        },
+        "-OuY0OrqlJ9kImdteD4e": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T16:58:34.870Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "All vehicles must have a floor closeout made of one or more panels, which separates the driver from the pavement"
+        },
+        "-OuY0XSiW9Y0NLDhLY7E": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T16:59:10.062Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "If multiple panels are used, gaps between panels should not exceed 3 mm (1/8 inch)"
+        },
+        "-OuY0eHWy-TnarcBLHzK": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T16:59:42.113Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "The compartment must extend from the foot area to the firewall and prevent track dust, debris, or any other foreign material from entering the vehicle"
+        },
+        "-OuY0m5Gp6x3flYqYtyA": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T17:00:14.097Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "The panels must be made of a solid, non-flexible, non-brittle material"
+        },
+        "-OuY0oDvcjJLbAdiaTYp": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T17:00:22.843Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "Panels must be minimum of 1mm thickness"
+        },
+        "-OuY10wB72M_AYgAL4W7": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T17:01:18.988Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "The driver, when seated in the normal driving position with both seat belt and helmet, must have a clear forward vision"
+        },
+        "-OuY14Vxyra-6Xm-C2Pn": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T17:01:33.629Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "An object 1.5m from the front most of the vehicle must be visible from the driver's position"
+        },
+        "-OuY1EE_IDcTpxjxzC1Z": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T17:02:13.477Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "The driver must have adequate visibility to the front and sides of the car"
+        },
+        "-OuY1V7yNO3TXzev4_lM": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T17:03:22.686Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "With the driver seated in a normal driving position, he/she must have a minimum field of vision of two hundred degrees (200°) (a minimum one hundred degrees (100°) to either side of the driver"
+        },
+        "-OuY1YM0qkeRQSKI8CFK": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T17:03:35.873Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "The driver's view should not be restricted by steering wheel positioning"
+        },
+        "-OuY1d-llWbR3KuC-OCe": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T17:03:59.025Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "Rear vision system may be electronic, mirrors or both"
+        },
+        "-OuY1wMd1Kprd8gHgX3b": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T17:05:18.313Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "There must be a minimum clearance of 3 inches from any motion parts inside the driver cockpit (i.e., steering wheel)"
+        },
+        "-OuY4YkF4vaCRBxzVdum": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T17:16:43.920Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "And at least 2 inches clearance of any static parts (i.e., Frame, Dashboard) to the driver"
+        },
+        "-OuY4nzhUjov-WyQ5QZh": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T17:17:50.445Z",
+          "createdBy": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+          "createdByName": "Asma Amreen Khan AK ",
+          "description": "",
+          "teamId": "Design",
+          "title": "The vehicle should be designed such that the driver can easily get in and out. A driver should able to access all the parts in the cockpit (Fire- extinguisher, Switches)"
+        }
+      },
+      "Electricals": {
+        "-OuYHhVechWIU3gmiQ6Y": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:14:11.754Z",
+          "createdBy": "EW1LAu9Ey5QVZwBy8Juj21V2fat2",
+          "createdByName": "SANJAY ",
+          "description": "",
+          "teamId": "Electricals",
+          "title": "The maximum input voltage capability of the motor controller is 72V for SEV. The output must strictly be equal to the operating voltage of the motor."
+        },
+        "-OuYHwQSe9ERodM4jO1g": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:15:12.861Z",
+          "createdBy": "EW1LAu9Ey5QVZwBy8Juj21V2fat2",
+          "createdByName": "SANJAY ",
+          "description": "",
+          "teamId": "Electricals",
+          "title": "The current rating of the motor controller should be greater than the rated current of the motor"
+        },
+        "-OuYIF2mQRM3owNTnVOs": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:16:33.266Z",
+          "createdBy": "EW1LAu9Ey5QVZwBy8Juj21V2fat2",
+          "createdByName": "SANJAY ",
+          "description": "",
+          "teamId": "Electricals",
+          "title": "To use available features in the motor controller to the maximum level"
+        },
+        "-OuYIQAW5l22ejlSUkBp": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:17:18.817Z",
+          "createdBy": "EW1LAu9Ey5QVZwBy8Juj21V2fat2",
+          "createdByName": "SANJAY ",
+          "description": "",
+          "teamId": "Electricals",
+          "title": "There must be a proper casing of the controller circuit with a proper heat sink inside. Open or bare controllers are strictly prohibited."
+        },
+        "-OuYIVVVD266uZoZwbCP": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:17:40.640Z",
+          "createdBy": "EW1LAu9Ey5QVZwBy8Juj21V2fat2",
+          "createdByName": "SANJAY ",
+          "description": "",
+          "teamId": "Electricals",
+          "title": "Proper Cooling System shall be provided for control of the temperature rise of Controller"
+        },
+        "-OuYIedhmfA95TnNwM_w": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:18:22.189Z",
+          "createdBy": "EW1LAu9Ey5QVZwBy8Juj21V2fat2",
+          "createdByName": "SANJAY ",
+          "description": "",
+          "teamId": "Electricals",
+          "title": "The motor controller must be rigidly mounted onto the vehicle at a distance minimum of 4 inches away from the motor"
+        },
+        "-OuYInf7pT2yG1-ZHM-R": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:18:59.144Z",
+          "createdBy": "EW1LAu9Ey5QVZwBy8Juj21V2fat2",
+          "createdByName": "SANJAY ",
+          "description": "",
+          "teamId": "Electricals",
+          "title": "Connection of motor controller to the battery should be done using connectors"
+        },
+        "-OuYIsbKesqSY13X6rGc": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:19:19.381Z",
+          "createdBy": "EW1LAu9Ey5QVZwBy8Juj21V2fat2",
+          "createdByName": "SANJAY ",
+          "description": "",
+          "teamId": "Electricals",
+          "title": "using programmable controllers must show their parameter settings at any time of the event"
+        },
+        "-OuYJ-W3_PgXhqB5nccf": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:19:51.748Z",
+          "createdBy": "EW1LAu9Ey5QVZwBy8Juj21V2fat2",
+          "createdByName": "SANJAY ",
+          "description": "",
+          "teamId": "Electricals",
+          "title": "Controller power rating shall be ±500 W from the rated power of the motor"
+        },
+        "-OuYJ4wpIW2VyoHXrQ4X": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:20:14.005Z",
+          "createdBy": "EW1LAu9Ey5QVZwBy8Juj21V2fat2",
+          "createdByName": "SANJAY ",
+          "description": "",
+          "teamId": "Electricals",
+          "title": "Proper controller specification sheet along with the bill must be submitted at the VAP check"
+        },
+        "-OuYJK28bVn-vDW5N4B-": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:21:15.849Z",
+          "createdBy": "EW1LAu9Ey5QVZwBy8Juj21V2fat2",
+          "createdByName": "SANJAY ",
+          "description": "",
+          "teamId": "Electricals",
+          "title": "use lithium battery"
+        },
+        "-OuYJQ-W2W3cu2jORs2N": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:21:40.257Z",
+          "createdBy": "EW1LAu9Ey5QVZwBy8Juj21V2fat2",
+          "createdByName": "SANJAY ",
+          "description": "",
+          "teamId": "Electricals",
+          "title": "For powering the auxiliary components, an additional SLI battery(lead acid or lithium) can be used whose ratings should not be more than 12V and 10Ah"
+        },
+        "-OuYJbluSdRFfchpSSr5": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:22:32.570Z",
+          "createdBy": "EW1LAu9Ey5QVZwBy8Juj21V2fat2",
+          "createdByName": "SANJAY ",
+          "description": "",
+          "teamId": "Electricals",
+          "title": "must use isolated dc-dc converters"
+        },
+        "-OuYJjyqAByqkrcjjZqg": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:23:06.166Z",
+          "createdBy": "EW1LAu9Ey5QVZwBy8Juj21V2fat2",
+          "createdByName": "SANJAY ",
+          "description": "",
+          "teamId": "Electricals",
+          "title": "The power lines for both the battery packs should be separate and well protected.....BMS is mandatory"
+        },
+        "-OuYJtjxg_9IbDt1BGvx": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:23:46.173Z",
+          "createdBy": "EW1LAu9Ey5QVZwBy8Juj21V2fat2",
+          "createdByName": "SANJAY ",
+          "description": "",
+          "teamId": "Electricals",
+          "title": "Use sealed gel-type battery packs in the case of lead-acid batteries. Liquid electrolyte batteries are strictly prohibited"
+        },
+        "-OuYJzwYJwG2gzRioqnx": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:24:11.555Z",
+          "createdBy": "EW1LAu9Ey5QVZwBy8Juj21V2fat2",
+          "createdByName": "SANJAY ",
+          "description": "",
+          "teamId": "Electricals",
+          "title": "Similar to the motor, the temperature of the battery packs must be monitored and displayed in the dashboard"
+        },
+        "-OuYK8pOe6FMyGSpVrZx": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:24:52.057Z",
+          "createdBy": "EW1LAu9Ey5QVZwBy8Juj21V2fat2",
+          "createdByName": "SANJAY ",
+          "description": "",
+          "teamId": "Electricals",
+          "title": "Teams are allowed to use any type of Lithium Chemistry based on their interest. But the BMS should be compatible with the particular type that is used by the teams"
+        },
+        "-OuYKE8wS4CQsLDnaBYj": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:25:13.852Z",
+          "createdBy": "EW1LAu9Ey5QVZwBy8Juj21V2fat2",
+          "createdByName": "SANJAY ",
+          "description": "",
+          "teamId": "Electricals",
+          "title": "Battery packs must be rigidly mounted and connections must also be tight and firm"
+        },
+        "-OuYKJQVy39eIwclZvt_": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:25:35.457Z",
+          "createdBy": "EW1LAu9Ey5QVZwBy8Juj21V2fat2",
+          "createdByName": "SANJAY ",
+          "description": "",
+          "teamId": "Electricals",
+          "title": "Battery packs must be placed behind the firewall only"
+        },
+        "-OuYKNyYyKZZQZMry6G2": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:25:54.083Z",
+          "createdBy": "EW1LAu9Ey5QVZwBy8Juj21V2fat2",
+          "createdByName": "SANJAY ",
+          "description": "",
+          "teamId": "Electricals",
+          "title": "The mounting of the battery pack must be welded to the chassis member. No movement of battery is allowed after mounting"
+        },
+        "-OuYKVMt3EEjzwJdjnQO": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:26:24.377Z",
+          "createdBy": "EW1LAu9Ey5QVZwBy8Juj21V2fat2",
+          "createdByName": "SANJAY ",
+          "description": "",
+          "teamId": "Electricals",
+          "title": "Minimum of 2-inch clearance must be provided from the firewall(battery)"
+        },
+        "-OuYKaA1r6JT2uB_EF8k": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:26:48.130Z",
+          "createdBy": "EW1LAu9Ey5QVZwBy8Juj21V2fat2",
+          "createdByName": "SANJAY ",
+          "description": "",
+          "teamId": "Electricals",
+          "title": "Teams  using  more  than  one  battery  pack  must  use  Master-Slave configuration BMS. In such case, each battery pack must be provided separate casing"
+        },
+        "-OuYKfkGtJ5gM8s6jSj7": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:27:10.993Z",
+          "createdBy": "EW1LAu9Ey5QVZwBy8Juj21V2fat2",
+          "createdByName": "SANJAY ",
+          "description": "",
+          "teamId": "Electricals",
+          "title": "Teams are strictly not allowed to connect multiple battery packs in series or parallel without the availability of Master-Slave BMS"
+        },
+        "-OuYKlyU8gFh4rdtE-BV": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:27:36.479Z",
+          "createdBy": "EW1LAu9Ey5QVZwBy8Juj21V2fat2",
+          "createdByName": "SANJAY ",
+          "description": "",
+          "teamId": "Electricals",
+          "title": "In case of using more than one battery pack each and every cell should be properly patched with the appropriate ratings of Nickel-induced fuse strips"
+        },
+        "-OuYKqXCqns0Duc0TRcZ": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:27:55.149Z",
+          "createdBy": "EW1LAu9Ey5QVZwBy8Juj21V2fat2",
+          "createdByName": "SANJAY ",
+          "description": "",
+          "teamId": "Electricals",
+          "title": "Battery should be connected to the motor controller using proper terminal connectors and it should be easily visible and accessible for verification"
+        },
+        "-OuYL3Qh8mdCM2RtrmPw": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:28:52.077Z",
+          "createdBy": "EW1LAu9Ey5QVZwBy8Juj21V2fat2",
+          "createdByName": "SANJAY ",
+          "description": "",
+          "teamId": "Electricals",
+          "title": "The SLI battery must be grounded to the chassis(GLV) whereas the tractive battery must not be grounded anywhere on the chassis"
+        },
+        "-OuYLARJ52wZU8Psinv4": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:29:20.788Z",
+          "createdBy": "EW1LAu9Ey5QVZwBy8Juj21V2fat2",
+          "createdByName": "SANJAY ",
+          "description": "",
+          "teamId": "Electricals",
+          "title": "Use only connectors to connect the battery terminal. Teams must not use bare conductors for providing any connections on the terminal."
+        },
+        "-OuYLKUzLgmJWY4Be50O": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:30:01.983Z",
+          "createdBy": "EW1LAu9Ey5QVZwBy8Juj21V2fat2",
+          "createdByName": "SANJAY ",
+          "description": "",
+          "teamId": "Electricals",
+          "title": "Battery packs must be placed in a suitable electrically insulated and fireproof battery box or cover"
+        },
+        "-OuYLNlqlfDQEdboyaK1": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:30:15.414Z",
+          "createdBy": "EW1LAu9Ey5QVZwBy8Juj21V2fat2",
+          "createdByName": "SANJAY ",
+          "description": "",
+          "teamId": "Electricals",
+          "title": "Danger sign sticker must be pasted over the battery box with proper visibility"
+        },
+        "-OuYLREaodAjhRTeVsbF": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:30:29.606Z",
+          "createdBy": "EW1LAu9Ey5QVZwBy8Juj21V2fat2",
+          "createdByName": "SANJAY ",
+          "description": "",
+          "teamId": "Electricals",
+          "title": "The battery box must be rigidly mounted behind the firewall and away from the driver compartment"
+        },
+        "-OuYLXKPhiTjJ52gZtzf": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:30:54.554Z",
+          "createdBy": "EW1LAu9Ey5QVZwBy8Juj21V2fat2",
+          "createdByName": "SANJAY ",
+          "description": "",
+          "teamId": "Electricals",
+          "title": "The design of the vehicle should also adhere to enclose the battery box and hold it rigidly such that it will not move even in adverse situations"
+        },
+        "-OuYLdGAKHOKc92Kj9Us": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:31:22.955Z",
+          "createdBy": "EW1LAu9Ey5QVZwBy8Juj21V2fat2",
+          "createdByName": "SANJAY ",
+          "description": "",
+          "teamId": "Electricals",
+          "title": "While placing the battery pack at the rear, proper body covering must be incorporated to ensure the battery packs are completely sheltered"
+        },
+        "-OuYLtfcsm3pXYnRj-rb": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:32:30.184Z",
+          "createdBy": "EW1LAu9Ey5QVZwBy8Juj21V2fat2",
+          "createdByName": "SANJAY ",
+          "description": "",
+          "teamId": "Electricals",
+          "title": "The charger ratings should be 220V 50 Hz as the input and the output should be greater than 72V"
+        },
+        "-OuYM2PH8Wsm8u141J6R": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:33:10.034Z",
+          "createdBy": "EW1LAu9Ey5QVZwBy8Juj21V2fat2",
+          "createdByName": "SANJAY ",
+          "description": "",
+          "teamId": "Electricals",
+          "title": "Separate charging sockets must be used in the vehicle for both tractive as well as SLI batteries to connect these chargers. The current ratings of the sockets should be chosen based on the current involved in the circuit."
+        },
+        "-OuYM5nj4YvZTHVVNxU9": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:33:23.951Z",
+          "createdBy": "EW1LAu9Ey5QVZwBy8Juj21V2fat2",
+          "createdByName": "SANJAY ",
+          "description": "",
+          "teamId": "Electricals",
+          "title": "Only cap-type charging connectors of suitable IP ratings must be used as mentioned in the figure."
+        },
+        "-OuYMSU-bXYhGX9tc7Np": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:34:56.832Z",
+          "createdBy": "EW1LAu9Ey5QVZwBy8Juj21V2fat2",
+          "createdByName": "SANJAY ",
+          "description": "",
+          "teamId": "Electricals",
+          "title": "minimum 2 kill switch should be placed for stop the overall current flow with dia of 40mm"
+        },
+        "-OuYMZU0HHQPBBu1Sz4v": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:35:25.505Z",
+          "createdBy": "EW1LAu9Ey5QVZwBy8Juj21V2fat2",
+          "createdByName": "SANJAY ",
+          "description": "",
+          "teamId": "Electricals",
+          "title": "They should be placed in such a way that one can be easily accessed by the driver and other two should be mounted on either side of roll hoop"
+        },
+        "-OuYMqur_ksl8aKO0O4K": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:36:41.015Z",
+          "createdBy": "EW1LAu9Ey5QVZwBy8Juj21V2fat2",
+          "createdByName": "SANJAY ",
+          "description": "",
+          "teamId": "Electricals",
+          "title": "it should be red colour.It should be a push to off and rotate to release.Kill switch must be rigidly mounted only on the mounting hinge welded on the chassis"
+        },
+        "-OuYMvV6hjjAJN3Ek6zH": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:36:59.783Z",
+          "createdBy": "EW1LAu9Ey5QVZwBy8Juj21V2fat2",
+          "createdByName": "SANJAY ",
+          "description": "",
+          "teamId": "Electricals",
+          "title": "For kill switch - Negative Line Should not be connected. only positive (Live) line must be connected"
+        },
+        "-OuYN0Z0qsBSzYEqlAIX": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:37:24.609Z",
+          "createdBy": "EW1LAu9Ey5QVZwBy8Juj21V2fat2",
+          "createdByName": "SANJAY ",
+          "description": "",
+          "teamId": "Electricals",
+          "title": "Use of appropriate fuse  and DC MCB is mandatory for each electrical component in the vehicle."
+        },
+        "-OuYN8nEIA1P2pedkMt0": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:37:58.351Z",
+          "createdBy": "EW1LAu9Ey5QVZwBy8Juj21V2fat2",
+          "createdByName": "SANJAY ",
+          "description": "",
+          "teamId": "Electricals",
+          "title": "Use of automotive blade-type fuses is mandatory for the low voltage circuit components"
+        },
+        "-OuYNDN1M5oMXRWUu7vj": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:38:17.090Z",
+          "createdBy": "EW1LAu9Ey5QVZwBy8Juj21V2fat2",
+          "createdByName": "SANJAY ",
+          "description": "",
+          "teamId": "Electricals",
+          "title": "Fuse rating and specifications should be visible on the fuse boxes"
+        },
+        "-OuYNL5mUqKP4pT7Upmr": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:38:48.754Z",
+          "createdBy": "EW1LAu9Ey5QVZwBy8Juj21V2fat2",
+          "createdByName": "SANJAY ",
+          "description": "",
+          "teamId": "Electricals",
+          "title": "The power to the motor must be drawn from the battery through an isolated relay(Solid State Relay – SSR is recommended)"
+        },
+        "-OuYNRfGc9XHAPjEkg8r": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:39:15.665Z",
+          "createdBy": "EW1LAu9Ey5QVZwBy8Juj21V2fat2",
+          "createdByName": "SANJAY ",
+          "description": "",
+          "teamId": "Electricals",
+          "title": "Separate fuse of suitable rating must be used on the tractive live line for safety"
+        },
+        "-OuYNlg0ZYAg5KEHecHR": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:40:41.729Z",
+          "createdBy": "EW1LAu9Ey5QVZwBy8Juj21V2fat2",
+          "createdByName": "SANJAY ",
+          "description": "",
+          "teamId": "Electricals",
+          "title": "must use DC MCB with suitable ratings ... DC MCB should be capable enough to withstand the peak current of the tractive motor."
+        },
+        "-OuYO8i1m47bBOgDaUZC": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:42:20.162Z",
+          "createdBy": "EW1LAu9Ey5QVZwBy8Juj21V2fat2",
+          "createdByName": "SANJAY ",
+          "description": "",
+          "teamId": "Electricals",
+          "title": "Wires used in the vehicle should be of suitable gauge resistance capable enough to withstand the peak voltage and current in the electrical system"
+        },
+        "-OuYODb11HHkrsxr6rWb": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:42:40.194Z",
+          "createdBy": "EW1LAu9Ey5QVZwBy8Juj21V2fat2",
+          "createdByName": "SANJAY ",
+          "description": "",
+          "teamId": "Electricals",
+          "title": "Wiring done for tractive and SLI circuits should be separate. Proper gauge and color variation must be given to each of the wires"
+        },
+        "-OuYOJlw1ZlpPdoxJxmq": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:43:05.468Z",
+          "createdBy": "EW1LAu9Ey5QVZwBy8Juj21V2fat2",
+          "createdByName": "SANJAY ",
+          "description": "",
+          "teamId": "Electricals",
+          "title": "When joining two wires, twisted pair joints are strictly prohibited. Instead, connectors of suitable ratings must be used"
+        },
+        "-OuYOdeyhRAZGNPfhLpp": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:44:31.038Z",
+          "createdBy": "EW1LAu9Ey5QVZwBy8Juj21V2fat2",
+          "createdByName": "SANJAY ",
+          "description": "",
+          "teamId": "Electricals",
+          "title": "For connecting to terminals, wire lugs must be used. This connection should be done by using a proper crimping tool so that wires are held rigidly onto the lug"
+        },
+        "-OuYOsm0-6MdkmVEFRJw": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:45:32.929Z",
+          "createdBy": "EW1LAu9Ey5QVZwBy8Juj21V2fat2",
+          "createdByName": "SANJAY ",
+          "description": "",
+          "teamId": "Electricals",
+          "title": "Also, the flexible hoses should be tied to the body of the vehicle so that loose connections do not exist and no hanging of the wiring conduit takes place"
+        },
+        "-OuYP3jYG_I2y3OuZGVl": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:46:21.923Z",
+          "createdBy": "EW1LAu9Ey5QVZwBy8Juj21V2fat2",
+          "createdByName": "SANJAY ",
+          "description": "",
+          "teamId": "Electricals",
+          "title": "All wiring must be strong and rigid.Separate hoses shall be provided to envelope the tractive and SLI battery circuit wiring if necessary"
+        },
+        "-OuYPEsLDUk7_Ety2KyW": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:47:07.542Z",
+          "createdBy": "EW1LAu9Ey5QVZwBy8Juj21V2fat2",
+          "createdByName": "SANJAY ",
+          "description": "",
+          "teamId": "Electricals",
+          "title": "Teams must perform proper calculations for the selection of wire gauge which will be cross-verified during the VAP"
+        },
+        "-OuYPLd1ZsYQsfTSKSBc": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:47:35.234Z",
+          "createdBy": "EW1LAu9Ey5QVZwBy8Juj21V2fat2",
+          "createdByName": "SANJAY ",
+          "description": "",
+          "teamId": "Electricals",
+          "title": "Live wires in red colour"
+        },
+        "-OuYPR_QAZTc4V6HkV7P": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T18:47:59.579Z",
+          "createdBy": "EW1LAu9Ey5QVZwBy8Juj21V2fat2",
+          "createdByName": "SANJAY ",
+          "description": "",
+          "teamId": "Electricals",
+          "title": "Wiring should be given with separate colors for identification purpose. Also, teams are recommended to provide identification tags for each of the wiring lines so that trouble shooting of faults will be easy"
+        }
+      },
+      "Innovation": {
+        "-OtmpfGzaB1EM_8cDfTF": {
+          "category": "general",
+          "checked": false,
+          "checkedAt": "2026-06-07T14:41:47.102Z",
+          "checkedBy": "HARESHKUMAR",
+          "createdAt": "2026-05-29T08:25:34.079Z",
+          "createdBy": "Nr5e3Au63BTYb94HQxT1Kux6OOh1",
+          "createdByName": "DINESH M 25MZ122",
+          "description": "",
+          "teamId": "Innovation",
+          "title": "Report"
+        }
+      },
+      "Suspension": {
+        "-OuVk2OHnuCUbBOX2-jT": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T06:23:31.922Z",
+          "createdBy": "ayZ3Ik7NzJcPK5UjD4CdQ9P7Igv1",
+          "createdByName": "Kanishka",
+          "description": "",
+          "teamId": "Suspension",
+          "title": "Use of suspension system is mandatory for all wheels along with proper actuation and weight transfer."
+        },
+        "-OuVk7PmjU18OvqSMxfj": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T06:23:52.498Z",
+          "createdBy": "ayZ3Ik7NzJcPK5UjD4CdQ9P7Igv1",
+          "createdByName": "Kanishka",
+          "description": "",
+          "teamId": "Suspension",
+          "title": "The suspension used must have a minimum of 4 inches of travel. (i.e)  2 inches of each bounce and rebound"
+        },
+        "-OuVkD1VhrqvHXSOZncz": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T06:24:15.520Z",
+          "createdBy": "ayZ3Ik7NzJcPK5UjD4CdQ9P7Igv1",
+          "createdByName": "Kanishka",
+          "description": "",
+          "teamId": "Suspension",
+          "title": "In loading conditions, the vehicle's bottom should not contact the surface or any other portions"
+        },
+        "-OuVkOWausNsCi9iYPup": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T06:25:02.566Z",
+          "createdBy": "ayZ3Ik7NzJcPK5UjD4CdQ9P7Igv1",
+          "createdByName": "Kanishka",
+          "description": "",
+          "teamId": "Suspension",
+          "title": "Wishbones or A-arms must be made up of Seamless tubes. Use either Primary or Secondary members of the roll cage for A-arms"
+        },
+        "-OuVkXOAOe6EqRPl-_FK": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T06:25:38.892Z",
+          "createdBy": "ayZ3Ik7NzJcPK5UjD4CdQ9P7Igv1",
+          "createdByName": "Kanishka",
+          "description": "",
+          "teamId": "Suspension",
+          "title": "Must ensure that the minimum bending stiffness of the frame (A- arm or wishbone) material have to match with the 70% of the primary member bending stiffness"
+        },
+        "-OuVkcCOIdtg7N46zGbA": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T06:26:02.713Z",
+          "createdBy": "ayZ3Ik7NzJcPK5UjD4CdQ9P7Igv1",
+          "createdByName": "Kanishka",
+          "description": "",
+          "teamId": "Suspension",
+          "title": "Not more than 4 threads from the Heim’s joint shall extend from the A-arm end"
+        },
+        "-OuVkicTYYw0YRoFzz6u": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T06:26:29.022Z",
+          "createdBy": "ayZ3Ik7NzJcPK5UjD4CdQ9P7Igv1",
+          "createdByName": "Kanishka",
+          "description": "",
+          "teamId": "Suspension",
+          "title": "Preferable to use an Anti-Roll bar mechanism"
+        }
+      },
+      "Transmission": {
+        "-OuV91HOiQUiDZzLv8vF": {
+          "category": "general",
+          "checked": false,
+          "checkedAt": "2026-06-07T03:37:53.629Z",
+          "checkedBy": "Sanjeevi Sr",
+          "createdAt": "2026-06-07T03:37:25.913Z",
+          "createdBy": "ekFXBogb3lOJdqFZ20LHUcGKDdD2",
+          "createdByName": "Sanjeevi Sr",
+          "description": "",
+          "teamId": "Transmission",
+          "title": "Transmission Team Checklist"
+        },
+        "-OuV9IAHFYfT-xfplgwQ": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T03:38:35.090Z",
+          "createdBy": "ekFXBogb3lOJdqFZ20LHUcGKDdD2",
+          "createdByName": "Sanjeevi Sr",
+          "description": "",
+          "teamId": "Transmission",
+          "title": "Rear-wheel drive is only allowed in the event"
+        },
+        "-OuV9f8hOX7M6_YT1HDw": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T03:40:13.293Z",
+          "createdBy": "ekFXBogb3lOJdqFZ20LHUcGKDdD2",
+          "createdByName": "Sanjeevi Sr",
+          "description": "",
+          "teamId": "Transmission",
+          "title": "All  the rotating parts must be covered with a scatter shield and it must be made up of metals only."
+        },
+        "-OuV9jJYbDyM5OzC0-nN": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T03:40:30.371Z",
+          "createdBy": "ekFXBogb3lOJdqFZ20LHUcGKDdD2",
+          "createdByName": "Sanjeevi Sr",
+          "description": "",
+          "teamId": "Transmission",
+          "title": "Accelerator pedal must be Right foot operated."
+        },
+        "-OuV9uOZAjRN9xqsJXUr": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T03:41:15.748Z",
+          "createdBy": "ekFXBogb3lOJdqFZ20LHUcGKDdD2",
+          "createdByName": "Sanjeevi Sr",
+          "description": "",
+          "teamId": "Transmission",
+          "title": "A separate mounting must be provided for the accelerator pedal and that mounting must be directly welded to the chassis. ∙"
+        },
+        "-OuVA-7yuFjvDxoHMTZ_": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T03:41:39.262Z",
+          "createdBy": "ekFXBogb3lOJdqFZ20LHUcGKDdD2",
+          "createdByName": "Sanjeevi Sr",
+          "description": "",
+          "teamId": "Transmission",
+          "title": "The speed of the motor should not exceed 4000 rpm."
+        },
+        "-OuVAEDFlZ05VOo1fdnN": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T03:42:41.040Z",
+          "createdBy": "ekFXBogb3lOJdqFZ20LHUcGKDdD2",
+          "createdByName": "Sanjeevi Sr",
+          "description": "",
+          "teamId": "Transmission",
+          "title": "Teams must make sure that the overall vehicle speed does not exceed 60 Kmph. ∙"
+        },
+        "-OuVAJgLBPwJ-vkkEBtL": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T03:43:03.446Z",
+          "createdBy": "ekFXBogb3lOJdqFZ20LHUcGKDdD2",
+          "createdByName": "Sanjeevi Sr",
+          "description": "",
+          "teamId": "Transmission",
+          "title": "Reverse operation of the motor is mandatory and proper forward & reverse switch must be provided."
+        },
+        "-OuVAROrc4T6M0Sqp8bw": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T03:43:35.031Z",
+          "createdBy": "ekFXBogb3lOJdqFZ20LHUcGKDdD2",
+          "createdByName": "Sanjeevi Sr",
+          "description": "",
+          "teamId": "Transmission",
+          "title": "Motors must be operated through their corresponding motor controller only. ∙"
+        },
+        "-OuVAZivyAk910pNRs0g": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T03:44:09.147Z",
+          "createdBy": "ekFXBogb3lOJdqFZ20LHUcGKDdD2",
+          "createdByName": "Sanjeevi Sr",
+          "description": "",
+          "teamId": "Transmission",
+          "title": "The mountings must be rigid, tightened with lock nuts and the outer frame (yoke) must be waterproof. ∙"
+        },
+        "-OuVAggX09U3jcO7FXkM": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T03:44:41.762Z",
+          "createdBy": "ekFXBogb3lOJdqFZ20LHUcGKDdD2",
+          "createdByName": "Sanjeevi Sr",
+          "description": "",
+          "teamId": "Transmission",
+          "title": "Proper cooling system should be installed in order to reduce the overheating of the motor. To avoid short-circuiting while employing a liquid cooling system, the motor must be securely insulated from the coolant. ∙"
+        },
+        "-OuVApLIU1uERCSXiXtv": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T03:45:17.203Z",
+          "createdBy": "ekFXBogb3lOJdqFZ20LHUcGKDdD2",
+          "createdByName": "Sanjeevi Sr",
+          "description": "",
+          "teamId": "Transmission",
+          "title": "The motor and controller should be connected using suitable connectors. Cutting and joining of wires are strictly prohibited. ∙"
+        },
+        "-OuVAyYbidW5NdMdOVWZ": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T03:45:54.919Z",
+          "createdBy": "ekFXBogb3lOJdqFZ20LHUcGKDdD2",
+          "createdByName": "Sanjeevi Sr",
+          "description": "",
+          "teamId": "Transmission",
+          "title": "It should be installed behind the firewall and away from the driver compartment. ∙"
+        },
+        "-OuVB6d65Hz6E7YSadrP": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T03:46:32.135Z",
+          "createdBy": "ekFXBogb3lOJdqFZ20LHUcGKDdD2",
+          "createdByName": "Sanjeevi Sr",
+          "description": "",
+          "teamId": "Transmission",
+          "title": "Proper motor specification sheet along with the bill must be submitted at the VAP check. ∙"
+        },
+        "-OuVBKlif5ms7qYzQ1uj": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T03:47:30.030Z",
+          "createdBy": "ekFXBogb3lOJdqFZ20LHUcGKDdD2",
+          "createdByName": "Sanjeevi Sr",
+          "description": "",
+          "teamId": "Transmission",
+          "title": "The maximum input voltage capability of the motor controller is 72V for SEV and BEV categories and 96V for HEV category. The output must strictly be equal to the operating voltage of the motor."
+        },
+        "-OuVBRuPetjdCwxDAUnj": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T03:47:59.258Z",
+          "createdBy": "ekFXBogb3lOJdqFZ20LHUcGKDdD2",
+          "createdByName": "Sanjeevi Sr",
+          "description": "",
+          "teamId": "Transmission",
+          "title": "The current rating of the motor controller should be greater than the rated current of the motor."
+        },
+        "-OuVBZdMSvWl_fmYcW4i": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T03:48:30.935Z",
+          "createdBy": "ekFXBogb3lOJdqFZ20LHUcGKDdD2",
+          "createdByName": "Sanjeevi Sr",
+          "description": "",
+          "teamId": "Transmission",
+          "title": "There must be a proper casing of the controller circuit with a proper heat sink inside. Open or bare controllers are strictly prohibited."
+        },
+        "-OuVBdBdNbo4SLorHaa1": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T03:48:49.578Z",
+          "createdBy": "ekFXBogb3lOJdqFZ20LHUcGKDdD2",
+          "createdByName": "Sanjeevi Sr",
+          "description": "",
+          "teamId": "Transmission",
+          "title": "The motor controller must be rigidly mounted onto the vehicle at a distance minimum of 4 inches away from the motor."
+        },
+        "-OuVBj-0oO_KUKIqwitw": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T03:49:13.345Z",
+          "createdBy": "ekFXBogb3lOJdqFZ20LHUcGKDdD2",
+          "createdByName": "Sanjeevi Sr",
+          "description": "",
+          "teamId": "Transmission",
+          "title": "Connection of motor controller to the battery should be done using connectors."
+        },
+        "-OuVBp6_84LXMgrMPYps": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T03:49:38.405Z",
+          "createdBy": "ekFXBogb3lOJdqFZ20LHUcGKDdD2",
+          "createdByName": "Sanjeevi Sr",
+          "description": "",
+          "teamId": "Transmission",
+          "title": "Team using programmable controllers must show their parameter settings at any time of the event."
+        },
+        "-OuVBtiWSgxnTyLL5dQq": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T03:49:57.281Z",
+          "createdBy": "ekFXBogb3lOJdqFZ20LHUcGKDdD2",
+          "createdByName": "Sanjeevi Sr",
+          "description": "",
+          "teamId": "Transmission",
+          "title": "Controller power rating shall be ±500 W from the rated power of the motor."
+        }
+      },
+      "Wheel_Tyre": {
+        "-OuVl2fUY-gtrOgAL8I0": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T06:27:55.232Z",
+          "createdBy": "ayZ3Ik7NzJcPK5UjD4CdQ9P7Igv1",
+          "createdByName": "Kanishka",
+          "description": "",
+          "teamId": "Wheel_Tyre",
+          "title": "The wheel diameter should be a minimum of 10 inches and the tire minimum width must be 90mm"
+        },
+        "-OuVl6kJHC2urahxXy70": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T06:28:11.924Z",
+          "createdBy": "ayZ3Ik7NzJcPK5UjD4CdQ9P7Igv1",
+          "createdByName": "Kanishka",
+          "description": "",
+          "teamId": "Wheel_Tyre",
+          "title": "The tire and wheel assembly must be properly tightened such that there is no wobbling of the wheel is allowed"
+        },
+        "-OuVl9cfrd1WS0d3bho-": {
+          "category": "general",
+          "checked": false,
+          "createdAt": "2026-06-07T06:28:23.723Z",
+          "createdBy": "ayZ3Ik7NzJcPK5UjD4CdQ9P7Igv1",
+          "createdByName": "Kanishka",
+          "description": "",
+          "teamId": "Wheel_Tyre",
+          "title": "Wheels must be locked either with a Lock Nut or with the Cotter Pin"
+        }
+      }
+    },
+    "manufacture": {
+      "Innovation": {
+        "-OtjJJYNisokUYj-0N2N": {
+          "category": "manufacture",
+          "checked": false,
+          "checkedAt": "2026-05-28T16:01:03.822Z",
+          "checkedBy": "DINESH M 25MZ122",
+          "createdAt": "2026-05-28T16:00:58.584Z",
+          "createdBy": "Nr5e3Au63BTYb94HQxT1Kux6OOh1",
+          "createdByName": "DINESH M 25MZ122",
+          "description": "",
+          "teamId": "Innovation",
+          "title": "report"
+        },
+        "-OtjJYwEoZWJI_R16Sv7": {
+          "category": "manufacture",
+          "checked": false,
+          "createdAt": "2026-05-28T16:02:01.615Z",
+          "createdBy": "Nr5e3Au63BTYb94HQxT1Kux6OOh1",
+          "createdByName": "DINESH M 25MZ122",
+          "description": "",
+          "teamId": "Innovation",
+          "title": "report"
+        }
+      }
+    }
+  },
+  "subsystems": {
+    "autonomous": {
+      "color": "#c084fc",
+      "headId": "",
+      "headName": "Dheeshith",
+      "id": "autonomous",
+      "name": "Autonomous",
+      "pendingTasks": 2,
+      "progress": 0,
+      "readiness": 0,
+      "riskScore": 0,
+      "status": "Active"
+    },
+    "brakes": {
+      "color": "#fca5a5",
+      "headId": "",
+      "headName": "Sidharthan",
+      "id": "brakes",
+      "name": "Brakes",
+      "pendingTasks": 2,
+      "progress": 0,
+      "readiness": 0,
+      "riskScore": 0,
+      "status": "Active"
+    },
+    "cost": {
+      "color": "#94a3b8",
+      "headId": "",
+      "headName": "Janani",
+      "id": "cost",
+      "name": "COST",
+      "pendingTasks": 2,
+      "progress": 0,
+      "readiness": 0,
+      "riskScore": 0,
+      "status": "Active"
+    },
+    "design": {
+      "color": "#f472b6",
+      "headId": "",
+      "headName": "Rishi Karthick",
+      "id": "design",
+      "name": "Design",
+      "pendingTasks": 2,
+      "progress": 0,
+      "readiness": 0,
+      "riskScore": 0,
+      "status": "Active"
+    },
+    "electrical": {
+      "color": "#fde047",
+      "headId": "",
+      "headName": "Sanjay",
+      "id": "electrical",
+      "name": "Electrical",
+      "pendingTasks": 2,
+      "progress": 0,
+      "readiness": 0,
+      "riskScore": 0,
+      "status": "Active"
+    },
+    "innovation": {
+      "color": "#86efac",
+      "headId": "",
+      "headName": "Dinesh",
+      "id": "innovation",
+      "name": "Innovation",
+      "pendingTasks": 0,
+      "progress": 0,
+      "readiness": 0,
+      "riskScore": 0,
+      "status": "Active"
+    },
+    "media-sponsorship": {
+      "color": "#38bdf8",
+      "headId": "",
+      "headName": "Nitheesh",
+      "id": "media-sponsorship",
+      "name": "MEDIA AND SPONSORSHIP",
+      "pendingTasks": 2,
+      "progress": 0,
+      "readiness": 0,
+      "riskScore": 0,
+      "status": "Active"
+    },
+    "steering": {
+      "color": "#7dd3fc",
+      "headId": "",
+      "headName": "Janani",
+      "id": "steering",
+      "name": "Steering",
+      "pendingTasks": 2,
+      "progress": 0,
+      "readiness": 0,
+      "riskScore": 0,
+      "status": "Active"
+    },
+    "suspension": {
+      "color": "#ff6b6b",
+      "headId": "",
+      "headName": "Yugesh",
+      "id": "suspension",
+      "name": "Suspension",
+      "pendingTasks": 2,
+      "progress": 0,
+      "readiness": 0,
+      "riskScore": 0,
+      "status": "Active"
+    },
+    "transmission": {
+      "color": "#fdba74",
+      "headId": "",
+      "headName": "Sanjeevi",
+      "id": "transmission",
+      "name": "Transmission",
+      "pendingTasks": 2,
+      "progress": 0,
+      "readiness": 0,
+      "riskScore": 0,
+      "status": "Active"
+    }
+  },
+  "users": {
+    "3zOk2HDdgIhsAAt4ldwwfzLVupH3": {
+      "department": "Mechatronics Engineering",
+      "displayName": "Sri prenesh",
+      "email": "727723eumt129@skcet.ac.in",
+      "isOnline": false,
+      "lastActive": "2026-06-09T15:20:32.127Z",
+      "photoURL": "",
+      "role": "CAPTAIN",
+      "year": "4th Year"
+    },
+    "4iZ64ijOXlbaBH4TvwhazHz91y02": {
+      "approvedTeams": [
+        "steering",
+        "cost"
+      ],
+      "department": "Mechatronics Engineering",
+      "displayName": "Janani SK",
+      "email": "727724eumc044@skcet.ac.in",
+      "isOnline": false,
+      "lastActive": "2026-06-09T09:40:58.905Z",
+      "photoURL": "",
+      "role": "CAPTAIN",
+      "teams": [
+        {
+          "status": "APPROVED",
+          "teamId": "steering"
+        },
+        {
+          "status": "APPROVED",
+          "teamId": "cost"
+        }
+      ],
+      "year": "3rd Year"
+    },
+    "6uVzVcDinLSB14Ndo8AGHFCisWv2": {
+      "approvedTeams": [
+        "design"
+      ],
+      "department": "Mechatronics Engineering",
+      "displayName": "Rishi Karthick K P",
+      "email": "25mz045@skcet.ac.in",
+      "isOnline": false,
+      "lastActive": "2026-06-05T10:15:26.634Z",
+      "photoURL": "",
+      "role": "TEAM_LEAD",
+      "teams": [
+        {
+          "status": "APPROVED",
+          "teamId": "design"
+        }
+      ],
+      "year": "2nd Year"
+    },
+    "BE9ErnAPdkeM8fC4zIJCmWn8eC02": {
+      "approvedTeams": [
+        "brakes"
+      ],
+      "createdAt": "2026-05-28T12:34:50.202Z",
+      "department": "Mechatronics Engineering",
+      "displayName": "Balamurugan A ",
+      "email": "25mz077@skcet.ac.in",
+      "onboarded": true,
+      "photoURL": "",
+      "role": "MEMBER",
+      "teams": [
+        {
+          "status": "APPROVED",
+          "teamId": "brakes"
+        }
+      ],
+      "uid": "BE9ErnAPdkeM8fC4zIJCmWn8eC02",
+      "year": "2nd Year"
+    },
+    "BvXwGrZF4dPSANgTPXThTKBpe3j2": {
+      "department": "Mechatronics Engineering",
+      "displayName": "Harish",
+      "email": "727725eumc604@skcet.ac.in",
+      "isOnline": false,
+      "lastActive": "2026-04-30T16:52:27.039Z",
+      "photoURL": "",
+      "role": "CAPTAIN",
+      "year": "3rd Year"
+    },
+    "EW1LAu9Ey5QVZwBy8Juj21V2fat2": {
+      "approvedTeams": [
+        "electrical"
+      ],
+      "department": "Mechatronics Engineering",
+      "displayName": "SANJAY ",
+      "email": "727724eumc093@skcet.ac.in",
+      "isOnline": false,
+      "lastActive": "2026-06-07T18:56:09.104Z",
+      "photoURL": "",
+      "role": "TEAM_LEAD",
+      "teams": [
+        {
+          "status": "APPROVED",
+          "teamId": "electrical"
+        }
+      ],
+      "year": "3rd Year"
+    },
+    "FA4d5uqovwfn9KPnwmUlE9SopYI3": {
+      "approvedTeams": [
+        "innovation",
+        "autonomous"
+      ],
+      "department": "Mechatronics Engineering",
+      "displayName": "SARATH HARIHARAN T",
+      "email": "25mz110@skcet.ac.in",
+      "isOnline": false,
+      "lastActive": "2026-06-09T13:54:26.880Z",
+      "onboarded": true,
+      "photoURL": "",
+      "role": "MEMBER",
+      "teams": [
+        {
+          "status": "APPROVED",
+          "teamId": "innovation"
+        },
+        {
+          "status": "APPROVED",
+          "teamId": "autonomous"
+        }
+      ],
+      "year": "2nd Year"
+    },
+    "KrS6JwW0MmObRaODxRuV8T51z8R2": {
+      "approvedTeams": [
+        "innovation",
+        "autonomous"
+      ],
+      "department": "Mechatronics Engineering",
+      "displayName": "LOKESWARAN ",
+      "email": "25mz087@skcet.ac.in",
+      "isOnline": false,
+      "lastActive": "2026-06-10T10:03:01.816Z",
+      "onboarded": true,
+      "photoURL": "",
+      "role": "MEMBER",
+      "teams": [
+        {
+          "status": "APPROVED",
+          "teamId": "innovation"
+        },
+        {
+          "status": "APPROVED",
+          "teamId": "autonomous"
+        }
+      ],
+      "year": "2nd Year"
+    },
+    "M6Posdb5lNSXpcvNBztEG9aoVRj2": {
+      "department": "Mechatronics Engineering",
+      "displayName": "Nitin Sundaresan",
+      "email": "727723eumt092@skcet.ac.in",
+      "isOnline": false,
+      "lastActive": "2026-06-09T10:12:28.966Z",
+      "photoURL": "",
+      "role": "CAPTAIN",
+      "year": "4th Year"
+    },
+    "Nr5e3Au63BTYb94HQxT1Kux6OOh1": {
+      "approvedTeams": [
+        "innovation"
+      ],
+      "createdAt": "2026-05-14T13:04:23.765Z",
+      "department": "Mechatronics Engineering",
+      "displayName": "DINESH M 25MZ122",
+      "drive_tokens": {
+        "access_token": "ya29.a0AQvPyINw6HsPU15qRSXSEed1llOEbpdUhBhOxcPNCCVGQg5TKrE4n_Vq5wzSw4Pktg5GsRuPhxWBzFYCpJJoO2mf_dg0piShdT-wPd3KnJ3OSwkTe9YFao2bGTSsbdsJ3i4y_kgMlntGPuSSkcLIL80Ixj4DmdJjzs0fkqJNzYylbMv50qAiihCJ7aG65LkaJwOssIAaCgYKAWMSARESFQHGX2MiXmeosIXfg9N_8b8Tvvwckg0206",
+        "expiry_date": 1777733639193,
+        "refresh_token": "1//0gcD8NF1LJkPoCgYIARAAGBASNgF-L9IrcJwHSyGtt80jqc8D8_7HIitYZkyul72IKYv2jMNFAe4h-VcQ3Eo6NcUUYd18L2n3Yw",
+        "scope": "https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/drive.file",
+        "token_type": "Bearer"
+      },
+      "email": "25mz122@skcet.ac.in",
+      "isOnline": true,
+      "lastActive": "2026-06-10T13:40:12.302Z",
+      "photoURL": "https://lh3.googleusercontent.com/a/ACg8ocKt6dGK_PT0dPK1tLkVhpvo22-H1yyn6kvYp76tSQSgr-aIYg=s96-c",
+      "role": "CAPTAIN",
+      "teams": [
+        {
+          "status": "APPROVED",
+          "teamId": "innovation"
+        }
+      ],
+      "uid": "Nr5e3Au63BTYb94HQxT1Kux6OOh1",
+      "year": "2nd Year"
+    },
+    "PrB1w6cd80Wf5yOzrh9ojHmo61y1": {
+      "approvedTeams": [
+        "autonomous",
+        "cost",
+        "design"
+      ],
+      "createdAt": "2026-05-28T12:25:58.291Z",
+      "department": "Mechatronics Engineering",
+      "displayName": "Angel",
+      "email": "25mz075@skcet.ac.in",
+      "isOnline": false,
+      "lastActive": "2026-05-30T09:49:11.976Z",
+      "onboarded": true,
+      "photoURL": "",
+      "role": "MEMBER",
+      "teams": [
+        {
+          "status": "APPROVED",
+          "teamId": "autonomous"
+        },
+        {
+          "status": "APPROVED",
+          "teamId": "cost"
+        },
+        {
+          "status": "APPROVED",
+          "teamId": "design"
+        }
+      ],
+      "uid": "PrB1w6cd80Wf5yOzrh9ojHmo61y1",
+      "year": "2nd Year"
+    },
+    "ayZ3Ik7NzJcPK5UjD4CdQ9P7Igv1": {
+      "department": "Mechatronics Engineering",
+      "displayName": "Kanishka",
+      "email": "727724eumc054@skcet.ac.in",
+      "isOnline": false,
+      "lastActive": "2026-06-07T19:05:36.344Z",
+      "photoURL": "https://kommodo.ai/i/fFB36rUN8HHxyhPZOQNv",
+      "role": "CAPTAIN",
+      "year": "3rd Year"
+    },
+    "d4Z8Q8x6FbSan4TJRijXRyDclkd2": {
+      "approvedTeams": [
+        "pro"
+      ],
+      "department": "Mechatronics Engineering",
+      "displayName": "NITEESH R ",
+      "email": "727725eumc608@skcet.ac.in",
+      "isOnline": false,
+      "lastActive": "2026-04-30T17:36:53.160Z",
+      "photoURL": "",
+      "role": "CAPTAIN",
+      "teams": [
+        {
+          "status": "APPROVED",
+          "teamId": "pro"
+        }
+      ],
+      "year": "3rd Year"
+    },
+    "dr1yZHzSrXYI0HZETIBZj0oEspp2": {
+      "approvedTeams": [
+        "brakes"
+      ],
+      "department": "Mechatronics Engineering",
+      "displayName": "Siddarthan.S ",
+      "email": "727724eumc114@skcet.ac.in",
+      "isOnline": false,
+      "lastActive": "2026-06-07T18:47:04.255Z",
+      "photoURL": "",
+      "role": "TEAM_LEAD",
+      "teams": [
+        {
+          "status": "APPROVED",
+          "teamId": "brakes"
+        }
+      ],
+      "year": "3rd Year"
+    },
+    "e2W4KYQeLxgk5xb4F4MjIYfpUYL2": {
+      "department": "Mechatronics Engineering",
+      "displayName": "HARESHKUMAR",
+      "email": "727724eumc036@skcet.ac.in",
+      "isOnline": false,
+      "lastActive": "2026-06-09T15:38:00.658Z",
+      "photoURL": "",
+      "role": "CAPTAIN",
+      "year": "3rd Year"
+    },
+    "ekFXBogb3lOJdqFZ20LHUcGKDdD2": {
+      "approvedTeams": [
+        "transmission"
+      ],
+      "department": "Mechatronics Engineering",
+      "displayName": "Sanjeevi Sr",
+      "email": "25mz021@skcet.ac.in",
+      "isOnline": false,
+      "lastActive": "2026-06-08T10:34:13.819Z",
+      "photoURL": "",
+      "role": "TEAM_LEAD",
+      "teams": [
+        {
+          "status": "APPROVED",
+          "teamId": "transmission"
+        }
+      ],
+      "year": "1st Year"
+    },
+    "g7fTr9a3TxO6Mb3QEBGid8yydKj2": {
+      "createdAt": "2026-06-10T13:39:35.684Z",
+      "displayName": "Engineer",
+      "onboarded": false,
+      "role": "MEMBER",
+      "uid": "g7fTr9a3TxO6Mb3QEBGid8yydKj2"
+    },
+    "gQajS9hNjbTmvFgDBMz7FZh2nBt2": {
+      "createdAt": "2026-05-28T14:07:27.885Z",
+      "department": "Mechatronics Engineering",
+      "displayName": "Asma Amreen Khan AK ",
+      "email": "727724eumc011@skcet.ac.in",
+      "isOnline": false,
+      "lastActive": "2026-06-07T05:49:29.076Z",
+      "onboarded": true,
+      "photoURL": "",
+      "role": "CAPTAIN",
+      "uid": "gQajS9hNjbTmvFgDBMz7FZh2nBt2",
+      "year": "3rd Year"
+    },
+    "kNWvIKzFDwdGLrmgXBg4Gg7LWb72": {
+      "approvedTeams": [
+        "suspension"
+      ],
+      "department": "Mechatronics Engineering",
+      "displayName": "G yugesh gobi",
+      "email": "25mz096@skcet.ac.in",
+      "isOnline": false,
+      "lastActive": "2026-06-08T01:01:24.441Z",
+      "photoURL": "",
+      "role": "TEAM_LEAD",
+      "teams": [
+        {
+          "status": "APPROVED",
+          "teamId": "suspension"
+        }
+      ],
+      "year": "1st Year"
+    }
+  }
+}
