@@ -134,17 +134,28 @@ export async function assignTeamHead(uid: string, teamId: string) {
   }
 }
 
-export async function fetchPendingMembers(teamIds: string[]) {
-  const query = teamIds.includes('all') ? 'all' : teamIds.join(',');
-  const response = await fetch(`/api/admin/pending?teamIds=${query}`);
-  if (!response.ok) throw new Error("Failed to fetch pending members");
-  return response.json() as Promise<UserProfile[]>;
+export async function fetchPendingMembers(teamIds: string[]): Promise<UserProfile[]> {
+  // Read directly from Firebase RTDB — no backend needed
+  const snapshot = await get(ref(rtdb, 'users'));
+  if (!snapshot.exists()) return [];
+  const allUsers: UserProfile[] = Object.entries(snapshot.val()).map(([key, val]: [string, any]) => {
+    const finalUid = (val && val.uid && typeof val.uid === 'string' && val.uid.length > 5) ? val.uid : key;
+    return { ...val, uid: finalUid } as UserProfile;
+  });
+  if (teamIds.includes('all')) {
+    return allUsers.filter(u => u.teams?.some(t => t.status === 'PENDING'));
+  }
+  return allUsers.filter(u => u.teams?.some(t => t.status === 'PENDING' && teamIds.includes(t.teamId)));
 }
 
-export async function fetchAllUsers() {
-  const response = await fetch('/api/admin/members');
-  if (!response.ok) throw new Error("Failed to fetch all members");
-  return response.json() as Promise<UserProfile[]>;
+export async function fetchAllUsers(): Promise<UserProfile[]> {
+  // Read directly from Firebase RTDB — no backend needed, always shows all users with their real emails
+  const snapshot = await get(ref(rtdb, 'users'));
+  if (!snapshot.exists()) return [];
+  return Object.entries(snapshot.val()).map(([key, val]: [string, any]) => {
+    const finalUid = (val && val.uid && typeof val.uid === 'string' && val.uid.length > 5) ? val.uid : key;
+    return { ...val, uid: finalUid } as UserProfile;
+  });
 }
 
 export async function deleteUser(uid: string) {

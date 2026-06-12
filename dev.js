@@ -16,14 +16,30 @@ console.log(`Starting services in: ${__dirname}`);
 
 // Start Vite frontend
 const viteProcess = spawn('node', [vitePath], { 
-    stdio: 'inherit',
+    stdio: ['ignore', 'inherit', 'inherit'],
     cwd: __dirname
+});
+
+viteProcess.on('error', (err) => {
+    console.error('[Launcher] Vite process failed to start:', err.message);
+});
+
+viteProcess.on('exit', (code, signal) => {
+    console.log(`[Launcher] Vite process exited with code ${code} and signal ${signal}`);
 });
 
 // Start Express backend with watch mode so it auto-restarts on changes
 const serverProcess = spawn('node', [tsxPath, 'watch', 'server.ts'], { 
-    stdio: 'inherit',
+    stdio: ['ignore', 'inherit', 'inherit'],
     cwd: __dirname
+});
+
+serverProcess.on('error', (err) => {
+    console.error('[Launcher] Server process failed to start:', err.message);
+});
+
+serverProcess.on('exit', (code, signal) => {
+    console.log(`[Launcher] Server process exited with code ${code} and signal ${signal}`);
 });
 
 // Handle termination to clean up both processes
@@ -36,3 +52,4 @@ const cleanup = () => {
 
 process.on('SIGINT', cleanup);
 process.on('SIGTERM', cleanup);
+

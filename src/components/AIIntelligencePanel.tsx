@@ -40,6 +40,9 @@ interface AIIntelligencePanelProps {
 }
 
 export default function AIIntelligencePanel({ type, data, context, subsystem, members = [] }: AIIntelligencePanelProps) {
+  if (!data || (Array.isArray(data) && data.length === 0)) {
+    return null;
+  }
   const { profile } = useAuth();
   const [analysis, setAnalysis] = useState<any>(null);
   const [loading, setLoading] = useState(false);

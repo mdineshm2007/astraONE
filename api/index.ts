@@ -125,7 +125,7 @@ if (!admin.apps.length) {
 let groq: Groq | null = null;
 try {
     // Env vars take priority, hardcoded fallback ensures Vercel works without manual setup
-    const apiKey = (process.env.GROQ_API_KEY || "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").trim();
+    const apiKey = (process.env.GROQ_API_KEY || "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").trim();
     if (apiKey) {
       groq = new Groq({ apiKey });
       console.log("[Groq] SDK Initialized Successfully");
@@ -826,21 +826,79 @@ app.post("/api/drive/upload", upload.single("file"), async (req, res) => {
 
 app.post("/api/chat", async (req, res) => {
   try {
-    const { messages } = req.body;
-    if (!groq) throw new Error("AI Assistant offline (Missing API Key)");
+    const { messages, endpoint, model, apiKey } = req.body;
+    
+    let activeEndpoint = endpoint || "https://api.groq.com/openai/v1/chat/completions";
+    const activeModel = model || "llama-3.1-8b-instant";
+    const activeKey = apiKey || process.env.GROQ_API_KEY || "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";
 
-    // Pass all messages as-is (system prompt with live data is injected by the frontend)
-    const completion = await groq.chat.completions.create({
-      messages,
-      model: "llama-3.1-8b-instant",
-      temperature: 0.7,
-      max_tokens: 1024,
+    // Prevent infinite recursion loops if user sets the proxy endpoint as the target
+    if (activeEndpoint.includes("/api/chat")) {
+      activeEndpoint = "https://api.groq.com/openai/v1/chat/completions";
+    }
+
+    if (!activeKey) throw new Error("AI Assistant offline (Missing API Key)");
+
+    // Call the target API dynamically (handles any third-party or fine-tuned provider)
+    const response = await fetch(activeEndpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${activeKey}`,
+        'bypass-tunnel-reminder': 'true' // Bypasses localtunnel warning pages for API clients
+      },
+      body: JSON.stringify({
+        model: activeModel,
+        messages,
+        temperature: 0.7,
+        max_tokens: 1024
+      })
     });
 
-    res.json({ message: completion.choices[0]?.message?.content });
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`AI Provider returned error ${response.status}: ${errorText}`);
+    }
+
+    const data = await response.json();
+    const assistantMessage = data.choices?.[0]?.message?.content || "No response generated.";
+    res.json({ message: assistantMessage });
   } catch (error: any) {
     console.error("Chat API Error:", error?.message || error);
     res.status(500).json({ error: error?.message || "Failed to communicate with AI" });
+  }
+});
+
+// --- Full Data Backup Endpoint ---
+app.get("/api/backup/full", async (req, res) => {
+  try {
+    const dbUrl = process.env.FIREBASE_DATABASE_URL || 'https://studio-1045950084-89865-default-rtdb.asia-southeast1.firebasedatabase.app/';
+    const dbSecret = process.env.FIREBASE_DATABASE_SECRET || '';
+    
+    // Fetch all data from Firebase REST API
+    const response = await fetch(`${dbUrl}.json?auth=${dbSecret}`);
+    if (!response.ok) throw new Error(`Firebase REST error: ${response.status}`);
+    const allData = await response.json();
+    
+    res.json({
+      success: true,
+      exportedAt: new Date().toISOString(),
+      data: {
+        users: allData.users || {},
+        tasks: allData.tasks || {},
+        subsystems: allData.subsystems || {},
+        posts: allData.posts || {},
+        queries: allData.queries || {},
+        notebooks: allData.notebooks || {},
+        teamRequests: allData.teamRequests || {},
+        notifications: allData.notifications || {},
+        innovation: allData.innovation || {},
+        updates: allData.updates || {},
+      }
+    });
+  } catch (error: any) {
+    console.error("[Backup] Full backup failed:", error.message);
+    res.status(500).json({ error: error.message });
   }
 });
 

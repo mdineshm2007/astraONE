@@ -9,6 +9,7 @@ export default defineConfig(({ mode }) => {
     plugins: [react(), tailwindcss()],
     define: {
       'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
+      'process.env.GROQ_API_KEY': JSON.stringify(env.GROQ_API_KEY),
     },
     resolve: {
       alias: {
@@ -21,7 +22,15 @@ export default defineConfig(({ mode }) => {
         '/api': {
           target: 'http://127.0.0.1:3001',
           changeOrigin: true,
-        }
+        },
+        '/groq': {
+          target: 'https://api.groq.com',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/groq/, ''),
+          headers: {
+            'Authorization': `Bearer ${env.GROQ_API_KEY}`,
+          },
+        },
       },
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
       // Do not modifyâfile watching is disabled to prevent flickering during agent edits.

@@ -805,21 +805,46 @@ app.get("/api/drive/folders", async (req, res) => {
     }
   });
 
-  // AI Assistant - Primary Assistant (Llama 3.1 8B)
+  // AI Assistant - Dynamic Assistant (Llama 3.1 8B / Custom Fine-tuned Models)
   app.post("/api/chat", async (req, res) => {
     try {
-      const { messages } = req.body;
-      if (!groq) throw new Error("AI Assistant offline (Missing API Key)");
+      const { messages, endpoint, model, apiKey } = req.body;
+      
+      let activeEndpoint = endpoint || "https://api.groq.com/openai/v1/chat/completions";
+      const activeModel = model || "llama-3.1-8b-instant";
+      const activeKey = apiKey || process.env.GROQ_API_KEY || "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";
 
-      // Pass all messages as-is (system prompt is injected by the frontend with live data)
-      const completion = await groq.chat.completions.create({
-        messages,
-        model: "llama-3.1-8b-instant",
-        temperature: 0.7,
-        max_tokens: 1024,
+      // Prevent infinite recursion loops if user sets the proxy endpoint as the target
+      if (activeEndpoint.includes("/api/chat")) {
+        activeEndpoint = "https://api.groq.com/openai/v1/chat/completions";
+      }
+
+      if (!activeKey) throw new Error("AI Assistant offline (Missing API Key)");
+
+      // Call the target API dynamically (handles any third-party or fine-tuned provider)
+      const response = await fetch(activeEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${activeKey}`,
+          'bypass-tunnel-reminder': 'true' // Bypasses localtunnel warning pages for API clients
+        },
+        body: JSON.stringify({
+          model: activeModel,
+          messages,
+          temperature: 0.7,
+          max_tokens: 1024
+        })
       });
 
-      res.json({ message: completion.choices[0]?.message?.content });
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`AI Provider returned error ${response.status}: ${errorText}`);
+      }
+
+      const data = await response.json();
+      const assistantMessage = data.choices?.[0]?.message?.content || "No response generated.";
+      res.json({ message: assistantMessage });
     } catch (error: any) {
       console.error("Chat API Error:", error?.message || error);
       res.status(500).json({ error: error?.message || "Failed to communicate with AI" });

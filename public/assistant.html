@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>ASTRA AI — Standalone Assistant</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<style>
+  :root {
+    --bg-dark: #090d16;
+    --panel-bg: rgba(17, 25, 40, 0.75);
+    --border-color: rgba(255, 255, 255, 0.1);
+    --primary: #0ea5e9;
+    --primary-hover: #38bdf8;
+    --text-main: #e2e8f0;
+    --text-muted: #94a3b8;
+    --user-msg: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+    --bot-msg: rgba(30, 41, 59, 0.7);
+  }
+
+  body {
+    margin: 0;
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: radial-gradient(circle at top right, #0c152b, var(--bg-dark));
+    color: var(--text-main);
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  #app {
+    width: 100%;
+    max-width: 900px;
+    height: 90vh;
+    background: var(--panel-bg);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid var(--border-color);
+    border-radius: 24px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+  }
+
+  header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(15, 23, 42, 0.4);
+  }
+
+  header h1 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  header h1 span {
+    color: var(--primary);
+  }
+
+  header p {
+    margin: 4px 0 0;
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .settings-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    border-radius: 10px;
+    padding: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .settings-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: scale(1.05);
+  }
+
+  #messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    scroll-behavior: smooth;
+  }
+
+  #messages::-webkit-scrollbar {
+    width: 6px;
+  }
+  #messages::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 3px;
+  }
+
+  .msg-container {
+    display: flex;
+    flex-direction: column;
+    max-width: 80%;
+  }
+
+  .msg-container.user {
+    align-self: flex-end;
+  }
+
+  .msg-container.bot {
+    align-self: flex-start;
+  }
+
+  .msg {
+    padding: 14px 18px;
+    border-radius: 18px;
+    line-height: 1.6;
+    font-size: 14px;
+    white-space: pre-wrap;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .user .msg {
+    background: var(--user-msg);
+    color: #fff;
+    border-bottom-right-radius: 4px;
+  }
+
+  .bot .msg {
+    background: var(--bot-msg);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    border-bottom-left-radius: 4px;
+  }
+
+  .sources {
+    margin-top: 8px;
+    font-size: 11px;
+    color: var(--text-muted);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    padding-top: 6px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .source-tag {
+    background: rgba(14, 165, 233, 0.15);
+    color: var(--primary-hover);
+    padding: 2px 8px;
+    border-radius: 6px;
+    border: 1px solid rgba(14, 165, 233, 0.2);
+    font-weight: 600;
+  }
+
+  #inputbar {
+    display: flex;
+    gap: 12px;
+    padding: 20px 24px;
+    border-top: 1px solid var(--border-color);
+    background: rgba(15, 23, 42, 0.3);
+  }
+
+  #q {
+    flex: 1;
+    padding: 14px 18px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    background: rgba(15, 23, 42, 0.6);
+    color: var(--text-main);
+    font-size: 14px;
+    outline: none;
+    transition: all 0.2s;
+  }
+
+  #q:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 10px rgba(14, 165, 233, 0.2);
+  }
+
+  #send {
+    padding: 0 24px;
+    border-radius: 12px;
+    border: none;
+    background: var(--primary);
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 14px;
+  }
+
+  #send:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+  }
+
+  #send:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* Settings Modal */
+  #settingsModal {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(9, 13, 22, 0.85);
+    backdrop-filter: blur(8px);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+  }
+
+  .modal-content {
+    background: #111827;
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    width: 90%;
+    max-width: 450px;
+    padding: 24px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding-bottom: 12px;
+  }
+
+  .modal-header h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 800;
+  }
+
+  .close-modal {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 20px;
+    cursor: pointer;
+  }
+
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  .form-group label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    letter-spacing: 0.5px;
+  }
+
+  .form-group input, .form-group select {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-main);
+    font-size: 13px;
+    box-sizing: border-box;
+    outline: none;
+  }
+
+  .form-group input:focus {
+    border-color: var(--primary);
+  }
+
+  .modal-footer {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+  }
+
+  .modal-footer button {
+    flex: 1;
+    padding: 10px 0;
+    border-radius: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 13px;
+  }
+
+  .save-btn {
+    background: var(--primary);
+    border: none;
+    color: #fff;
+  }
+
+  .save-btn:hover {
+    background: var(--primary-hover);
+  }
+
+  .clear-btn {
+    background: transparent;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    color: #ef4444;
+  }
+
+  .clear-btn:hover {
+    background: rgba(239, 68, 68, 0.1);
+  }
+
+  .loading-dots {
+    display: inline-flex;
+    gap: 4px;
+  }
+
+  .loading-dots div {
+    width: 6px;
+    height: 6px;
+    background: var(--primary);
+    border-radius: 50%;
+    animation: bounce 1.4s infinite ease-in-out both;
+  }
+
+  .loading-dots div:nth-child(1) { animation-delay: -0.32s; }
+  .loading-dots div:nth-child(2) { animation-delay: -0.16s; }
+
+  @keyframes bounce {
+    0%, 80%, 100% { transform: scale(0); }
+    40% { transform: scale(1.0); }
+  }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <header>
+    <div>
+      <h1><span>ASTRA</span> AI Assistant</h1>
+      <p>Standalone reports, BOM, and engineering copilot</p>
+    </div>
+    <div class="header-actions">
+      <button class="settings-btn" id="openSettings" title="Configure Keys & Endpoints">
+        <!-- SVG gear icon -->
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+      </button>
+    </div>
+  </header>
+
+  <div id="messages"></div>
+
+  <div id="inputbar">
+    <input id="q" type="text" placeholder="Ask about brakes, solar panel, cost reports, or innovations..." />
+    <button id="send">Send</button>
+  </div>
+
+  <!-- Settings Modal -->
+  <div id="settingsModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Configure API Settings</h3>
+        <button class="close-modal" id="closeSettings">&times;</button>
+      </div>
+      
+      <div class="form-group">
+        <label>API Provider</label>
+        <select id="apiProvider">
+          <option value="local">Local Express Backend (/api/chat)</option>
+          <option value="groq">Groq Cloud API (Free / Fast)</option>
+          <option value="huggingface">Hugging Face Serverless (Free)</option>
+        </select>
+      </div>
+
+      <div class="form-group" id="endpointGroup">
+        <label>API Endpoint URL</label>
+        <input type="text" id="apiEndpoint" placeholder="/api/chat" />
+      </div>
+
+      <div class="form-group">
+        <label>Model Name / ID</label>
+        <input type="text" id="apiModel" placeholder="llama-3.1-8b-instant" />
+      </div>
+
+      <div class="form-group" id="keyGroup">
+        <label>API Key / Token</label>
+        <input type="password" id="apiKey" placeholder="Not required for Local backend..." />
+      </div>
+
+      <div class="modal-footer">
+        <button class="clear-btn" id="clearSettings">Clear</button>
+        <button class="save-btn" id="saveSettings">Save Settings</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// =============================================================================
+// BAKED-IN KNOWLEDGE BASE CHUNKS (Extracted from ASTRA PDF Reports & calculations)
+// =============================================================================
+const CHUNKS = [
+  { "source": "Innovation Report", "text": "ABSTRACT: Our innovation suite includes Sense Vision (ultrasonic blind-spot system), VTSI-X (Vehicle Thermal Stress Index using ESP32 & Pi), AstraKonekt (mobile telemetry app), Pothole Detection System (computer vision road scanner), ElectraAR (Augmented Reality electrical debugger), VR ADAS (motion-linked driver training), ASEVCANv1 (telemetry PCB), and Crash Detector." },
+  { "source": "Innovation Report", "text": "1. SENSE VISION SYSTEM: Blind-spot safety system using ultrasonic JSN-SR04 sensors and webcam feed processed via Raspberry Pi 5 to estimate distance. Cost: Rs.24,540 (Rs.7,540 after SKCET incubation concession). Novelty: Combines ultrasonic ranging with Raspberry Pi object tracking bumper unit." },
+  { "source": "Innovation Report", "text": "2. SAFETY TECH & RIDER TAGGING: Drowsiness detection combining visual markers (OpenCV facial/eyelid monitoring using Eye Aspect Ratio) with physiological data (wearable pulse band via ESP32-C3). Reduces false positives by validating eye states with driver heart-rate fluctuations. Cost: Rs.1,550." },
+  { "source": "Innovation Report", "text": "3. ASTRAKONEKT: Flutter/Android application connecting directly to ESP8266 telemetry controller via direct local WiFi. Provides live dashboards, graphs, trip logs, and system diagnostics for electric vehicles. Cost: Rs.200." },
+  { "source": "Innovation Report", "text": "4. ELECTRAAR: Augmented Reality electrical fault detection. ESP8266 monitors secondary loads (headlight, horn, indicators) and reports voltage states. Unity/Vuforia app scans components via camera and overlays fault guides. Reduces troubleshooting time by 80% (from 15 min to 2 min). Cost: Rs.1,100." },
+  { "source": "Innovation Report", "text": "5. VR ADAS: Advanced Driver Assistance Platform. Transmits real-time gyroscope, accelerator, and brake limit switch data from the physical kart to a Unity VR headset. Alerts the driver during training to excessive roll, lockups, or instability based on real vehicle dynamics." },
+  { "source": "Innovation Report", "text": "6. VTSI-X THERMAL SYSTEM: Calculates a unified Vehicle Thermal Stress Index (VTSI). Collects motor and battery temperatures over CAN bus, normalizes states, and runs predictive analysis on temp rise rate (dT/dt) to alert the driver via Pi display. Cost: Rs.5,200." },
+  { "source": "Innovation Report", "text": "7. ASEVCANV1 DRIVER: Centralized communication and power board. Reads vehicle sensor streams via CAN transceiver (MCP2551) on an STM32, transmits them wirelessly via ESP32, and displays metrics on a DWIN HMI. Regulates power via buck converter. Cost: Rs.1,750." },
+  { "source": "Innovation Report", "text": "8. POTHOLE DETECTION (HRMS): Webcam scans road in real-time. Raspberry Pi processes video with computer vision, identifying potholes. Displays visual cockpit warning 'Go Slow - Pothole Ahead' to save low-ground-clearance karts. Cost: Rs.7,540." },
+  { "source": "Innovation Report", "text": "9. AUTOMATED PANEL CLEANER: Microfiber brush carriage driven by stepper motor and ball screw mechanism (90% mechanical efficiency vs 50% lead screws). Controlled via Arduino Uno. Step angle of 1.8 deg, ball screw pitch of 5mm yields 0.025mm precision. Cost: Rs.2,700." },
+  { "source": "Innovation Report", "text": "10. CRASH DETECTOR: Standalone safety module. Tracks orientation and acceleration with MPU6050 and crash boundaries with JSN-SR04 ultrasonic impact sensor. SIM808 module sends GPS coordinate link via SMS to emergency contacts upon crash. Cost: Rs.2,319." },
+  { "source": "Innovation Report", "text": "11. ASEVDASH 3.o: Core cockpit display. 7-inch HMI screen showing State of Charge (SOC), kart speed, motor RPM, battery voltage, motor/battery currents, and temperatures by interfacing with the Astra CAN driver. Cost: Rs.6,250." },
+  { "source": "Design Report 2026", "text": "CHASSIS FRAME: Fabricated with AISI 4130 Chromoly Steel (Upgrade over AISI 1018). Tensile Strength: 727 MPa. Yield Strength: 581 MPa. Density: 7.85 g/cm3. Primary Member: 25.4mm diameter, 1.2mm thickness. Secondary Member: 19.08mm, 1mm thickness. Roll cage weight: 30 Kg. Total vehicle weight: 310 Kg." },
+  { "source": "Design Report 2026", "text": "CAE CHASSIS TESTS: Front impact: 10290 N force, max deformation 1.92mm, stress 188.7 MPa, Factor of Safety (FOS) 3.1. Side impact: 8820 N force, deformation 3.11mm, stress 451.6 MPa, FOS 1.2. Rear impact: 10290 N, deformation 5.9mm, stress 278.1 MPa, FOS 2.1. Rollover: 8820 N, deformation 6.6mm, FOS 1.6." },
+  { "source": "Design Report 2026", "text": "SUSPENSION GEOMETRY: Independent Double Wishbone (Short Long Arm) planar four-bar mechanism. Ground Clearance: 203.2 mm (7 inches). Jounce: 50mm. Bounce: 50mm. Scrub Radius: 2 inches. KPI Angle: 7 degrees. Upper Wishbone: 174.7mm. Lower: 209.2mm. Spring Stiffness: 30 N/mm front, 40 N/mm rear." },
+  { "source": "Design Report 2026", "text": "SUSPENSION DISTRIBUTION: Static weight split: 60% Rear (186 Kg), 40% Front (124 Kg). Sprung Mass: 200 Kg (without driver). Total mass with driver: 310 Kg. Front View Swing Arm (FVSA) length: 32.73 inches. Roll Camber: 0.31. Wheel Camber: 1.24 deg. Roll Center height: 11 inches." },
+  { "source": "Design Report 2026", "text": "STEERING SYSTEM: Rack and Pinion Steering using Ackermann steering geometry. Wheelbase: 65 inches. Track Width: 45 inches. Kingpin C-C Distance: 33 inches. Turning Radius: 3250mm. Ackermann Angle: 28.5 degrees. Ackermann Percentage: 111.23%. Inside wheel angle: 31.7 deg. Outside wheel angle: 23.3 deg." },
+  { "source": "Design Report 2026", "text": "BRAKING SYSTEM: X-split dual hydraulic layout. Stop distance: 3.6m. Master cylinder bore: 17mm, stroke: 19mm. Disc plate diameter: 200mm. Brake force distribution: 2790 N. Torque per wheel: 234.39 Nm. Pedal ratio: 6:1. Pedal travel: 50.8mm. Pedal force required: 1382.62 N." },
+  { "source": "Design Report 2026", "text": "POWERTRAIN CALCULATIONS: Motor: Hybrid Synchronous Reluctance Motor. Nominal Voltage: 60V. Transmission: Gearbox with 10:1 ratio. Rated Power: 4000 W (Peak: 8000 W). Max Torque on Wheel: 105 Nm. Max Speed: 60 Km/h. Acceleration: 3.33 m/s^2. Tyres: 90/90-R12." },
+  { "source": "Design Report 2026", "text": "BATTERY PACK: Lithium-Ion NMC cell chemistry. 1 pack. Nominal Voltage: 60V. Charging/Discharging Rate: 1C / 2C. Capacity: 100 Ah (6 kWh). Dimensions: 381mm x 292mm x 254mm. DC-DC Converter: Input 60V, Output 12V 15A (180W), efficiency 92% (Flyback mechanism)." },
+  { "source": "Design Report 2026", "text": "SOLAR PANEL SPECS: 2 Flexible Mono-Perc panels. Voc: 48.96V. Vmpp: 42.55V. Isc: 5.25A. Impp: 4.93A. Expected power output: 411.2 W. Panel active area efficiency: 21.1%. MPPT Charge Controller: Max output 20A, Multi-Stage Adaptive tracking algorithm." },
+  { "source": "Cost Report 2026", "text": "BUDGET SUMMARY: Total material cost of ASTRA vehicle: Rs.4,57,831.11. Budget breakdown: Battery (Rs.1,30,000), Chassis frame materials (Rs.73,787), Solar panels & MPPT (Rs.45,000), Motor & gearbox (Rs.41,300), Wheel assembly (Rs.26,290), Steering (Rs.15,000), Electrical secondary systems (Rs.14,481)." },
+  { "source": "Cost Report 2026", "text": "COST RULES: Cost documentation requires retail list prices excluding sales tax/VAT. Foreign items must use Indian retail quotes if available. Custom parts require standard customer quotes. Receipts for all items over Rs.100 must be label-numbered in the report." }
+];
+
+// =============================================================================
+// CORE JS LOGIC: CHAT & CLIENT-SIDE KEYWORD SEARCH
+// =============================================================================
+const messagesEl = document.getElementById('messages');
+const qInput = document.getElementById('q');
+const sendBtn = document.getElementById('send');
+
+// Default config values
+const DEFAULTS = {
+  local: {
+    endpoint: "/api/chat",
+    model: "llama-3.1-8b-instant",
+    key: "ollama"
+  },
+  groq: {
+    endpoint: "https://api.groq.com/openai/v1/chat/completions",
+    model: "llama-3.1-8b-instant",
+    key: "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"
+  },
+  huggingface: {
+    endpoint: "https://api-inference.huggingface.co/v1/chat/completions",
+    model: "meta-llama/Meta-Llama-3.1-8B-Instruct",
+    key: ""
+  }
+};
+
+// Load settings from localStorage
+function getSetting(key, fallback = "") {
+  return localStorage.getItem('astra_ast_' + key) || fallback;
+}
+
+// Initial settings load (Local Backend as default for zero-setup)
+let currentProvider = getSetting('provider', 'local');
+document.getElementById('apiProvider').value = currentProvider;
+document.getElementById('apiEndpoint').value = getSetting('endpoint', DEFAULTS[currentProvider].endpoint);
+document.getElementById('apiModel').value = getSetting('model', DEFAULTS[currentProvider].model);
+document.getElementById('apiKey').value = getSetting('key', DEFAULTS[currentProvider].key);
+
+// Toggle UI inputs depending on active provider
+function updateFormVisibility(prov) {
+  const keyGroup = document.getElementById('keyGroup');
+  const endpointGroup = document.getElementById('endpointGroup');
+  const keyInput = document.getElementById('apiKey');
+  
+  if (prov === 'local') {
+    keyGroup.style.opacity = '0.5';
+    keyInput.placeholder = "Not required for Local backend...";
+    keyInput.disabled = true;
+  } else {
+    keyGroup.style.opacity = '1';
+    keyInput.placeholder = "Paste your API key here...";
+    keyInput.disabled = false;
+  }
+}
+updateFormVisibility(currentProvider);
+
+// Handle toggle provider updates
+document.getElementById('apiProvider').addEventListener('change', (e) => {
+  const prov = e.target.value;
+  document.getElementById('apiEndpoint').value = DEFAULTS[prov].endpoint;
+  document.getElementById('apiModel').value = DEFAULTS[prov].model;
+  document.getElementById('apiKey').value = DEFAULTS[prov].key;
+  updateFormVisibility(prov);
+});
+
+// Settings Modal controls
+document.getElementById('openSettings').addEventListener('click', () => {
+  document.getElementById('settingsModal').style.display = 'flex';
+});
+
+document.getElementById('closeSettings').addEventListener('click', () => {
+  document.getElementById('settingsModal').style.display = 'none';
+});
+
+document.getElementById('saveSettings').addEventListener('click', () => {
+  localStorage.setItem('astra_ast_provider', document.getElementById('apiProvider').value);
+  localStorage.setItem('astra_ast_endpoint', document.getElementById('apiEndpoint').value);
+  localStorage.setItem('astra_ast_model', document.getElementById('apiModel').value);
+  localStorage.setItem('astra_ast_key', document.getElementById('apiKey').value);
+  alert('Settings saved successfully!');
+  document.getElementById('settingsModal').style.display = 'none';
+});
+
+document.getElementById('clearSettings').addEventListener('click', () => {
+  localStorage.removeItem('astra_ast_provider');
+  localStorage.removeItem('astra_ast_endpoint');
+  localStorage.removeItem('astra_ast_model');
+  localStorage.removeItem('astra_ast_key');
+  
+  // Reload defaults
+  document.getElementById('apiProvider').value = 'local';
+  document.getElementById('apiEndpoint').value = DEFAULTS.local.endpoint;
+  document.getElementById('apiModel').value = DEFAULTS.local.model;
+  document.getElementById('apiKey').value = DEFAULTS.local.key;
+  updateFormVisibility('local');
+  alert('Settings cleared. Defaults restored.');
+});
+
+// App Startup Chat Greeting
+window.addEventListener('load', () => {
+  appendMessage('assistant', "ASTRA Assistant Online. Ask me anything about previous reports, engineering parameters, or innovations.", []);
+});
+
+// Search algorithm: Local keyword matching (TF-IDF-like score generator)
+function getRelevantChunks(query, limit = 5) {
+  const stopWords = new Set(["what", "is", "the", "and", "our", "for", "with", "how", "from", "should", "there", "about", "that", "this", "can"]);
+  const queryWords = query.toLowerCase()
+    .replace(/[^\w\s]/g, '')
+    .split(/\s+/)
+    .filter(w => w.length > 2 && !stopWords.has(w));
+    
+  if (queryWords.length === 0) {
+    return CHUNKS.slice(0, 3); // Fallback to basic summary
+  }
+  
+  const scored = CHUNKS.map(chunk => {
+    let score = 0;
+    const textLower = chunk.text.toLowerCase();
+    
+    queryWords.forEach(word => {
+      // Check for substring match
+      if (textLower.includes(word)) {
+        score += 1;
+        // Give higher weight to exact word boundary matches
+        const boundaryRegex = new RegExp('\\b' + word + '\\b', 'g');
+        const boundaryMatches = textLower.match(boundaryRegex);
+        if (boundaryMatches) {
+          score += boundaryMatches.length * 2;
+        }
+      }
+    });
+    return { chunk, score };
+  });
+  
+  // Filter out zero matches, sort descending by score
+  return scored
+    .filter(item => item.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit)
+    .map(item => item.chunk);
+}
+
+// Append message card to chat display
+function appendMessage(role, text, sources = []) {
+  const container = document.createElement('div');
+  container.className = `msg-container ${role}`;
+  
+  const msgBody = document.createElement('div');
+  msgBody.className = 'msg';
+  msgBody.textContent = text;
+  container.appendChild(msgBody);
+  
+  if (sources.length > 0) {
+    const uniqueSources = [...new Set(sources)];
+    const sourcesDiv = document.createElement('div');
+    sourcesDiv.className = 'sources';
+    sourcesDiv.innerHTML = 'Sources: ' + uniqueSources.map(s => `<span class="source-tag">${s}</span>`).join(' ');
+    container.appendChild(sourcesDiv);
+  }
+  
+  messagesEl.appendChild(container);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+// Perform LLM completions query
+async function handleSend() {
+  const query = qInput.value.trim();
+  if (!query) return;
+  
+  // Disable UI during query
+  qInput.value = '';
+  qInput.disabled = true;
+  sendBtn.disabled = true;
+  
+  appendMessage('user', query);
+  
+  // 1. Search locally for matching segments
+  const matchedChunks = getRelevantChunks(query, 5);
+  const sources = matchedChunks.map(c => c.source);
+  
+  // 2. Format context for prompt
+  const contextStr = matchedChunks.map((c, i) => `[Source: ${c.source}]\n${c.text}`).join('\n\n');
+  
+  // Render loading placeholder
+  const loadingContainer = document.createElement('div');
+  loadingContainer.className = 'msg-container bot loading-placeholder';
+  loadingContainer.innerHTML = `<div class="msg"><span class="loading">Thinking </span><div class="loading-dots"><div></div><div></div><div></div></div></div>`;
+  messagesEl.appendChild(loadingContainer);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+  
+  try {
+    // Read current settings
+    const provider = localStorage.getItem('astra_ast_provider') || 'local';
+    const endpoint = localStorage.getItem('astra_ast_endpoint') || DEFAULTS[provider].endpoint;
+    const model = localStorage.getItem('astra_ast_model') || DEFAULTS[provider].model;
+    const apiKey = localStorage.getItem('astra_ast_key') || DEFAULTS[provider].key;
+    
+    if (provider !== 'local' && !apiKey) {
+      throw new Error("Missing API Key. Please click the gear icon to configure your key.");
+    }
+    
+    // Construct System Prompt
+    const systemPrompt = `You are ASTRA AI, the dedicated Engineering, Design, and Cost Copilot for Team ASTRA. Answer the user's question accurately.
+    
+Use the following relevant segments extracted from the team's historical reports and engineering data to construct your answer. If the context does not contain the answer, use general solar electric vehicle engineering principles and state that it is a general recommendation.
+
+RELEVANT REPORT SEGMENTS:
+${contextStr}`;
+
+    let response;
+    
+    if (provider === 'local') {
+      // Query local Express backend API
+      response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: query }
+          ]
+        })
+      });
+    } else {
+      // Direct call to target Cloud Provider (Groq / Hugging Face)
+      response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+          'bypass-tunnel-reminder': 'true'
+        },
+        body: JSON.stringify({
+          model: model,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: query }
+          ],
+          temperature: 0.3,
+          max_tokens: 1024
+        })
+      });
+    }
+    
+    // Remove loading placeholder
+    const placeholder = document.querySelector('.loading-placeholder');
+    if (placeholder) placeholder.remove();
+    
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`API returned error ${response.status}: ${errText}`);
+    }
+    
+    const data = await response.json();
+    let reply = "";
+    
+    if (provider === 'local') {
+      reply = data.message;
+    } else {
+      reply = data.choices?.[0]?.message?.content || "No response generated.";
+    }
+    
+    appendMessage('assistant', reply, sources);
+    
+  } catch (err) {
+    const placeholder = document.querySelector('.loading-placeholder');
+    if (placeholder) placeholder.remove();
+    appendMessage('assistant', `❌ Error: ${err.message}. Please check your API settings or internet connection.`);
+  } finally {
+    qInput.disabled = false;
+    sendBtn.disabled = false;
+    qInput.focus();
+  }
+}
+
+sendBtn.addEventListener('click', handleSend);
+qInput.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') handleSend();
+});
+</script>
+
+</body>
+</html>

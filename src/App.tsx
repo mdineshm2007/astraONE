@@ -77,6 +77,24 @@ function AppContent() {
   const privilegedRoles = ['CAPTAIN', 'TEAM_LEAD'];
   const isPrivileged = privilegedRoles.includes(profile?.role || '');
 
+  // Helper to detect if a name is clearly a placeholder or generic
+  const isPlaceholderName = (name: string): boolean => {
+    if (!name || name.trim().length < 3) return true;
+    const n = name.trim().toLowerCase();
+    const BLOCKED = ['engineer', 'unknown', 'user', 'admin', 'member', 'test', 'guest', 'anonymous'];
+    if (BLOCKED.includes(n)) return true;
+    // Looks like an email prefix (only lowercase letters and digits, no space)
+    if (/^[a-z0-9]+$/.test(n)) return true;
+    // Starts with digits (like '727724eumc054')
+    if (/^\d/.test(n)) return true;
+    return false;
+  };
+
+  // Force profile completion if name is still a placeholder (even if onboarded=true)
+  if (!isPrivileged && isPlaceholderName(profile.displayName)) {
+    return <ProfileOnboarding />;
+  }
+
   if (!isPrivileged && profile?.role === 'MEMBER') {
     if (!profile.onboarded) {
       return <ProfileOnboarding />;

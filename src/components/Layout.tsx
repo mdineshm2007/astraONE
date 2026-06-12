@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { LayoutDashboard, Users, Bell, Menu, Rocket, Notebook as NotebookIcon, ShieldAlert, Database, LogOut, Globe, HelpCircle, BarChart3, MessageSquare, X, ClipboardList, Megaphone, Radio, Send, Loader2, AlertTriangle } from 'lucide-react';
+import { LayoutDashboard, Users, Bell, Menu, Rocket, Notebook as NotebookIcon, ShieldAlert, Database, LogOut, Globe, HelpCircle, BarChart3, MessageSquare, X, ClipboardList, Megaphone, Radio, Send, Loader2, AlertTriangle, Bot } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import AIAssistant from './AIAssistant';
 import { subscribeToMultipleTeamsPendingMembers, updateUserProfile, subscribeToUsers } from '../services/userService';
@@ -37,7 +37,7 @@ export default function Layout({ children, currentView, onViewChange }: LayoutPr
   const [broadcastTargetType, setBroadcastTargetType] = useState<'all' | 'team' | 'user'>('all');
   const [broadcastTargetId, setBroadcastTargetId] = useState('');
   const [isBroadcasting, setIsBroadcasting] = useState(false);
-  const [isTriggeringReminders, setIsTriggeringReminders] = useState(false);
+
   const [allUsersList, setAllUsersList] = useState<UserProfile[]>([]);
 
   // Subsystem options
@@ -139,19 +139,61 @@ export default function Layout({ children, currentView, onViewChange }: LayoutPr
     }
   };
 
-  const handleTriggerReminders = async () => {
-    setIsTriggeringReminders(true);
-    try {
-      const res = await fetch('/api/cron/notifications');
-      if (!res.ok) throw new Error('Failed to run notification cron on backend');
-      const data = await res.json();
-      alert(`⏰ Success: ${data.message || 'Reminders triggered successfully!'}`);
-    } catch (err: any) {
-      alert(`❌ Failed: ${err.message}`);
-    } finally {
-      setIsTriggeringReminders(false);
-    }
-  };
+  // ── Auto Task Reminder at 8:30 PM ──────────────────────────────────────────
+  // Every minute, check if it's 8:30 PM. If so, look at the current user's tasks.
+  // For any task that is still pending/in-progress with no progress logged today,
+  // write a Firebase notification so they receive an in-app + push alert.
+  useEffect(() => {
+    if (!profile) return;
+    const REMINDED_TODAY_KEY = `astra_reminded_${profile.uid}_${new Date().toDateString()}`;
+
+    const checkAndSendReminder = async () => {
+      const now = new Date();
+      const h = now.getHours();
+      const m = now.getMinutes();
+      if (h !== 20 || m !== 30) return; // only fire at 8:30 PM
+
+      // Only send once per day
+      if (localStorage.getItem(REMINDED_TODAY_KEY)) return;
+      localStorage.setItem(REMINDED_TODAY_KEY, '1');
+
+      try {
+        const { ref: dbRef, get: dbGet, set: dbSet } = await import('firebase/database');
+        const tasksSnap = await dbGet(dbRef(rtdb, 'tasks'));
+        if (!tasksSnap.exists()) return;
+
+        const today = now.toDateString();
+        const allTasks = Object.entries(tasksSnap.val() as Record<string, any>);
+        const myPendingTasks = allTasks.filter(([, t]) => {
+          if (t.assignedToId !== profile.uid) return false;
+          if (t.status === 'COMPLETED') return false;
+          // Check if there's a progress note logged today
+          const updatedAt = t.updatedAt ? new Date(t.updatedAt).toDateString() : '';
+          const hasTodayUpdate = updatedAt === today && t.todayProgress && t.todayProgress.trim().length > 0;
+          return !hasTodayUpdate;
+        });
+
+        if (myPendingTasks.length === 0) return;
+
+        const notifId = `auto_reminder_${now.getTime()}`;
+        const notification = {
+          title: '⏰ Daily Progress Reminder',
+          message: `You have ${myPendingTasks.length} task${myPendingTasks.length > 1 ? 's' : ''} with no progress update today. Tap to update now.`,
+          type: 'INFO',
+          timestamp: now.toISOString(),
+          read: false,
+          link: 'teams'
+        };
+        await dbSet(dbRef(rtdb, `notifications/${profile.uid}/${notifId}`), notification);
+        console.log('[AutoReminder] Sent 8:30 PM task reminder.');
+      } catch (e) {
+        console.warn('[AutoReminder] Could not send reminder:', e);
+      }
+    };
+
+    const interval = setInterval(checkAndSendReminder, 60_000); // check every minute
+    return () => clearInterval(interval);
+  }, [profile]);
 
 
   useEffect(() => {
@@ -287,6 +329,7 @@ export default function Layout({ children, currentView, onViewChange }: LayoutPr
     { id: 'teams', label: 'Engineering Hub', icon: Users, roles: ['CAPTAIN', 'TEAM_LEAD', 'MEMBER'] },
     { id: 'posts', label: 'Engineering Feed', icon: Globe, roles: ['CAPTAIN', 'TEAM_LEAD', 'MEMBER'] },
     { id: 'queries', label: 'Query Panel', icon: HelpCircle, roles: ['CAPTAIN', 'TEAM_LEAD', 'MEMBER'] },
+    { id: 'copilot', label: 'AI Copilot', icon: Bot, roles: ['CAPTAIN', 'TEAM_LEAD', 'MEMBER'], isExternal: true, path: '/assistant.html' },
     { id: 'workspace', label: 'Cloud Infrastructure', icon: Database, roles: ['CAPTAIN', 'TEAM_LEAD', 'MEMBER'] },
     { id: 'rulebook', label: 'Rulebook Checklist', icon: ClipboardList, roles: ['CAPTAIN', 'TEAM_LEAD', 'MEMBER'] },
     { id: 'admin', label: 'Admin Control', icon: ShieldAlert, roles: ['CAPTAIN', 'TEAM_LEAD'], badge: pendingCount },
@@ -328,7 +371,11 @@ export default function Layout({ children, currentView, onViewChange }: LayoutPr
               <button
                 key={item.id}
                 onClick={() => {
-                  onViewChange(item.id as AppView);
+                  if ('isExternal' in item && item.isExternal) {
+                    window.open(item.path, '_blank');
+                  } else {
+                    onViewChange(item.id as AppView);
+                  }
                   setSidebarOpen(false);
                 }}
                 className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all group relative ${
@@ -794,19 +841,9 @@ export default function Layout({ children, currentView, onViewChange }: LayoutPr
                     </div>
 
                     <div className="h-[1px] bg-white/5 my-2" />
-
-                    <button 
-                      type="button"
-                      onClick={handleTriggerReminders}
-                      disabled={isTriggeringReminders}
-                      className="w-full px-4 py-2.5 rounded-xl text-xs font-bold border border-orange-500/20 text-orange-400 bg-orange-500/5 hover:bg-orange-500/10 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-                    >
-                      {isTriggeringReminders ? (
-                        <><Loader2 size={12} className="animate-spin" /> Triggering Reminders...</>
-                      ) : (
-                        <><Radio size={12} className="animate-pulse" /> ⏰ Trigger Automated Task Reminders Now</>
-                      )}
-                    </button>
+                    <p className="text-[10px] text-center text-slate-600 font-bold uppercase tracking-widest flex items-center justify-center gap-1.5">
+                      <Radio size={10} className="text-orange-500/50" /> Auto 8:30 PM reminders active
+                    </p>
                   </div>
                 </div>
               </motion.div>

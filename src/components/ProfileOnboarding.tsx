@@ -12,6 +12,19 @@ export default function ProfileOnboarding() {
   const [photoURL, setPhotoURL] = useState(profile?.photoURL || '');
   const [isUploading, setIsUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [nameError, setNameError] = useState('');
+
+  // Block generic/placeholder names that reveal the user didn't set a proper name
+  const BLOCKED_NAMES = ['engineer', 'unknown', 'user', 'admin', 'member', 'test', 'guest', 'anonymous'];
+  const validateName = (name: string): string => {
+    const trimmed = name.trim();
+    if (trimmed.length < 3) return 'Name must be at least 3 characters.';
+    if (/^\d+/.test(trimmed)) return 'Name cannot start with numbers. Enter your real name.';
+    if (BLOCKED_NAMES.some(b => trimmed.toLowerCase() === b)) return `"${trimmed}" is not a valid name. Enter your real full name.`;
+    // Check if looks like an email prefix (all lowercase letters+digits, no spaces)
+    if (/^[a-z0-9]+$/.test(trimmed)) return 'Please enter your full name (e.g. "Dinesh M"), not your email ID.';
+    return '';
+  };
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -29,7 +42,9 @@ export default function ProfileOnboarding() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!profile || !displayName || !year || isUploading) return;
+    const nameErr = validateName(displayName);
+    if (nameErr) { setNameError(nameErr); return; }
+    if (!profile || !year || isUploading) return;
 
     setIsSubmitting(true);
     try {
@@ -108,11 +123,19 @@ export default function ProfileOnboarding() {
                 type="text"
                 required
                 value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                placeholder="Enter your full name"
-                className="w-full bg-surface border border-white/10 rounded-2xl pl-12 pr-4 py-4 text-white focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all"
+                onChange={(e) => { setDisplayName(e.target.value); setNameError(''); }}
+                onBlur={() => setNameError(validateName(displayName))}
+                placeholder="Enter your full name (e.g. Dinesh M)"
+                className={`w-full bg-surface border rounded-2xl pl-12 pr-4 py-4 text-white focus:outline-none focus:ring-4 transition-all ${
+                  nameError ? 'border-red-500/60 focus:border-red-500/80 focus:ring-red-500/10' : 'border-white/10 focus:border-primary/50 focus:ring-primary/10'
+                }`}
               />
             </div>
+            {nameError && (
+              <p className="text-[11px] text-red-400 font-bold mt-1.5 ml-1 flex items-center gap-1">
+                <span>⚠️</span> {nameError}
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -144,7 +167,7 @@ export default function ProfileOnboarding() {
 
           <button
             type="submit"
-            disabled={isSubmitting || isUploading || !displayName || !year}
+            disabled={isSubmitting || isUploading || !displayName || !year || !!nameError}
             className="w-full bg-primary text-[#001f2e] font-black py-4 rounded-2xl flex items-center justify-center gap-3 hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/20 mt-4"
           >
             {isSubmitting ? (
