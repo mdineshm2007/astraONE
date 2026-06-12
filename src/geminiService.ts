@@ -14,7 +14,8 @@ export function getGroqApiKey(): string {
       return localKey.trim();
     }
   }
-  return (process.env.GROQ_API_KEY || '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') as string;
+  // No fallback hardcoded key — use env var only (set GROQ_API_KEY in Vercel dashboard)
+  return (process.env.GROQ_API_KEY || '') as string;
 }
 
 // Retrieve custom API endpoint dynamically (for custom fine-tuned Llama endpoints)

@@ -125,7 +125,7 @@ if (!admin.apps.length) {
 let groq: Groq | null = null;
 try {
     // Env vars take priority, hardcoded fallback ensures Vercel works without manual setup
-    const apiKey = (process.env.GROQ_API_KEY || "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").trim();
+    const apiKey = (process.env.GROQ_API_KEY || "").trim();
     if (apiKey) {
       groq = new Groq({ apiKey });
       console.log("[Groq] SDK Initialized Successfully");
@@ -830,7 +830,7 @@ app.post("/api/chat", async (req, res) => {
     
     let activeEndpoint = endpoint || "https://api.groq.com/openai/v1/chat/completions";
     const activeModel = model || "llama-3.1-8b-instant";
-    const activeKey = apiKey || process.env.GROQ_API_KEY || "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";
+    const activeKey = apiKey || process.env.GROQ_API_KEY || "";
 
     // Prevent infinite recursion loops if user sets the proxy endpoint as the target
     if (activeEndpoint.includes("/api/chat")) {

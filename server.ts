@@ -812,7 +812,7 @@ app.get("/api/drive/folders", async (req, res) => {
       
       let activeEndpoint = endpoint || "https://api.groq.com/openai/v1/chat/completions";
       const activeModel = model || "llama-3.1-8b-instant";
-      const activeKey = apiKey || process.env.GROQ_API_KEY || "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";
+      const activeKey = apiKey || process.env.GROQ_API_KEY || "";
 
       // Prevent infinite recursion loops if user sets the proxy endpoint as the target
       if (activeEndpoint.includes("/api/chat")) {
