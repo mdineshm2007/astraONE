@@ -21,9 +21,9 @@ export default function Login() {
           <Rocket className="text-primary" size={40} />
         </div>
         
-        <h1 className="text-4xl font-black tracking-tighter mb-4">ASTRA</h1>
+        <h1 className="text-3xl font-black tracking-tighter mb-4">ASTRA PORTAL</h1>
         <p className="text-slate-400 mb-10 leading-relaxed">
-          Solar Car Intelligence & Team Management Platform. Secure portal for engineering team only.
+          Attendance & Training Management Portal. Secure logging for captains, leads, and members.
         </p>
 
         <button 
@@ -36,9 +36,9 @@ export default function Login() {
         
         <div className="mt-8 pt-8 border-t border-primary/10 flex flex-col items-center gap-4">
            <div className="flex justify-center gap-4 text-[10px] uppercase font-bold tracking-widest text-slate-500">
-              <span>Solar Car v2.4</span>
+              <span>ASTRA Portal v1.0</span>
               <span>•</span>
-              <span>R&D Hub</span>
+              <span>Attendance Hub</span>
            </div>
            <div className="flex justify-center gap-6 text-[10px] uppercase font-bold tracking-widest text-slate-400">
               <a href="/privacy.html" className="hover:text-primary transition-colors">Privacy Policy</a>

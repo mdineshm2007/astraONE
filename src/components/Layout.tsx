@@ -1,8 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { LayoutDashboard, Users, Bell, Menu, Rocket, Notebook as NotebookIcon, ShieldAlert, Database, LogOut, Globe, HelpCircle, BarChart3, MessageSquare, X, ClipboardList, Megaphone, Radio, Send, Loader2, AlertTriangle, Bot } from 'lucide-react';
+import { LayoutDashboard, Users, Bell, Menu, Rocket, Notebook as NotebookIcon, ShieldAlert, Database, LogOut, Globe, HelpCircle, BarChart3, MessageSquare, X, ClipboardList, Megaphone, Radio, Send, Loader2, AlertTriangle, Bot, ClipboardCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import AIAssistant from './AIAssistant';
 import { subscribeToMultipleTeamsPendingMembers, updateUserProfile, subscribeToUsers } from '../services/userService';
 import { uploadImage } from '../services/storageService';
 import { AppView, UserProfile } from '../types';
@@ -324,15 +323,18 @@ export default function Layout({ children, currentView, onViewChange }: LayoutPr
 
   if (!profile) return null;
 
-  const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['CAPTAIN', 'TEAM_LEAD', 'MEMBER'] },
-    { id: 'teams', label: 'Engineering Hub', icon: Users, roles: ['CAPTAIN', 'TEAM_LEAD', 'MEMBER'] },
-    { id: 'posts', label: 'Engineering Feed', icon: Globe, roles: ['CAPTAIN', 'TEAM_LEAD', 'MEMBER'] },
-    { id: 'queries', label: 'Query Panel', icon: HelpCircle, roles: ['CAPTAIN', 'TEAM_LEAD', 'MEMBER'] },
-    { id: 'copilot', label: 'AI Copilot', icon: Bot, roles: ['CAPTAIN', 'TEAM_LEAD', 'MEMBER'], isExternal: true, path: '/assistant.html' },
-    { id: 'workspace', label: 'Cloud Infrastructure', icon: Database, roles: ['CAPTAIN', 'TEAM_LEAD', 'MEMBER'] },
-    { id: 'rulebook', label: 'Rulebook Checklist', icon: ClipboardList, roles: ['CAPTAIN', 'TEAM_LEAD', 'MEMBER'] },
-    { id: 'admin', label: 'Admin Control', icon: ShieldAlert, roles: ['CAPTAIN', 'TEAM_LEAD'], badge: pendingCount },
+  interface MenuItem {
+    id: string;
+    label: string;
+    icon: any;
+    roles: string[];
+    isExternal?: boolean;
+    path?: string;
+    badge?: number;
+  }
+
+  const menuItems: MenuItem[] = [
+    { id: 'attendance', label: 'Attendance & Training', icon: ClipboardCheck, roles: ['CAPTAIN', 'TEAM_LEAD', 'MEMBER'] },
   ];
 
   const allowedItems = menuItems.filter(item => item.roles.includes(profile.role));
@@ -360,9 +362,9 @@ export default function Layout({ children, currentView, onViewChange }: LayoutPr
             <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-primary/20">
               <Rocket className="text-black" size={24} />
             </div>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col">
+             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col">
               <span className="text-xl font-black tracking-tighter leading-none">ASTRA</span>
-              <span className="text-[10px] font-bold text-primary uppercase tracking-widest mt-1">Solar Car IQ</span>
+              <span className="text-[10px] font-bold text-primary uppercase tracking-widest mt-1">Attendance Hub</span>
             </motion.div>
           </div>
 
@@ -441,7 +443,7 @@ export default function Layout({ children, currentView, onViewChange }: LayoutPr
           <div className="flex items-center gap-4 relative">
              {(!window.isSecureContext || !('Notification' in window)) ? (
                <div 
-                 onClick={() => alert("🚨 HTTP Connection Detected!\n\nChrome restricts notifications and service workers to secure connections (HTTPS) or localhost.\n\nTo test notifications on your Android phone:\n1. Open Chrome on your phone and go to: chrome://flags/#unsafely-treat-insecure-origin-as-secure\n2. Enable the flag and add your computer's IP address (e.g., http://192.168.x.x:3000)\n3. Relaunch Chrome and you will be able to enable alerts!")}
+                 onClick={() => alert("🚨 HTTP Connection Detected!\n\nChrome restricts notifications and service workers to secure connections (HTTPS) or localhost.\n\nTo test notifications on your Android phone:\n1. Open Chrome on your phone and go to: chrome://flags/#unsafely-treat-insecure-origin-as-secure\n2. Enable the flag and add your computer's IP address (e.g., http://192.168.x.x:3050)\n3. Relaunch Chrome and you will be able to enable alerts!")}
                  className="px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-[10px] font-black rounded-xl border border-red-500/20 transition-all flex items-center gap-1.5 cursor-help"
                  title="Chrome blocks notifications on HTTP. Click for override guide."
                >
@@ -588,8 +590,6 @@ export default function Layout({ children, currentView, onViewChange }: LayoutPr
         <div className="flex-1 overflow-y-auto p-8 scroll-smooth custom-scrollbar">
            {children}
         </div>
-
-        <AIAssistant onViewChange={onViewChange} />
 
         {/* Profile Edit Modal */}
         <AnimatePresence>

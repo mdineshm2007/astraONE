@@ -10,7 +10,9 @@ export type AppView =
   | 'members'
   | 'innovation'
   | 'workspace'
-  | 'rulebook';
+  | 'rulebook'
+  | 'attendance';
+
 
 export interface DriveFolder {
   id: string;
@@ -187,7 +189,20 @@ export interface RulebookItem {
   checked: boolean;
   checkedBy?: string;
   checkedAt?: string;
-  createdBy: string;
-  createdByName: string;
   createdAt: string;
 }
+
+export interface TrainingSession {
+  id: string;
+  date: string;        // YYYY-MM-DD
+  topic: string;
+  handledBy: string;   // Trainer name
+  department: string;  // e.g., "Mechanical", "Electrical", "Software", "Mechatronics"
+  duration: number;    // Hours (e.g., 2)
+  attendance: { [uid: string]: boolean }; // Map of user ID to present (true/false)
+  externalAttendance?: string[]; // Names of external attendees who logged in manually
+  status: 'COMPLETED' | 'UPCOMING';
+  createdAt: string;
+  createdBy: string;
+}
+

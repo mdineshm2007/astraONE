@@ -643,7 +643,7 @@ app.get("/api/drive/folders", async (req, res) => {
       const { code, state } = req.query;
       const baseUrl = getBaseUrl(req);
 
-      if (!code || !state) return res.redirect(`http://localhost:3000/workspace?error=missing_params`);
+      if (!code || !state) return res.redirect(`http://localhost:3050/workspace?error=missing_params`);
 
       const oauth2Client = createOAuth2Client(`${baseUrl}/api/auth/google/callback`);
       const { tokens } = await oauth2Client.getToken(code as string);
@@ -653,10 +653,10 @@ app.get("/api/drive/folders", async (req, res) => {
       await admin.database().ref('drive_config/status').set({ connected: true, timestamp: Date.now() });
       await admin.database().ref(`users/${state}/drive_tokens`).set(tokens);
 
-      res.redirect(`http://localhost:3000/workspace?auth=success`);
+      res.redirect(`http://localhost:3050/workspace?auth=success`);
     } catch (error: any) {
       console.error("OAuth Redirect Error:", error);
-      res.redirect(`http://localhost:3000/workspace?error=auth_failed`);
+      res.redirect(`http://localhost:3050/workspace?error=auth_failed`);
     }
   });
 
