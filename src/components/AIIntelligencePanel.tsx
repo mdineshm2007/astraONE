@@ -65,12 +65,12 @@ export default function AIIntelligencePanel({ type, data, context, subsystem, me
       if (avgProgress >= 60) {
         overallStatus = 'IMPROVED';
         overallText = `The ${subsystem || 'selected'} department has shown significant improvement over last year's engineering benchmarks. Current average completion is at ${avgProgress}%, representing an estimated 15% increase in team velocity. Key prototypes and system assemblies are moving ahead of schedule.`;
-      } else if (avgProgress >= 35) {
+      } else if (avgProgress >= 20) {
         overallStatus = 'SAME';
         overallText = `The ${subsystem || 'selected'} department's execution matches last year's timeline (currently at ${avgProgress}% average progress). The project timeline is stable, and team velocity is consistent with standard engineering iteration benchmarks.`;
       } else {
-        overallStatus = 'LAGGING';
-        overallText = `The ${subsystem || 'selected'} department is currently lagging behind last year's development milestones by approximately 12% (currently at ${avgProgress}% average progress). Attention is required on pending requirements and blockers to avoid schedule compression.`;
+        overallStatus = 'SAME';
+        overallText = `${subsystem || 'Selected'} department is at ${avgProgress}% average progress. This is the start of the new SEVC 2027 academic year — competition is February 2027. Last year's report was submitted at SEVC 2026 (complete). Design work starts after 1st-year students complete the 2-week orientation. Starting at 0% is expected and normal.`;
       }
 
       const tasksAnalysis = taskArr.map((t: any) => {
@@ -80,13 +80,16 @@ export default function AIIntelligencePanel({ type, data, context, subsystem, me
         
         if (prog >= 75) {
           comp = 'IMPROVED';
-          lastYearVsNowStr = `Completed or near completion. In SEVC 2025, this phase took 10-14 days longer to reach a similar level of validation. Integration is highly optimized this year.`;
+          lastYearVsNowStr = `Near completion — excellent pace. Last year (SEVC 2026), this phase took 10–14 more days to reach a similar validation level. Integration is highly optimized this year.`;
         } else if (prog >= 35) {
           comp = 'SAME';
-          lastYearVsNowStr = `Progress is at ${prog}%, which mirrors the step-by-step development sprint velocity of last year. Execution is on track without major deviations.`;
+          lastYearVsNowStr = `At ${prog}% — progressing steadily. This matches the sprint velocity from last year's equivalent phase. Execution is on track.`;
+        } else if (prog > 0) {
+          comp = 'SAME';
+          lastYearVsNowStr = `Early stage (${prog}% done). This is a NEW academic year (2026–27) — competition is February 2027. Starting from scratch is expected. Design phase typically begins after 1st-year orientation (2 weeks).`;
         } else {
-          comp = 'LAGGING';
-          lastYearVsNowStr = `Progress is currently at ${prog}%. This is behind last year's design freeze timeline for equivalent modules. Immediate resource redistribution is recommended.`;
+          comp = 'SAME';
+          lastYearVsNowStr = `Not yet started (0%). This is the START of the new SEVC 2027 academic year. Last year's report was submitted at the SEVC 2026 competition — that cycle is complete. New design work will begin after 1st-year students join and complete the 2-week tutorial/orientation period.`;
         }
 
         // Generate summary based on description, todayProgress, etc.
@@ -190,15 +193,15 @@ export default function AIIntelligencePanel({ type, data, context, subsystem, me
     let vsLastYearText = "";
     let comparisonVerdict: 'BETTER' | 'WORSE' | 'SIMILAR' = 'SIMILAR';
 
-    if (avgProgress >= 60) {
-      comparisonVerdict = 'BETTER';
-      vsLastYearText = "SEVC 2025 utilized a standard telemetric dashboard. This year's integration of AI to predict vehicle cutoff shows a significant technological leap. Execution velocity is 15% higher than last year.";
-    } else if (avgProgress >= 40) {
+    if (avgProgress < 20) {
       comparisonVerdict = 'SIMILAR';
-      vsLastYearText = "SEVC 2025 relied on a standard telemetric dashboard. This year, we are upgrading to an AI-integrated predictive cutoff system. Progress is steady and matches last year's timeline, but the technological scope is much higher.";
+      vsLastYearText = `We are at the beginning of the new SEVC 2027 cycle (competition in February 2027). The 1st-year students have not yet arrived; once they join, the team will run a 2-week tutorial/onboarding phase before commencing the design stage. Starting at ${avgProgress}% progress is normal, expected, and aligned with last year's early schedule.`;
+    } else if (avgProgress >= 60) {
+      comparisonVerdict = 'BETTER';
+      vsLastYearText = `The ${sub || 'selected'} subsystem shows high velocity at ${avgProgress}% progress. This is ahead of the equivalent phase from last year's initial timeline, showing improved task coordination and faster prototyping.`;
     } else {
-      comparisonVerdict = 'WORSE';
-      vsLastYearText = "SEVC 2025 featured a basic telemetric dashboard. Developing this year's AI-integrated predictive cutoff system is proving complex. Velocity is trailing behind last year's benchmarks; prioritize resolving blockers.";
+      comparisonVerdict = 'SIMILAR';
+      vsLastYearText = `The ${sub || 'selected'} subsystem is at ${avgProgress}% progress. Work is progressing steadily, matching the sprint velocity from last year's equivalent phase. The team is on track for the February 2027 competition.`;
     }
 
     return {
@@ -428,9 +431,9 @@ export default function AIIntelligencePanel({ type, data, context, subsystem, me
                         analysis.overallStatus === 'SAME' ? 'text-yellow-400 border-yellow-400/30 bg-yellow-400/10' :
                         'text-red-400 border-red-400/30 bg-red-400/10'
                       }`}>
-                        {analysis.overallStatus === 'IMPROVED' && <><TrendingUp size={12} /> Improved vs 2025</>}
-                        {analysis.overallStatus === 'SAME' && <><Minus size={12} /> Same as 2025</>}
-                        {analysis.overallStatus === 'LAGGING' && <><TrendingDown size={12} /> Lagging vs 2025</>}
+                        {analysis.overallStatus === 'IMPROVED' && <><TrendingUp size={12} /> Improved vs 2026</>}
+                        {analysis.overallStatus === 'SAME' && <><Minus size={12} /> Same as 2026</>}
+                        {analysis.overallStatus === 'LAGGING' && <><TrendingDown size={12} /> Lagging vs 2026</>}
                       </span>
                     </div>
                   </div>
@@ -555,7 +558,7 @@ export default function AIIntelligencePanel({ type, data, context, subsystem, me
                     {analysis.vs_last_year && (
                       <div className="space-y-2">
                         <h4 className="text-[10px] font-black uppercase tracking-widest text-yellow-400 flex items-center gap-1.5">
-                          <TrendingUp size={12} /> vs Last Year (SEVC 2025)
+                          <TrendingUp size={12} /> vs Last Year (SEVC 2026)
                         </h4>
                         <div className="bg-yellow-400/5 border border-yellow-400/20 rounded-xl p-3 h-full group relative">
                           <VerdictBadge verdict={analysis.comparison_verdict} />

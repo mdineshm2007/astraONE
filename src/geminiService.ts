@@ -197,6 +197,13 @@ async function fetchLiveContext(): Promise<Record<string, any>> {
     const users = usersSnap.exists() ? Object.entries(usersSnap.val()).map(([id, v]: any) => ({ id, ...v })) : [];
     const subsystems = subsystemsSnap.exists() ? subsystemsSnap.val() : {};
 
+    // Sort tasks by createdAt descending (newest first) so recent tasks are actually the latest ones
+    const sortedTasks = [...tasks].sort((a, b) => {
+      const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return bTime - aTime;
+    });
+
     const taskSummary = {
       total: tasks.length,
       completed: tasks.filter((t: any) => t.status === 'COMPLETED').length,
@@ -213,7 +220,7 @@ async function fetchLiveContext(): Promise<Record<string, any>> {
         if (t.status === 'BLOCKED') acc[t.subsystem].blocked++;
         return acc;
       }, {}),
-      recentTasks: tasks.slice(0, 20).map((t: any) => ({
+      recentTasks: sortedTasks.slice(0, 100).map((t: any) => ({
         title: t.title,
         subsystem: t.subsystem,
         status: t.status,
@@ -255,16 +262,21 @@ function buildSystemPrompt(liveContext: Record<string, any>, userProfile?: any):
     .map(([id, s]: any) => `  - ${id}: progress=${s.progress || 0}%, status=${s.status || 'unknown'}`)
     .join('\n') || '  (No subsystem data)';
 
-  // Compress tasks: only show active/blocked/critical ones (capped at 5)
+  // Show all active tasks: IN_PROGRESS, BLOCKED, PENDING, and CRITICAL (capped at 15)
   const activeTasks = taskSummary && taskSummary.recentTasks
     ? taskSummary.recentTasks
-        .filter((t: any) => t.status === 'IN_PROGRESS' || t.status === 'BLOCKED' || t.priority === 'CRITICAL')
-        .slice(0, 5)
+        .filter((t: any) =>
+          t.status === 'IN_PROGRESS' ||
+          t.status === 'BLOCKED' ||
+          t.status === 'PENDING' ||
+          t.priority === 'CRITICAL'
+        )
+        .slice(0, 15)
     : [];
 
   const taskLines = taskSummary ? `
   Total Tasks: ${taskSummary.total} (Done: ${taskSummary.completed}, Active: ${taskSummary.inProgress}, Blocked: ${taskSummary.blocked})
-  Active/Critical Tasks (capped at 5):
+  Active/Critical Tasks (capped at 15):
 ${activeTasks.map((t: any) => `    - [${t.status}] "${t.title}" | ${t.subsystem} | Assigned: ${t.assignedTo} | ${t.progressPercent}%`).join('\n')}` : '  (No task data)';
 
   // Compress team members: list only online members, and count offline ones to save massive tokens
@@ -286,6 +298,13 @@ ${activeTasks.map((t: any) => `    - [${t.status}] "${t.title}" | ${t.subsystem}
 - Role: ${role}
 - Teams: ${teams}
 - Current Time: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST
+
+## Academic Year & Project Stage Context
+- Current Cycle: We are at the start of the NEW academic year 2026–2027.
+- Competition: The SEVC 2027 competition is scheduled for February 2027.
+- Project Stage: This is the very beginning of our development cycle. The new 1st-year students have not yet arrived. Once they join, the team will conduct a 2-week tutorial/training period for them before we begin any vehicle design.
+- Previous Year Status: Last year's reports and design cycle (SEVC 2026) were successfully completed and submitted at the competition. That cycle is fully complete.
+- Progress Expectations: Because it is the absolute start of the cycle, having 0% progress on tasks (or tasks in a PENDING status, such as new assignments given to members like Sarath) is completely normal, expected, and standard. It is NOT a delay or a sign of lagging. Do not say that tasks are lagging compared to last year's completed reports.
 
 ## Live Platform Data
 
@@ -309,7 +328,7 @@ ${historicalContext || 'No historical reports found.'}
 - Answer questions about tasks, members, progress, deadlines using the live data above
 - Answer questions about report structure, how to write reports, engineering calculations, SEVC rules using the knowledge base and historical reports
 - If asked "how to write innovation report" or "what content should be inside" — give the full structure, sections, and tips from the knowledge base and previous year's reports
-- If asked about task progress — reference the live data
+- If asked about task progress — reference the live data and the current academic year context (0% at start of year/orientation phase is normal, not lagging)
 - Keep answers clear, practical, and team-focused
 - Respond ONLY in English. Do NOT write in Tamil, Tanglish, or any other language unless the user explicitly asks: "Speak in Tamil" or "Translate to Tamil". If the user writes in Tamil, reply in English unless they ask you to speak in Tamil.
 - Be direct and actionable — this is an engineering team AI, not a general chatbot
