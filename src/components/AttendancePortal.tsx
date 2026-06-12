@@ -5,10 +5,13 @@ import {
   createTrainingSession, 
   updateTrainingSession, 
   deleteTrainingSession, 
-  subscribeToTrainingSessions 
+  subscribeToTrainingSessions,
+  createHoliday,
+  deleteHoliday,
+  subscribeToHolidays
 } from '../services/attendanceService';
 import { rtdb } from '../firebase';
-import { TrainingSession, UserProfile } from '../types';
+import { TrainingSession, UserProfile, Holiday } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Calendar, CheckSquare, List, Users as UsersIcon, BarChart3, 
@@ -51,15 +54,18 @@ export default function AttendancePortal() {
   const [activeTab, setActiveTab] = useState<TabType>('attendance');
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [sessions, setSessions] = useState<TrainingSession[]>([]);
+  const [holidays, setHolidays] = useState<Holiday[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   
   // Realtime Subscriptions
   useEffect(() => {
     const unsubUsers = subscribeToUsers(setUsers);
     const unsubSessions = subscribeToTrainingSessions(setSessions);
+    const unsubHolidays = subscribeToHolidays(setHolidays);
     return () => {
       unsubUsers();
       unsubSessions();
+      unsubHolidays();
     };
   }, []);
 
@@ -76,6 +82,16 @@ export default function AttendancePortal() {
     duration: 2,
     status: 'UPCOMING' as 'COMPLETED' | 'UPCOMING' // Default to upcoming so captains can mark attendance on completion
   });
+
+  // State for holiday forms
+  const [isCreatingHoliday, setIsCreatingHoliday] = useState(false);
+  const [newHolidayName, setNewHolidayName] = useState('');
+  const [newHolidayDate, setNewHolidayDate] = useState(new Date().toISOString().split('T')[0]);
+
+  // Report Filtering range
+  const [reportType, setReportType] = useState<'ALL' | 'DAILY' | 'WEEKLY' | 'MONTHLY'>('ALL');
+  const [selectedReportDate, setSelectedReportDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedReportMonth, setSelectedReportMonth] = useState(new Date().toISOString().split('T')[0].substring(0, 7)); // YYYY-MM
 
   // State for active attendance logging
   const [loggingSession, setLoggingSession] = useState<TrainingSession | null>(null);
@@ -150,6 +166,36 @@ export default function AttendancePortal() {
     } catch (err) {
       console.error("Failed to create training session:", err);
       alert("Failed to create training session.");
+    }
+  };
+
+  const handleCreateHoliday = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!profile || !newHolidayName.trim()) return;
+    try {
+      const holidayData = {
+        date: newHolidayDate,
+        name: newHolidayName.trim(),
+        createdBy: profile.uid,
+        createdAt: new Date().toISOString()
+      };
+      await createHoliday(holidayData);
+      setNewHolidayName('');
+      setIsCreatingHoliday(false);
+      alert("Holiday successfully saved!");
+    } catch (err) {
+      console.error("Failed to create holiday:", err);
+      alert("Failed to create holiday.");
+    }
+  };
+
+  const handleDeleteHoliday = async (id: string) => {
+    if (!confirm("Are you sure you want to remove this holiday?")) return;
+    try {
+      await deleteHoliday(id);
+    } catch (err) {
+      console.error("Failed to delete holiday:", err);
+      alert("Failed to delete holiday.");
     }
   };
 
@@ -273,19 +319,42 @@ export default function AttendancePortal() {
   const completedSessions = sessions.filter(s => s.status === 'COMPLETED');
   const upcomingSessions = sessions.filter(s => s.status === 'UPCOMING');
 
+  // Derived state to filter completed sessions based on report range
+  const getFilteredSessions = (sessionList: TrainingSession[]) => {
+    return sessionList.filter(s => {
+      if (s.status !== 'COMPLETED') return false;
+      if (reportType === 'DAILY') {
+        return s.date === selectedReportDate;
+      }
+      if (reportType === 'WEEKLY') {
+        const start = new Date(selectedReportDate);
+        const end = new Date(selectedReportDate);
+        end.setDate(end.getDate() + 7);
+        const sessionDate = new Date(s.date);
+        return sessionDate >= start && sessionDate < end;
+      }
+      if (reportType === 'MONTHLY') {
+        return s.date.startsWith(selectedReportMonth);
+      }
+      return true;
+    });
+  };
+
+  const filteredCompletedSessions = getFilteredSessions(sessions);
+
   // Member statistics calculations based on all completed sessions (excluding Alumni)
-  const getMemberStats = (userId: string, _approvedTeamsList: string[] = []) => {
-    const attended = completedSessions.filter(s => s.attendance && s.attendance[userId] === true);
+  const getMemberStats = (userId: string, sessionList = completedSessions) => {
+    const attended = sessionList.filter(s => s.attendance && s.attendance[userId] === true);
     
-    const percentage = completedSessions.length > 0
-      ? Math.round((attended.length / completedSessions.length) * 100)
+    const percentage = sessionList.length > 0
+      ? Math.round((attended.length / sessionList.length) * 100)
       : 100;
 
     const totalHours = attended.reduce((acc, s) => acc + (s.duration || 0), 0);
 
     return {
       attendedCount: attended.length,
-      expectedCount: completedSessions.length,
+      expectedCount: sessionList.length,
       percentage,
       totalHours
     };
@@ -309,7 +378,7 @@ export default function AttendancePortal() {
     const headers = ['Name', 'Type', 'Department/Subsystem', 'Attended Sessions', 'Total Relevant Sessions', 'Attendance %', 'Total Training Hours'];
     
     // Append completed sessions columns to headers
-    completedSessions.forEach(s => {
+    filteredCompletedSessions.forEach(s => {
       headers.push(`"${s.date} - ${s.topic}"`);
     });
 
@@ -317,7 +386,7 @@ export default function AttendancePortal() {
 
     // Add registered members (excluding alumni)
     activeUsers.forEach(user => {
-      const stats = getMemberStats(user.uid, user.approvedTeams || []);
+      const stats = getMemberStats(user.uid, filteredCompletedSessions);
       const row = [
         `"${user.displayName || 'Unnamed User'}"`,
         'Registered',
@@ -328,7 +397,7 @@ export default function AttendancePortal() {
         stats.totalHours
       ];
 
-      completedSessions.forEach(s => {
+      filteredCompletedSessions.forEach(s => {
         const isPresent = s.attendance && s.attendance[user.uid] === true;
         row.push(isPresent ? 'Present' : 'Absent');
       });
@@ -342,7 +411,7 @@ export default function AttendancePortal() {
       let hours = 0;
       let totalRelevant = 0;
 
-      completedSessions.forEach(s => {
+      filteredCompletedSessions.forEach(s => {
         const isPresent = s.externalAttendance && s.externalAttendance.includes(name);
         if (isPresent) {
           attended++;
@@ -363,7 +432,7 @@ export default function AttendancePortal() {
         hours
       ];
 
-      completedSessions.forEach(s => {
+      filteredCompletedSessions.forEach(s => {
         const isPresent = s.externalAttendance && s.externalAttendance.includes(name);
         row.push(isPresent ? 'Present' : 'Absent');
       });
@@ -376,7 +445,7 @@ export default function AttendancePortal() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", `astra_attendance_report_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute("download", `astra_${reportType.toLowerCase()}_attendance_report_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -435,16 +504,98 @@ export default function AttendancePortal() {
             </p>
           </div>
           {isPrivileged && (
-            <button
-              onClick={() => setIsCreatingSession(!isCreatingSession)}
-              className="px-5 py-3 bg-primary text-black font-black rounded-2xl hover:brightness-110 active:scale-[0.98] transition-all flex items-center gap-2 shadow-lg shadow-primary/20 cursor-pointer"
-            >
-              {isCreatingSession ? <X size={18} /> : <Plus size={18} />}
-              {isCreatingSession ? 'Cancel' : 'Log Session'}
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setIsCreatingHoliday(!isCreatingHoliday)}
+                className="px-5 py-3 bg-white/5 border border-white/10 text-white font-bold rounded-2xl hover:bg-white/10 active:scale-[0.98] transition-all flex items-center gap-2 cursor-pointer text-sm"
+              >
+                {isCreatingHoliday ? <X size={16} /> : <Calendar size={16} />}
+                {isCreatingHoliday ? 'Cancel Holiday' : 'Manage Holidays'}
+              </button>
+              <button
+                onClick={() => setIsCreatingSession(!isCreatingSession)}
+                className="px-5 py-3 bg-primary text-black font-black rounded-2xl hover:brightness-110 active:scale-[0.98] transition-all flex items-center gap-2 shadow-lg shadow-primary/20 cursor-pointer"
+              >
+                {isCreatingSession ? <X size={18} /> : <Plus size={18} />}
+                {isCreatingSession ? 'Cancel' : 'Log Session'}
+              </button>
+            </div>
           )}
         </div>
       </div>
+
+      {/* Create Holiday Form Overlay */}
+      <AnimatePresence>
+        {isCreatingHoliday && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="glass-panel p-6 rounded-2xl border border-yellow-500/20 overflow-hidden no-print"
+          >
+            <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+              <Calendar className="text-yellow-500" size={20} />
+              Manage Holidays / Non-Attendance Days
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <form onSubmit={handleCreateHoliday} className="space-y-4">
+                <h4 className="text-sm font-bold text-slate-300">Add New Holiday</h4>
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Holiday Reason</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Exam Break, Festival"
+                    value={newHolidayName}
+                    onChange={e => setNewHolidayName(e.target.value)}
+                    className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary transition-colors"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Date</label>
+                  <input
+                    type="date"
+                    required
+                    value={newHolidayDate}
+                    onChange={e => setNewHolidayDate(e.target.value)}
+                    className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary transition-colors"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="px-6 py-3 bg-yellow-500 text-black font-black rounded-xl hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer shadow-md"
+                >
+                  Save Holiday
+                </button>
+              </form>
+
+              <div className="space-y-4">
+                <h4 className="text-sm font-bold text-slate-300">Active Holidays</h4>
+                <div className="max-h-[220px] overflow-y-auto space-y-2 bg-white/5 border border-white/5 rounded-xl p-3">
+                  {holidays.map(h => (
+                    <div key={h.id} className="flex justify-between items-center bg-black/20 p-2.5 rounded-lg border border-white/5 text-xs text-slate-300">
+                      <div>
+                        <span className="font-bold text-white block">{h.name}</span>
+                        <span className="text-[10px] text-slate-500">{h.date}</span>
+                      </div>
+                      <button
+                        onClick={() => handleDeleteHoliday(h.id)}
+                        className="p-1 hover:text-red-400 rounded transition text-slate-500 cursor-pointer"
+                        title="Delete Holiday"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  ))}
+                  {holidays.length === 0 && (
+                    <p className="text-xs text-slate-500 italic py-4 text-center">No holidays declared yet.</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Create Session Form Overlay */}
       <AnimatePresence>
@@ -482,7 +633,7 @@ export default function AttendancePortal() {
                   onClick={() => setNewSessionData({
                     ...newSessionData,
                     topic: `Daily Attendance - ${newSessionData.date}`,
-                    duration: 1,
+                    duration: 3,
                     department: 'General Team'
                   })}
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
@@ -491,7 +642,7 @@ export default function AttendancePortal() {
                       : 'bg-white/5 text-slate-400 hover:text-white'
                   }`}
                 >
-                  Daily Attendance
+                  Daily Attendance (3-6 PM)
                 </button>
               </div>
 
@@ -619,6 +770,22 @@ export default function AttendancePortal() {
         {/* 1. ATTENDANCE TAB */}
         {activeTab === 'attendance' && (
           <div className="space-y-6 no-print">
+            {(() => {
+              const todayStr = new Date().toISOString().split('T')[0];
+              const todayHoliday = holidays.find(h => h.date === todayStr);
+              if (todayHoliday) {
+                return (
+                  <div className="bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 p-4 rounded-xl flex items-center gap-3 no-print">
+                    <Calendar className="text-yellow-500" size={20} />
+                    <div>
+                      <span className="font-black text-xs uppercase tracking-wider block leading-none">Holiday Notice</span>
+                      <p className="text-sm font-bold mt-1">Today is a holiday: {todayHoliday.name}. No attendance required.</p>
+                    </div>
+                  </div>
+                );
+              }
+              return null;
+            })()}
             {isPrivileged ? (
               loggingSession ? (
                 // Interactive attendance grid for captains
@@ -1221,34 +1388,78 @@ export default function AttendancePortal() {
         {/* 5. REPORTS TAB */}
         {activeTab === 'reports' && (
           <div className="space-y-8">
-            {/* Control buttons (no-print) */}
-            <div className="flex flex-wrap gap-3 justify-end no-print">
-              <button
-                onClick={handleExportCSV}
-                className="px-4 py-2.5 bg-white/10 hover:bg-white/15 text-white font-bold rounded-xl text-xs transition cursor-pointer flex items-center gap-2"
-              >
-                <Download size={14} />
-                Export CSV (Excel)
-              </button>
-              <button
-                onClick={() => window.print()}
-                className="px-4 py-2.5 bg-primary text-black font-black rounded-xl text-xs transition cursor-pointer flex items-center gap-2 shadow-lg shadow-primary/10"
-              >
-                <Printer size={14} />
-                Print PDF Report
-              </button>
+            {/* Control buttons & filters (no-print) */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white/5 border border-white/5 p-5 rounded-2xl no-print">
+              <div className="flex flex-wrap gap-4 items-center">
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-slate-400 mb-1.5">Report Range</label>
+                  <select
+                    value={reportType}
+                    onChange={e => setReportType(e.target.value as any)}
+                    className="bg-[#0d1320] border border-white/10 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-primary"
+                  >
+                    <option value="ALL">All Time</option>
+                    <option value="DAILY">Daily Report</option>
+                    <option value="WEEKLY">Weekly Report</option>
+                    <option value="MONTHLY">Monthly Report</option>
+                  </select>
+                </div>
+
+                {(reportType === 'DAILY' || reportType === 'WEEKLY') && (
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-slate-400 mb-1.5">
+                      {reportType === 'DAILY' ? 'Select Date' : 'Week Start Date'}
+                    </label>
+                    <input
+                      type="date"
+                      value={selectedReportDate}
+                      onChange={e => setSelectedReportDate(e.target.value)}
+                      className="bg-[#0d1320] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-primary"
+                    />
+                  </div>
+                )}
+
+                {reportType === 'MONTHLY' && (
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-slate-400 mb-1.5">Select Month</label>
+                    <input
+                      type="month"
+                      value={selectedReportMonth}
+                      onChange={e => setSelectedReportMonth(e.target.value)}
+                      className="bg-[#0d1320] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-primary"
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  onClick={handleExportCSV}
+                  className="px-4 py-2.5 bg-white/10 hover:bg-white/15 text-white font-bold rounded-xl text-xs transition cursor-pointer flex items-center gap-2"
+                >
+                  <Download size={14} />
+                  Export CSV (Excel)
+                </button>
+                <button
+                  onClick={() => window.print()}
+                  className="px-4 py-2.5 bg-primary text-black font-black rounded-xl text-xs transition cursor-pointer flex items-center gap-2 shadow-lg shadow-primary/10"
+                >
+                  <Printer size={14} />
+                  Print PDF Report
+                </button>
+              </div>
             </div>
 
             {/* Metrics cards (printed & visible) */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {(() => {
-                // Calculate general metrics
-                const activeTrainers = new Set(completedSessions.map(s => s.handledBy)).size;
-                const totalHours = completedSessions.reduce((acc, s) => acc + (s.duration || 0), 0);
+                // Calculate general metrics based on filtered sessions
+                const activeTrainers = new Set(filteredCompletedSessions.map(s => s.handledBy)).size;
+                const totalHours = filteredCompletedSessions.reduce((acc, s) => acc + (s.duration || 0), 0);
 
                 let presents = 0;
                 let expected = 0;
-                completedSessions.forEach(s => {
+                filteredCompletedSessions.forEach(s => {
                   activeUsers.forEach(m => {
                     if (s.attendance && s.attendance[m.uid] === true) presents++;
                     expected++;
@@ -1298,7 +1509,7 @@ export default function AttendancePortal() {
                       <th className="py-2.5 px-3 font-bold uppercase">Member Name</th>
                       <th className="py-2.5 px-3 font-bold uppercase">Type</th>
                       <th className="py-2.5 px-3 font-bold uppercase">Subsystem Department</th>
-                      {completedSessions.map(s => (
+                      {filteredCompletedSessions.map(s => (
                         <th key={s.id} className="py-2.5 px-3 font-bold uppercase text-center whitespace-nowrap" style={{ minWidth: '80px' }}>
                           {s.date.split('-').slice(1).reverse().join('/')}
                           <span className="block text-[8px] font-normal lowercase">{s.topic.substring(0, 10)}...</span>
@@ -1310,7 +1521,7 @@ export default function AttendancePortal() {
                   <tbody className="divide-y divide-white/5 text-slate-300">
                     {/* Active Registered Members */}
                     {activeUsers.map(user => {
-                      const stats = getMemberStats(user.uid, user.approvedTeams || []);
+                      const stats = getMemberStats(user.uid, filteredCompletedSessions);
                       return (
                         <tr key={user.uid} className="hover:bg-white/5">
                           <td className="py-2.5 px-3 font-bold text-white print-text">{user.displayName || user.email}</td>
@@ -1318,7 +1529,7 @@ export default function AttendancePortal() {
                           <td className="py-2.5 px-3 text-slate-400 print-text font-bold">
                             {user.approvedTeams?.map(id => Object.keys(DEPT_TO_ID).find(key => DEPT_TO_ID[key] === id) || id).join(', ') || 'General'}
                           </td>
-                          {completedSessions.map(s => {
+                          {filteredCompletedSessions.map(s => {
                             const isPresent = s.attendance && s.attendance[user.uid] === true;
                             
                             return (
@@ -1340,7 +1551,7 @@ export default function AttendancePortal() {
                     {externalMembers.map(name => {
                       let attended = 0;
                       let expectedCount = 0;
-                      completedSessions.forEach(s => {
+                      filteredCompletedSessions.forEach(s => {
                         const isPresent = s.externalAttendance && s.externalAttendance.includes(name);
                         if (isPresent) attended++;
                         expectedCount++;
@@ -1352,7 +1563,7 @@ export default function AttendancePortal() {
                           <td className="py-2.5 px-3 font-bold text-emerald-300 print-text">{name}</td>
                           <td className="py-2.5 px-3 text-slate-400 print-text">External / Manual</td>
                           <td className="py-2.5 px-3 text-slate-500 print-text">Unassigned</td>
-                          {completedSessions.map(s => {
+                          {filteredCompletedSessions.map(s => {
                             const isPresent = s.externalAttendance && s.externalAttendance.includes(name);
                             return (
                               <td key={s.id} className="py-2.5 px-3 text-center">

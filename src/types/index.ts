@@ -202,6 +202,15 @@ export interface TrainingSession {
   attendance: { [uid: string]: boolean }; // Map of user ID to present (true/false)
   externalAttendance?: string[]; // Names of external attendees who logged in manually
   status: 'COMPLETED' | 'UPCOMING';
+  sessionType?: 'TRAINING' | 'DAILY_3_6';
+  createdAt: string;
+  createdBy: string;
+}
+
+export interface Holiday {
+  id: string;
+  date: string; // YYYY-MM-DD
+  name: string; // Reason
   createdAt: string;
   createdBy: string;
 }

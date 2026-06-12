@@ -59,3 +59,43 @@ export function subscribeToTrainingSessions(callback: (sessions: TrainingSession
 
   return unsub;
 }
+
+export async function createHoliday(holiday: Omit<any, 'id'>) {
+  try {
+    const holidaysRef = ref(rtdb, 'holidays');
+    const newHolidayRef = push(holidaysRef);
+    const cleanHoliday = JSON.parse(JSON.stringify(holiday));
+    await set(newHolidayRef, cleanHoliday);
+    return newHolidayRef.key;
+  } catch (err) {
+    console.error('createHoliday error:', err);
+    throw err;
+  }
+}
+
+export async function deleteHoliday(id: string) {
+  try {
+    const holidayRef = ref(rtdb, `holidays/${id}`);
+    await remove(holidayRef);
+  } catch (err) {
+    console.error('deleteHoliday error:', err);
+    throw err;
+  }
+}
+
+export function subscribeToHolidays(callback: (holidays: any[]) => void) {
+  const holidaysRef = ref(rtdb, 'holidays');
+  const unsub = onValue(holidaysRef, (snapshot) => {
+    const data = snapshot.val();
+    if (!data) {
+      callback([]);
+      return;
+    }
+    const holidays = Object.entries(data).map(([id, val]: [string, any]) => ({ id, ...val }));
+    callback(holidays.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+  }, (err) => {
+    console.error('subscribeToHolidays error:', err);
+  });
+
+  return unsub;
+}
