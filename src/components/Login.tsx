@@ -23,7 +23,7 @@ export default function Login() {
         
         <h1 className="text-3xl font-black tracking-tighter mb-4">ASTRA PORTAL</h1>
         <p className="text-slate-400 mb-10 leading-relaxed">
-          Attendance & Training Management Portal. Secure logging for captains, leads, and members.
+          Mission Command Portal. Secure intelligence and subsystem tracking for Team ASTRA.
         </p>
 
         <button 
@@ -38,7 +38,7 @@ export default function Login() {
            <div className="flex justify-center gap-4 text-[10px] uppercase font-bold tracking-widest text-slate-500">
               <span>ASTRA Portal v1.0</span>
               <span>•</span>
-              <span>Attendance Hub</span>
+              <span>Solar Car IQ</span>
            </div>
            <div className="flex justify-center gap-6 text-[10px] uppercase font-bold tracking-widest text-slate-400">
               <a href="/privacy.html" className="hover:text-primary transition-colors">Privacy Policy</a>

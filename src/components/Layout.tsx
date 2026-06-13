@@ -361,7 +361,7 @@ export default function Layout({ children, currentView, onViewChange }: LayoutPr
             </div>
              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col">
               <span className="text-xl font-black tracking-tighter leading-none">ASTRA</span>
-              <span className="text-[10px] font-bold text-primary uppercase tracking-widest mt-1">Attendance Hub</span>
+              <span className="text-[10px] font-bold text-primary uppercase tracking-widest mt-1">Solar Car IQ</span>
             </motion.div>
           </div>
 
