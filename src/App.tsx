@@ -80,14 +80,16 @@ function AppContent() {
 
   // Helper to detect if a name is clearly a placeholder or generic
   const isPlaceholderName = (name: string): boolean => {
-    if (!name || name.trim().length < 3) return true;
-    const n = name.trim().toLowerCase();
+    if (!name) return true;
+    const trimmed = name.trim();
+    if (trimmed.length < 3) return true;
+    const n = trimmed.toLowerCase();
     const BLOCKED = ['engineer', 'unknown', 'user', 'admin', 'member', 'test', 'guest', 'anonymous'];
     if (BLOCKED.includes(n)) return true;
     // Looks like an email prefix (only lowercase letters and digits, no space)
-    if (/^[a-z0-9]+$/.test(n)) return true;
+    if (/^[a-z0-9]+$/.test(trimmed)) return true;
     // Starts with digits (like '727724eumc054')
-    if (/^\d/.test(n)) return true;
+    if (/^\d/.test(trimmed)) return true;
     return false;
   };
 
