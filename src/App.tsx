@@ -13,12 +13,12 @@ import ProfileOnboarding from './components/ProfileOnboarding';
 import AdminPanel from './components/AdminPanel';
 import DriveWorkspace from './components/DriveWorkspace';
 import RulebookChecklist from './components/RulebookChecklist';
-import AttendancePortal from './components/AttendancePortal';
+import AIAssistant from './components/AIAssistant';
 import { ShieldAlert } from 'lucide-react';
 
 function AppContent() {
   const { user, profile, loading, error } = useAuth();
-  const [currentView, setCurrentView] = useState<AppView>('attendance');
+  const [currentView, setCurrentView] = useState<AppView>('dashboard');
 
   useEffect(() => {
     seedSubsystems().catch(e => {
@@ -117,7 +117,7 @@ function AppContent() {
       case 'admin': return <AdminPanel />;
       case 'workspace': return <DriveWorkspace />;
       case 'rulebook': return <RulebookChecklist />;
-      case 'attendance': return <AttendancePortal />;
+      case 'copilot': return <AIAssistant onViewChange={setCurrentView} />;
       default: return <Dashboard />;
     }
   };

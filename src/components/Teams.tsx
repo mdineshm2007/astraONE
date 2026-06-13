@@ -32,7 +32,6 @@ export default function Teams() {
   });
   const [dailyLog, setDailyLog] = useState({
     event: 'SEVC',
-    attendance: 'Present' as any,
     todayProgress: '',
     nextAction: '',
     resourcesNeeded: '',
@@ -117,7 +116,6 @@ export default function Teams() {
         todayProgress: dailyLog.todayProgress,
         nextAction: dailyLog.nextAction,
         resourcesNeeded: dailyLog.resourcesNeeded,
-        attendance: dailyLog.attendance,
         event: dailyLog.event
       };
       
@@ -128,7 +126,6 @@ export default function Teams() {
         userName: profile.displayName || resolveNameFromEmail(profile.email),
         userEmail: profile.email, // Add email for better resolution
         progressPercent: dailyLog.progressPercent,
-        attendance: dailyLog.attendance,
         todayProgress: dailyLog.todayProgress,
         nextAction: dailyLog.nextAction,
         resourcesNeeded: dailyLog.resourcesNeeded,
@@ -144,7 +141,6 @@ export default function Teams() {
       setProgressTask(null);
       setDailyLog({
         event: 'SEVC',
-        attendance: 'Present',
         todayProgress: '',
         nextAction: '',
         resourcesNeeded: '',
@@ -240,7 +236,6 @@ export default function Teams() {
               setProgressTask(task); 
               setDailyLog({
                 event: task.event || 'SEVC',
-                attendance: task.attendance || 'Present',
                 todayProgress: task.todayProgress || '',
                 nextAction: task.nextAction || '',
                 resourcesNeeded: task.resourcesNeeded || '',
@@ -318,7 +313,6 @@ export default function Teams() {
                       setProgressTask(task); 
                       setDailyLog({
                         event: task.event || 'SEVC',
-                        attendance: task.attendance || 'Present',
                         todayProgress: task.todayProgress || '',
                         nextAction: task.nextAction || '',
                         resourcesNeeded: task.resourcesNeeded || '',
@@ -500,19 +494,7 @@ export default function Teams() {
                     </select>
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-tighter text-slate-500">Attendance Status</label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {['Present', 'Work from home', 'Absent', 'On Duty'].map(status => (
-                        <button key={status} onClick={() => setDailyLog({...dailyLog, attendance: status as any})}
-                          className={`py-2.5 rounded-xl text-[10px] font-black uppercase border transition-all ${
-                            dailyLog.attendance === status ? 'bg-primary border-primary text-black' : 'bg-white/5 border-white/5 text-slate-400 hover:border-white/10'
-                          }`}>
-                          {status}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+
 
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase tracking-tighter text-slate-500">Mission Status</label>

@@ -11,8 +11,7 @@ export type AppView =
   | 'innovation'
   | 'workspace'
   | 'rulebook'
-  | 'attendance';
-
+  | 'copilot';
 
 export interface DriveFolder {
   id: string;
@@ -98,7 +97,7 @@ export interface TaskUpdate {
   userName: string;
   userEmail?: string;
   progressPercent: number;
-  attendance: string;
+  attendance?: string;
   todayProgress: string;
   nextAction: string;
   resourcesNeeded: string;

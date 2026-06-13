@@ -40,7 +40,7 @@ export default function TaskTable({ tasks, onUpdateProgress, onDeleteTask, canMa
 
       const headers = [
         'DATE', 'ASSIGNEE', 'WORKSTREAM', 'TASK TITLE',
-        'EVENT / MILESTONE', 'ATTENDANCE STATUS', 'MISSION STATUS',
+        'EVENT / MILESTONE', 'MISSION STATUS',
         'COMPLETION PERCENTAGE', "TODAY'S PROGRESS", 'NEXT ACTION',
         'RESOURCES NEEDED / BLOCKERS', 'ADDITIONAL REMARKS'
       ];
@@ -56,7 +56,6 @@ export default function TaskTable({ tasks, onUpdateProgress, onDeleteTask, canMa
             task.workstream || 'R&D',
             task.title,
             task.event || 'SEVC',
-            task.attendance || 'Pending',
             task.status.replace('_', ' '),
             `${task.progressPercent || 0}%`,
             'No updates yet',
@@ -85,7 +84,6 @@ export default function TaskTable({ tasks, onUpdateProgress, onDeleteTask, canMa
               task.workstream || 'R&D',
               task.title,
               u.event || task.event || 'SEVC',
-              u.attendance || 'Present',
               task.status.replace('_', ' '),
               `${u.progressPercent || 0}%`,
               u.todayProgress || 'N/A',
@@ -163,7 +161,6 @@ export default function TaskTable({ tasks, onUpdateProgress, onDeleteTask, canMa
                 <th className="px-6 py-4 border-b border-white/5">Timeline</th>
                 <th className="px-6 py-4 border-b border-white/5">Status</th>
                 <th className="px-6 py-4 border-b border-white/5 text-primary/80">Requirements</th>
-                <th className="px-6 py-4 border-b border-white/5">Attendance</th>
                 <th className="px-6 py-4 border-b border-white/5">Progress</th>
                 <th className="px-6 py-4 border-b border-white/5">Actions</th>
               </tr>
@@ -215,13 +212,7 @@ export default function TaskTable({ tasks, onUpdateProgress, onDeleteTask, canMa
                       {task.resourcesNeeded || '—'}
                     </p>
                   </td>
-                  <td className="px-6 py-4">
-                    <span className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase ${
-                      task.attendance === 'Present' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'
-                    }`}>
-                      {task.attendance || 'Pending'}
-                    </span>
-                  </td>
+
                   <td className="px-6 py-4">
                     <div className="w-24 space-y-1">
                       <div className="flex justify-between text-[8px] font-black text-slate-500">

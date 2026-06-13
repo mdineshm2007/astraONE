@@ -65,7 +65,7 @@ export interface TaskUpdate {
   userName: string;
   userEmail?: string;
   progressPercent: number;
-  attendance: string;
+  attendance?: string;
   todayProgress: string;
   nextAction: string;
   resourcesNeeded: string;

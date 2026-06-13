@@ -323,18 +323,15 @@ export default function Layout({ children, currentView, onViewChange }: LayoutPr
 
   if (!profile) return null;
 
-  interface MenuItem {
-    id: string;
-    label: string;
-    icon: any;
-    roles: string[];
-    isExternal?: boolean;
-    path?: string;
-    badge?: number;
-  }
-
-  const menuItems: MenuItem[] = [
-    { id: 'attendance', label: 'Attendance & Training', icon: ClipboardCheck, roles: ['CAPTAIN', 'TEAM_LEAD', 'MEMBER'] },
+  const menuItems = [
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['CAPTAIN', 'TEAM_LEAD', 'MEMBER'] },
+    { id: 'teams', label: 'Engineering Hub', icon: Users, roles: ['CAPTAIN', 'TEAM_LEAD', 'MEMBER'] },
+    { id: 'posts', label: 'Engineering Feed', icon: Globe, roles: ['CAPTAIN', 'TEAM_LEAD', 'MEMBER'] },
+    { id: 'queries', label: 'Query Panel', icon: HelpCircle, roles: ['CAPTAIN', 'TEAM_LEAD', 'MEMBER'] },
+    { id: 'copilot', label: 'AI Copilot', icon: Bot, roles: ['CAPTAIN', 'TEAM_LEAD', 'MEMBER'] },
+    { id: 'workspace', label: 'Cloud Infrastructure', icon: Database, roles: ['CAPTAIN', 'TEAM_LEAD', 'MEMBER'] },
+    { id: 'rulebook', label: 'Rulebook Checklist', icon: ClipboardList, roles: ['CAPTAIN', 'TEAM_LEAD', 'MEMBER'] },
+    { id: 'admin', label: 'Admin Control', icon: ShieldAlert, roles: ['CAPTAIN', 'TEAM_LEAD'], badge: pendingCount },
   ];
 
   const allowedItems = menuItems.filter(item => item.roles.includes(profile.role));
@@ -373,11 +370,7 @@ export default function Layout({ children, currentView, onViewChange }: LayoutPr
               <button
                 key={item.id}
                 onClick={() => {
-                  if ('isExternal' in item && item.isExternal) {
-                    window.open(item.path, '_blank');
-                  } else {
-                    onViewChange(item.id as AppView);
-                  }
+                  onViewChange(item.id as AppView);
                   setSidebarOpen(false);
                 }}
                 className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all group relative ${
@@ -590,6 +583,7 @@ export default function Layout({ children, currentView, onViewChange }: LayoutPr
         <div className="flex-1 overflow-y-auto p-8 scroll-smooth custom-scrollbar">
            {children}
         </div>
+
 
         {/* Profile Edit Modal */}
         <AnimatePresence>
