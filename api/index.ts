@@ -383,7 +383,11 @@ app.post("/api/users/profile/:uid/update", async (req, res) => {
     const updates = req.body;
     if (!uid) return res.status(400).json({ error: "UID required" });
     
-    await admin.database().ref(`users/${uid}`).update(updates);
+    if (admin.apps.length > 0) {
+      await admin.database().ref(`users/${uid}`).update(updates);
+    } else {
+      await firebaseRest.update(`users/${uid}`, updates);
+    }
     res.json({ success: true });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -395,24 +399,41 @@ app.post("/api/users/teams/request", async (req, res) => {
     const { uid, teamIds } = req.body;
     if (!uid || !teamIds) return res.status(400).json({ error: "UID and teamIds required" });
 
-    const userRef = admin.database().ref(`users/${uid}`);
-    const snapshot = await userRef.once("value");
-    
-    if (snapshot.exists()) {
-      const profile = snapshot.val();
-      const currentTeams = profile.teams || [];
+    if (admin.apps.length > 0) {
+      const userRef = admin.database().ref(`users/${uid}`);
+      const snapshot = await userRef.once("value");
       
-      const newTeamRequests = teamIds
-        .filter((id: string) => !currentTeams.some((t: any) => t.teamId === id))
-        .map((id: string) => ({ teamId: id, status: 'PENDING' }));
+      if (snapshot.exists()) {
+        const profile = snapshot.val();
+        const currentTeams = profile.teams || [];
+        
+        const newTeamRequests = teamIds
+          .filter((id: string) => !currentTeams.some((t: any) => t.teamId === id))
+          .map((id: string) => ({ teamId: id, status: 'PENDING' }));
 
-      if (newTeamRequests.length > 0) {
-        const updatedTeams = [...currentTeams, ...newTeamRequests];
-        await userRef.update({ teams: updatedTeams });
+        if (newTeamRequests.length > 0) {
+          const updatedTeams = [...currentTeams, ...newTeamRequests];
+          await userRef.update({ teams: updatedTeams });
+        }
+        res.json({ success: true });
+      } else {
+        res.status(404).json({ error: "User not found" });
       }
-      res.json({ success: true });
     } else {
-      res.status(404).json({ error: "User not found" });
+      const profile = await firebaseRest.get(`users/${uid}`);
+      if (profile) {
+        const currentTeams = profile.teams || [];
+        const newTeamRequests = teamIds
+          .filter((id: string) => !currentTeams.some((t: any) => t.teamId === id))
+          .map((id: string) => ({ teamId: id, status: 'PENDING' }));
+        if (newTeamRequests.length > 0) {
+          const updatedTeams = [...currentTeams, ...newTeamRequests];
+          await firebaseRest.update(`users/${uid}`, { teams: updatedTeams });
+        }
+        res.json({ success: true });
+      } else {
+        res.status(404).json({ error: "User not found" });
+      }
     }
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -702,18 +723,30 @@ app.post("/api/users/approve", async (req, res) => {
   try {
     const { uid, teamId } = req.body;
     if (!uid || !teamId) return res.status(400).json({ error: "UID and teamId required" });
-
-    const userRef = admin.database().ref(`users/${uid}`);
-    const snapshot = await userRef.once("value");
     
-    if (snapshot.exists()) {
-      const profile = snapshot.val();
-      const teams = profile.teams || [];
-      const updatedTeams = teams.map((t: any) => t.teamId === teamId ? { ...t, status: 'APPROVED' } : t);
-      const approvedTeams = updatedTeams.filter((t: any) => t.status === 'APPROVED').map((t: any) => t.teamId);
-      await userRef.update({ teams: updatedTeams, approvedTeams });
-      res.json({ success: true });
-    } else res.status(404).json({ error: "User not found" });
+    if (admin.apps.length > 0) {
+      const userRef = admin.database().ref(`users/${uid}`);
+      const snapshot = await userRef.once("value");
+      if (snapshot.exists()) {
+        const profile = snapshot.val();
+        const teams = profile.teams || [];
+        const updatedTeams = teams.map((t: any) => t.teamId === teamId ? { ...t, status: 'APPROVED' } : t);
+        const approvedTeams = updatedTeams.filter((t: any) => t.status === 'APPROVED').map((t: any) => t.teamId);
+        await userRef.update({ teams: updatedTeams, approvedTeams });
+        res.json({ success: true });
+      } else res.status(404).json({ error: "User not found" });
+    } else {
+      const profile = await firebaseRest.get(`users/${uid}`);
+      if (profile) {
+        const teams = profile.teams || [];
+        const updatedTeams = teams.map((t: any) => t.teamId === teamId ? { ...t, status: 'APPROVED' } : t);
+        const approvedTeams = updatedTeams.filter((t: any) => t.status === 'APPROVED').map((t: any) => t.teamId);
+        await firebaseRest.update(`users/${uid}`, { teams: updatedTeams, approvedTeams });
+        res.json({ success: true });
+      } else {
+        res.status(404).json({ error: "User not found" });
+      }
+    }
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -724,16 +757,27 @@ app.post("/api/users/reject", async (req, res) => {
     const { uid, teamId } = req.body;
     if (!uid || !teamId) return res.status(400).json({ error: "UID and teamId required" });
 
-    const userRef = admin.database().ref(`users/${uid}`);
-    const snapshot = await userRef.once("value");
-    
-    if (snapshot.exists()) {
-      const profile = snapshot.val();
-      const updatedTeams = (profile.teams || []).filter((t: any) => t.teamId !== teamId);
-      const approvedTeams = updatedTeams.filter((t: any) => t.status === 'APPROVED').map((t: any) => t.teamId);
-      await userRef.update({ teams: updatedTeams, approvedTeams });
-      res.json({ success: true });
-    } else res.status(404).json({ error: "User not found" });
+    if (admin.apps.length > 0) {
+      const userRef = admin.database().ref(`users/${uid}`);
+      const snapshot = await userRef.once("value");
+      if (snapshot.exists()) {
+        const profile = snapshot.val();
+        const updatedTeams = (profile.teams || []).filter((t: any) => t.teamId !== teamId);
+        const approvedTeams = updatedTeams.filter((t: any) => t.status === 'APPROVED').map((t: any) => t.teamId);
+        await userRef.update({ teams: updatedTeams, approvedTeams });
+        res.json({ success: true });
+      } else res.status(404).json({ error: "User not found" });
+    } else {
+      const profile = await firebaseRest.get(`users/${uid}`);
+      if (profile) {
+        const updatedTeams = (profile.teams || []).filter((t: any) => t.teamId !== teamId);
+        const approvedTeams = updatedTeams.filter((t: any) => t.status === 'APPROVED').map((t: any) => t.teamId);
+        await firebaseRest.update(`users/${uid}`, { teams: updatedTeams, approvedTeams });
+        res.json({ success: true });
+      } else {
+        res.status(404).json({ error: "User not found" });
+      }
+    }
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -894,6 +938,8 @@ app.get("/api/backup/full", async (req, res) => {
         notifications: allData.notifications || {},
         innovation: allData.innovation || {},
         updates: allData.updates || {},
+        rulebook: allData.rulebook || {},
+        finances: allData.finances || {},
       }
     });
   } catch (error: any) {

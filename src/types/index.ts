@@ -11,7 +11,8 @@ export type AppView =
   | 'innovation'
   | 'workspace'
   | 'rulebook'
-  | 'copilot';
+  | 'copilot'
+  | 'backup';
 
 export interface DriveFolder {
   id: string;

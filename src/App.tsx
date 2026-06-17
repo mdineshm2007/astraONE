@@ -14,6 +14,7 @@ import AdminPanel from './components/AdminPanel';
 import DriveWorkspace from './components/DriveWorkspace';
 import RulebookChecklist from './components/RulebookChecklist';
 import AIAssistant from './components/AIAssistant';
+import OfflineBackup from './components/OfflineBackup';
 import { ShieldAlert } from 'lucide-react';
 
 function AppContent() {
@@ -120,6 +121,7 @@ function AppContent() {
       case 'workspace': return <DriveWorkspace />;
       case 'rulebook': return <RulebookChecklist />;
       case 'copilot': return <AIAssistant onViewChange={setCurrentView} />;
+      case 'backup': return <OfflineBackup />;
       default: return <Dashboard />;
     }
   };

@@ -120,11 +120,20 @@ export default function Teams() {
       };
       
       await updateTask(progressTask.id, updates, progressTask);
+
+      // Always attribute the log to the TASK'S ASSIGNED MEMBER, not the person
+      // clicking the button (who may be a team lead or captain updating on behalf
+      // of a member). This prevents duplicate / misattributed log entries.
+      const assignedMember = members.find(m => m.uid === progressTask.assignedToId);
+      const logUserId   = progressTask.assignedToId || profile.uid;
+      const logUserName = progressTask.assignedTo    || profile.displayName || resolveNameFromEmail(profile.email);
+      const logUserEmail = assignedMember?.email     || profile.email;
+
       await saveTaskUpdate({
         taskId: progressTask.id,
-        userId: profile.uid,
-        userName: profile.displayName || resolveNameFromEmail(profile.email),
-        userEmail: profile.email, // Add email for better resolution
+        userId: logUserId,
+        userName: logUserName,
+        userEmail: logUserEmail,
         progressPercent: dailyLog.progressPercent,
         todayProgress: dailyLog.todayProgress,
         nextAction: dailyLog.nextAction,
@@ -136,7 +145,9 @@ export default function Teams() {
       
       const { updatePerformanceMetric } = await import('../services/analyticsService');
       await updatePerformanceMetric(progressTask.subsystem, dailyLog.progressPercent, dailyLog.progressPercent < 50 ? 30 : 10);
-      await logUserActivity(profile.uid, 'UPDATE_PROGRESS', { taskId: progressTask.id, progress: dailyLog.progressPercent });
+      // Log the activity against the assigned member's uid so it appears in the
+      // member's log only — not as a separate entry under the team lead / captain.
+      await logUserActivity(logUserId, 'UPDATE_PROGRESS', { taskId: progressTask.id, progress: dailyLog.progressPercent });
       
       setProgressTask(null);
       setDailyLog({

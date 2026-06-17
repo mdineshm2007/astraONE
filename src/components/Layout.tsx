@@ -331,6 +331,7 @@ export default function Layout({ children, currentView, onViewChange }: LayoutPr
     { id: 'copilot', label: 'AI Copilot', icon: Bot, roles: ['CAPTAIN', 'TEAM_LEAD', 'MEMBER'] },
     { id: 'workspace', label: 'Cloud Infrastructure', icon: Database, roles: ['CAPTAIN', 'TEAM_LEAD', 'MEMBER'] },
     { id: 'rulebook', label: 'Rulebook Checklist', icon: ClipboardList, roles: ['CAPTAIN', 'TEAM_LEAD', 'MEMBER'] },
+    { id: 'backup', label: 'Offline Backup', icon: ClipboardCheck, roles: ['CAPTAIN', 'TEAM_LEAD', 'MEMBER'] },
     { id: 'admin', label: 'Admin Control', icon: ShieldAlert, roles: ['CAPTAIN', 'TEAM_LEAD'], badge: pendingCount },
   ];
 

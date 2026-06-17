@@ -187,15 +187,19 @@ To update task progress in ASTRA platform:
 /** Fetch live app data from Firebase for AI context */
 async function fetchLiveContext(): Promise<Record<string, any>> {
   try {
-    const [tasksSnap, usersSnap, subsystemsSnap] = await Promise.all([
-      get(ref(rtdb, 'tasks')),
-      get(ref(rtdb, 'users')),
-      get(ref(rtdb, 'subsystems')),
+    const [tasksSnap, usersSnap, subsystemsSnap, rulebookSnap, financesSnap] = await Promise.all([
+      get(ref(rtdb, 'tasks')).catch(() => null),
+      get(ref(rtdb, 'users')).catch(() => null),
+      get(ref(rtdb, 'subsystems')).catch(() => null),
+      get(ref(rtdb, 'rulebook/general')).catch(() => null),
+      get(ref(rtdb, 'finances')).catch(() => null),
     ]);
 
-    const tasks = tasksSnap.exists() ? Object.entries(tasksSnap.val()).map(([id, v]: any) => ({ id, ...v })) : [];
-    const users = usersSnap.exists() ? Object.entries(usersSnap.val()).map(([id, v]: any) => ({ id, ...v })) : [];
-    const subsystems = subsystemsSnap.exists() ? subsystemsSnap.val() : {};
+    const tasks = tasksSnap && tasksSnap.exists() ? Object.entries(tasksSnap.val()).map(([id, v]: any) => ({ id, ...v })) : [];
+    const users = usersSnap && usersSnap.exists() ? Object.entries(usersSnap.val()).map(([id, v]: any) => ({ id, ...v })) : [];
+    const subsystems = subsystemsSnap && subsystemsSnap.exists() ? subsystemsSnap.val() : {};
+    const rulebook = rulebookSnap && rulebookSnap.exists() ? rulebookSnap.val() : {};
+    const finances = financesSnap && financesSnap.exists() ? financesSnap.val() : {};
 
     // Sort tasks by createdAt descending (newest first) so recent tasks are actually the latest ones
     const sortedTasks = [...tasks].sort((a, b) => {
@@ -241,7 +245,67 @@ async function fetchLiveContext(): Promise<Record<string, any>> {
       year: u.year || 'Unknown',
     }));
 
-    return { taskSummary, memberSummary, subsystems, fetchedAt: new Date().toISOString() };
+    // Process Rulebook Checklist
+    const rulebookList: any[] = [];
+    let checkedCount = 0;
+    for (const [teamId, teamItems] of Object.entries(rulebook)) {
+      if (teamItems && typeof teamItems === 'object') {
+        for (const [id, val] of Object.entries(teamItems as Record<string, any>)) {
+          const item = { id, teamId, ...val };
+          rulebookList.push(item);
+          if (item.checked) checkedCount++;
+        }
+      }
+    }
+    const rulebookSummary = {
+      total: rulebookList.length,
+      completed: checkedCount,
+      progressPercent: rulebookList.length > 0 ? Math.round((checkedCount / rulebookList.length) * 100) : 0,
+      teams: Object.entries(rulebook).reduce((acc: any, [teamId, teamItems]: any) => {
+        if (teamItems && typeof teamItems === 'object') {
+          const list = Object.values(teamItems);
+          const comp = list.filter((i: any) => i.checked).length;
+          acc[teamId] = {
+            total: list.length,
+            completed: comp,
+            items: list.slice(0, 5).map((i: any) => ({
+              title: i.title,
+              checked: i.checked,
+              verifiedBy: i.checkedBy || ''
+            }))
+          };
+        }
+        return acc;
+      }, {})
+    };
+
+    // Process Finances / BOM
+    const bomData = finances.bom || {};
+    let totalProjectCost = 0;
+    const bomSummaryTeams: Record<string, any> = {};
+    for (const [teamId, bomItems] of Object.entries(bomData)) {
+      if (bomItems && typeof bomItems === 'object') {
+        const itemsList = Object.values(bomItems);
+        const teamCost = itemsList.reduce((sum: number, item: any) => sum + (Number(item.totalMaterialCost) || 0), 0);
+        totalProjectCost += teamCost;
+        bomSummaryTeams[teamId] = {
+          totalCost: teamCost,
+          itemCount: itemsList.length,
+          items: itemsList.slice(0, 5).map((i: any) => ({
+            partName: i.partName,
+            type: i.type || 'Purchased',
+            cost: i.totalMaterialCost || 0,
+            vendor: i.vendor || ''
+          }))
+        };
+      }
+    }
+    const bomSummary = {
+      totalProjectCost,
+      teams: bomSummaryTeams
+    };
+
+    return { taskSummary, memberSummary, subsystems, rulebookSummary, bomSummary, fetchedAt: new Date().toISOString() };
   } catch (err) {
     console.warn('[AI] Failed to fetch live context:', err);
     return {};
@@ -279,6 +343,34 @@ function buildSystemPrompt(liveContext: Record<string, any>, userProfile?: any):
   Active/Critical Tasks (capped at 15):
 ${activeTasks.map((t: any) => `    - [${t.status}] "${t.title}" | ${t.subsystem} | Assigned: ${t.assignedTo} | ${t.progressPercent}%`).join('\n')}` : '  (No task data)';
 
+  // Format rulebook checklist lines
+  const rulebookSummary = liveContext.rulebookSummary;
+  let rulebookLines = '  (No rulebook checklist data)';
+  if (rulebookSummary && rulebookSummary.total > 0) {
+    rulebookLines = `  Overall Checklist Progress: ${rulebookSummary.completed}/${rulebookSummary.total} (${rulebookSummary.progressPercent}% completed)\n`;
+    for (const [teamId, data] of Object.entries(rulebookSummary.teams || {})) {
+      const tData = data as any;
+      rulebookLines += `  - Subsystem ${teamId}: ${tData.completed}/${tData.total} items completed\n`;
+      if (tData.items && tData.items.length > 0) {
+        rulebookLines += tData.items.map((item: any) => `    * [${item.checked ? '✓' : ' '}] "${item.title}"${item.verifiedBy ? ` (verified by ${item.verifiedBy})` : ''}`).join('\n') + '\n';
+      }
+    }
+  }
+
+  // Format BOM/Finance lines
+  const bomSummary = liveContext.bomSummary;
+  let bomLines = '  (No financial/BOM data)';
+  if (bomSummary) {
+    bomLines = `  Total Vehicle Estimated/Actual Cost: ₹${bomSummary.totalProjectCost.toLocaleString('en-IN')}\n`;
+    for (const [teamId, data] of Object.entries(bomSummary.teams || {})) {
+      const bData = data as any;
+      bomLines += `  - Subsystem ${teamId}: Total ₹${bData.totalCost.toLocaleString('en-IN')} across ${bData.itemCount} parts\n`;
+      if (bData.items && bData.items.length > 0) {
+        bomLines += bData.items.map((item: any) => `    * Part: "${item.partName}" | Type: ${item.type} | Vendor: ${item.vendor || 'Unknown'} | Cost: ₹${item.cost}`).join('\n') + '\n';
+      }
+    }
+  }
+
   // Compress team members: list only online members, and count offline ones to save massive tokens
   const onlineMembers = memberSummary.filter((m: any) => m.isOnline);
   const onlineNames = onlineMembers.map((m: any) => `${m.name} (${m.role})`).join(', ') || 'None';
@@ -311,6 +403,12 @@ ${activeTasks.map((t: any) => `    - [${t.status}] "${t.title}" | ${t.subsystem}
 ### Task Status
 ${taskLines}
 
+### Rulebook Checklist Status
+${rulebookLines}
+
+### Bill of Materials (BOM) & Cost Tracking
+${bomLines}
+
 ### Team Members
 ${memberLines}
 
@@ -324,8 +422,8 @@ ${ASTRA_KNOWLEDGE_BASE}
 ${historicalContext || 'No historical reports found.'}
 
 ## Your Behaviour
-- You have both LIVE data from the ASTRA platform AND deep engineering domain knowledge (including previous year reports)
-- Answer questions about tasks, members, progress, deadlines using the live data above
+- You have both LIVE data from the ASTRA platform (tasks, rulebook checklist items, BOM/finances, and members) AND deep engineering domain knowledge (including previous year reports)
+- Answer questions about tasks, rulebook checklist progress, bill of materials/part costs, members, progress, deadlines using the live data above
 - Answer questions about report structure, how to write reports, engineering calculations, SEVC rules using the knowledge base and historical reports
 - If asked "how to write innovation report" or "what content should be inside" — give the full structure, sections, and tips from the knowledge base and previous year's reports
 - If asked about task progress — reference the live data and the current academic year context (0% at start of year/orientation phase is normal, not lagging)

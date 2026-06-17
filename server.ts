@@ -1382,6 +1382,41 @@ setInterval(() => {
   }
 }, 30000);
 
+// --- Full Data Backup Endpoint ---
+app.get("/api/backup/full", async (req, res) => {
+  try {
+    const dbUrl = process.env.FIREBASE_DATABASE_URL || 'https://studio-1045950084-89865-default-rtdb.asia-southeast1.firebasedatabase.app/';
+    const dbSecret = process.env.FIREBASE_DATABASE_SECRET || '';
+    
+    // Fetch all data from Firebase REST API
+    const response = await fetch(`${dbUrl}.json?auth=${dbSecret}`);
+    if (!response.ok) throw new Error(`Firebase REST error: ${response.status}`);
+    const allData = await response.json();
+    
+    res.json({
+      success: true,
+      exportedAt: new Date().toISOString(),
+      data: {
+        users: allData.users || {},
+        tasks: allData.tasks || {},
+        subsystems: allData.subsystems || {},
+        posts: allData.posts || {},
+        queries: allData.queries || {},
+        notebooks: allData.notebooks || {},
+        teamRequests: allData.teamRequests || {},
+        notifications: allData.notifications || {},
+        innovation: allData.innovation || {},
+        updates: allData.updates || {},
+        rulebook: allData.rulebook || {},
+        finances: allData.finances || {},
+      }
+    });
+  } catch (error: any) {
+    console.error("[Backup] Full backup failed:", error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Endpoint to trigger manually for testing
 app.get("/api/cron/notifications", async (req, res) => {
   try {
